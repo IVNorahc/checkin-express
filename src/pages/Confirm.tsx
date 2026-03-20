@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { jsPDF } from 'jspdf'
 import { supabase } from '../lib/supabase'
+import { getDB } from '../lib/db'
 
 const mockData = {
   documentType: 'passport',
@@ -240,6 +241,38 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
     const canvas = canvasRef.current
     const signatureDataUrl = canvas?.toDataURL('image/png')
 
+    if (!signatureDataUrl) {
+      setIsGenerating(false)
+      setSuccessMessage('')
+      return
+    }
+
+    const db = getDB()
+    const scanDate = now.toISOString()
+    const printed = false
+
+    // 1) Sauvegarder le client + 2) Sauvegarder la fiche de police
+    const clientId = await db.clients.add({
+      surname: formData.surname,
+      givenNames: formData.givenNames,
+      dateOfBirth: formData.dateOfBirth,
+      documentType: formData.documentType,
+      documentNumber: formData.documentNumber,
+      nationality: formData.nationality,
+      sex: formData.sex,
+      expiryDate: formData.expiryDate,
+      roomNumber,
+      scanDate,
+      printed,
+    })
+
+    const fichePoliceId = await db.fichesPolice.add({
+      clientId,
+      generatedAt: scanDate,
+      roomNumber,
+      printed,
+    })
+
     const pdf = new jsPDF()
     let y = 18
 
@@ -304,10 +337,15 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
 
     pdf.setFontSize(9)
     pdf.text('Document genere par Check-in Express by Percepta', 105, 285, { align: 'center' })
+
+    // 3) Générer et télécharger le PDF
+    const pdfData = pdf.output('datauristring')
+    await db.fichesPolice.update(fichePoliceId, { pdfData })
     pdf.save(`fiche-police-${registrationNumber}.pdf`)
 
     setSuccessMessage('Fiche générée !')
     setIsGenerating(false)
+    // 4) Revenir au dashboard après affichage du message
     setTimeout(() => onConfirm(), 600)
   }
 
