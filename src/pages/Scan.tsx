@@ -1,24 +1,76 @@
 import { useRef, useState } from 'react'
 import Webcam from 'react-webcam'
+import { analyzeDocument } from '../lib/gemini'
 
 type ScanProps = {
   onBack: () => void
-  onCapture: () => void
+  onCapture: (data: OCRData | null) => void
+}
+
+type OCRData = {
+  documentType: string | null
+  issuingCountry: string | null
+  surname: string | null
+  givenNames: string | null
+  dateOfBirth: string | null
+  documentNumber: string | null
+  nationality: string | null
+  sex: string | null
+  expiryDate: string | null
+  address: string | null
+  needsBackSide: boolean | null
+  confidence: number | null
+}
+
+function normalizeScreenshot(screenshot: string, fallbackMimeType = 'image/jpeg') {
+  if (screenshot.startsWith('data:')) {
+    const match = screenshot.match(/^data:(.*?);base64,(.*)$/)
+    if (match) {
+      return {
+        previewSrc: screenshot,
+        imageBase64: match[2],
+        mimeType: match[1],
+      }
+    }
+  }
+
+  return {
+    previewSrc: `data:${fallbackMimeType};base64,${screenshot}`,
+    imageBase64: screenshot,
+    mimeType: fallbackMimeType,
+  }
 }
 
 export default function Scan({ onBack, onCapture }: ScanProps) {
   const webcamRef = useRef<Webcam>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
 
-  const handleCapture = () => {
-    const image = webcamRef.current?.getScreenshot()
-    if (!image) return
-    setCapturedImage(image)
-    onCapture()
+  const handleCapture = async () => {
+    const screenshot = webcamRef.current?.getScreenshot()
+    if (!screenshot) return
+
+    const normalized = normalizeScreenshot(screenshot, 'image/jpeg')
+
+    setCapturedImage(normalized.previewSrc)
+    setAnalysisError(null)
+    setIsAnalyzing(true)
+
+    try {
+      const data = (await analyzeDocument(normalized.imageBase64, normalized.mimeType)) as OCRData
+      onCapture(data)
+    } catch (e) {
+      setAnalysisError("Erreur d'analyse, réessayez")
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const handleRetry = () => {
     setCapturedImage(null)
+    setAnalysisError(null)
+    setIsAnalyzing(false)
   }
 
   return (
@@ -46,14 +98,22 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               className="w-full rounded-xl border border-white/20"
             />
             <div className="mt-6 flex items-center justify-center gap-3 text-white">
-              <span className="inline-block h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              <p className="text-lg font-medium">Analyse en cours...</p>
+              {isAnalyzing ? (
+                <>
+                  <span className="inline-block h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <p className="text-lg font-medium">Analyse en cours...</p>
+                </>
+              ) : (
+                <p className="text-lg font-medium">Prêt pour confirmation</p>
+              )}
             </div>
+            {analysisError && <p className="mt-3 text-sm text-red-500 text-center">{analysisError}</p>}
             <div className="mt-6 flex justify-center">
               <button
                 type="button"
                 onClick={handleRetry}
                 className="px-8 h-12 rounded-full border border-white text-white hover:bg-white/10 transition-colors"
+                disabled={isAnalyzing}
               >
                 ↻ Reprendre
               </button>
@@ -86,6 +146,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               <button
                 type="button"
                 onClick={handleCapture}
+                disabled={isAnalyzing}
                 className="w-full max-w-[340px] h-14 rounded-[50px] bg-[#1e3a8a] text-white text-lg font-semibold shadow-lg hover:bg-[#162f6b] transition-colors"
               >
                 📸 CAPTURER

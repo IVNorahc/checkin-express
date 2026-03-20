@@ -8,6 +8,20 @@ import Confirm from './pages/Confirm'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
+  const [ocrData, setOcrData] = useState<{
+    documentType: string | null
+    issuingCountry: string | null
+    surname: string | null
+    givenNames: string | null
+    dateOfBirth: string | null
+    documentNumber: string | null
+    nationality: string | null
+    sex: string | null
+    expiryDate: string | null
+    address: string | null
+    needsBackSide: boolean | null
+    confidence: number | null
+  } | null>(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
 
   useEffect(() => {
@@ -55,7 +69,10 @@ export default function App() {
     return (
       <Dashboard
         onRequireLogin={() => setCurrentPage('login')}
-        onScanComplete={() => setCurrentPage('confirm')}
+        onScanComplete={() => {
+          setOcrData(null)
+          setCurrentPage('scan')
+        }}
       />
     )
   }
@@ -64,7 +81,10 @@ export default function App() {
     return (
       <Scan
         onBack={() => setCurrentPage('dashboard')}
-        onCapture={() => setCurrentPage('confirm')}
+        onCapture={(data) => {
+          setOcrData(data)
+          setCurrentPage('confirm')
+        }}
       />
     )
   }
@@ -72,7 +92,11 @@ export default function App() {
   if (currentPage === 'confirm') {
     return (
       <Confirm
-        onRestart={() => setCurrentPage('scan')}
+        data={ocrData}
+        onRestart={() => {
+          setOcrData(null)
+          setCurrentPage('scan')
+        }}
         onConfirm={() => setCurrentPage('dashboard')}
       />
     )

@@ -25,6 +25,21 @@ const mockData = {
   confidence: 0.97,
 }
 
+type OCRData = {
+  documentType: string | null
+  issuingCountry: string | null
+  surname: string | null
+  givenNames: string | null
+  dateOfBirth: string | null
+  documentNumber: string | null
+  nationality: string | null
+  sex: string | null
+  expiryDate: string | null
+  address: string | null
+  needsBackSide: boolean | null
+  confidence: number | null
+}
+
 type EditableKey = Exclude<keyof typeof mockData, 'confidence'>
 
 type FormData = Record<EditableKey, string>
@@ -56,12 +71,27 @@ const initialData: FormData = {
 }
 
 type ConfirmProps = {
+  data: OCRData | null
   onRestart: () => void
   onConfirm: () => void
 }
 
-export default function Confirm({ onRestart, onConfirm }: ConfirmProps) {
-  const [formData, setFormData] = useState<FormData>(initialData)
+const buildFormDataFromOCR = (ocr: OCRData): FormData => ({
+  documentType: ocr.documentType ?? '',
+  issuingCountry: ocr.issuingCountry ?? '',
+  surname: ocr.surname ?? '',
+  givenNames: ocr.givenNames ?? '',
+  dateOfBirth: ocr.dateOfBirth ?? '',
+  documentNumber: ocr.documentNumber ?? '',
+  nationality: ocr.nationality ?? '',
+  sex: ocr.sex ?? '',
+  expiryDate: ocr.expiryDate ?? '',
+  address: ocr.address ?? '',
+})
+
+export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
+  const effectiveFormData = data ? buildFormDataFromOCR(data) : initialData
+  const [formData, setFormData] = useState<FormData>(effectiveFormData)
   const [roomNumber, setRoomNumber] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [hotelName, setHotelName] = useState('Hotel inconnu')
@@ -71,7 +101,8 @@ export default function Confirm({ onRestart, onConfirm }: ConfirmProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const isDrawingRef = useRef(false)
 
-  const confidencePercent = useMemo(() => Math.round(mockData.confidence * 100), [])
+  const confidenceValue = data && typeof data.confidence === 'number' ? data.confidence : mockData.confidence
+  const confidencePercent = useMemo(() => Math.round(confidenceValue * 100), [confidenceValue])
 
   const handleFieldChange = (key: EditableKey) => (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [key]: e.target.value }))
@@ -175,7 +206,7 @@ export default function Confirm({ onRestart, onConfirm }: ConfirmProps) {
   }
 
   const handleReset = () => {
-    setFormData(initialData)
+    setFormData(effectiveFormData)
     setRoomNumber('')
     setSubmitted(false)
     setSuccessMessage('')
