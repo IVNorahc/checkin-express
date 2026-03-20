@@ -1,20 +1,26 @@
-import { supabase } from "./supabase"
-
 export async function analyzeDocument(
   imageBase64: string,
   mimeType: string = "image/jpeg"
 ) {
-  const { data, error } = await supabase.functions.invoke("analyze-document", {
-    body: { image: imageBase64, mimeType },
-  })
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-  if (error) {
-    throw new Error(error.message)
+  const response = await fetch(
+    `${supabaseUrl}/functions/v1/analyze-document`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseKey}`
+      },
+      body: JSON.stringify({ image: imageBase64, mimeType })
+    }
+  )
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(error)
   }
 
-  if (typeof data === "string") {
-    return JSON.parse(data)
-  }
-
-  return data
+  return await response.json()
 }
