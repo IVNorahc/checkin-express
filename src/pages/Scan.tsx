@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import { analyzeDocument } from '../lib/gemini'
 
@@ -44,33 +44,165 @@ function normalizeScreenshot(screenshot: string, fallbackMimeType = 'image/jpeg'
 export default function Scan({ onBack, onCapture }: ScanProps) {
   const webcamRef = useRef<Webcam>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [capturedImageBase64, setCapturedImageBase64] = useState<string | null>(null)
+  const [capturedMimeType, setCapturedMimeType] = useState<string>('image/jpeg')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [canRetry, setCanRetry] = useState(false)
+
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+  const extractGeminiErrorMessage = (err: unknown) => {
+    if (err && typeof err === 'object') {
+      const anyErr = err as any
+      const msg =
+        anyErr?.message ??
+        anyErr?.error?.message ??
+        anyErr?.error_description ??
+        anyErr?.response?.data?.message
+      if (typeof msg === 'string' && msg.trim()) return msg.trim()
+    }
+    if (typeof err === 'string') return err
+    return "Erreur d'analyse"
+  }
 
   const handleCapture = async () => {
+    if (isAnalyzing) return
+
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+    setCanRetry(false)
+    setCapturedImageBase64(null)
+
+    // Laisser l'autofocus se stabiliser
+    await waitMs(500)
+
     const screenshot = webcamRef.current?.getScreenshot()
-    if (!screenshot) return
+    if (!screenshot) {
+      if (isMountedRef.current) {
+        setAnalysisError("Impossible de capturer la caméra")
+        setCanRetry(true)
+        setIsAnalyzing(false)
+      }
+      return
+    }
 
     const normalized = normalizeScreenshot(screenshot, 'image/jpeg')
 
-    setCapturedImage(normalized.previewSrc)
-    setAnalysisError(null)
-    setIsAnalyzing(true)
+    // Afficher rapidement un aperçu pendant la préparation/analysis.
+    if (isMountedRef.current) {
+      setCapturedImage(normalized.previewSrc)
+    }
+
+    // Re-coder en JPEG haute résolution pour améliorer la qualité d'OCR.
+    const enhanced = await (async () => {
+      const img = new Image()
+      img.src = normalized.previewSrc
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Image de capture invalide'))
+      })
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 1920
+      canvas.height = 1080
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Canvas non supporté')
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.95)
+      const match = jpegDataUrl.match(/^data:image\/jpeg;base64,(.*)$/)
+      const base64 = match?.[1] ?? jpegDataUrl.split(',')[1]
+
+      return {
+        previewSrc: jpegDataUrl,
+        imageBase64: base64,
+        mimeType: 'image/jpeg',
+      }
+    })()
+
+    if (isMountedRef.current) {
+      setCapturedImage(enhanced.previewSrc)
+      setCapturedImageBase64(enhanced.imageBase64)
+      setCapturedMimeType(enhanced.mimeType)
+    }
 
     try {
-      const data = (await analyzeDocument(normalized.imageBase64, normalized.mimeType)) as OCRData
+      const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
+      if (!isMountedRef.current) return
       onCapture(data)
-    } catch (e) {
-      setAnalysisError("Erreur d'analyse, réessayez")
+      return
+    } catch (e1) {
+      if (!isMountedRef.current) return
+      setAnalysisError(extractGeminiErrorMessage(e1))
+      setCanRetry(true)
+
+      // Retry automatique une seule fois après 2 secondes
+      await waitMs(2000)
+
+      try {
+        const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
+        if (!isMountedRef.current) return
+        onCapture(data)
+        return
+      } catch (e2) {
+        if (!isMountedRef.current) return
+        setAnalysisError(extractGeminiErrorMessage(e2))
+        setCanRetry(true)
+      }
     } finally {
-      setIsAnalyzing(false)
+      if (isMountedRef.current) setIsAnalyzing(false)
     }
   }
 
   const handleRetry = () => {
     setCapturedImage(null)
+    setCapturedImageBase64(null)
     setAnalysisError(null)
     setIsAnalyzing(false)
+    setCanRetry(false)
+  }
+
+  const handleRetryAnalysis = async () => {
+    if (!capturedImageBase64) return
+    if (isAnalyzing) return
+
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+    setCanRetry(false)
+
+    try {
+      const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
+      if (!isMountedRef.current) return
+      onCapture(data)
+      return
+    } catch (e1) {
+      if (!isMountedRef.current) return
+      setAnalysisError(extractGeminiErrorMessage(e1))
+      await waitMs(2000)
+
+      try {
+        const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
+        if (!isMountedRef.current) return
+        onCapture(data)
+        return
+      } catch (e2) {
+        if (!isMountedRef.current) return
+        setAnalysisError(extractGeminiErrorMessage(e2))
+        setCanRetry(true)
+      }
+    } finally {
+      if (isMountedRef.current) setIsAnalyzing(false)
+    }
   }
 
   return (
@@ -104,10 +236,23 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                   <p className="text-lg font-medium">Analyse en cours...</p>
                 </>
               ) : (
-                <p className="text-lg font-medium">Prêt pour confirmation</p>
+                <p className="text-lg font-medium">{analysisError ? 'Analyse terminée' : 'Prêt pour confirmation'}</p>
               )}
             </div>
             {analysisError && <p className="mt-3 text-sm text-red-500 text-center">{analysisError}</p>}
+
+            {canRetry && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleRetryAnalysis}
+                  className="px-8 h-12 rounded-full border border-white text-white bg-transparent hover:bg-white/10 transition-colors"
+                  disabled={isAnalyzing}
+                >
+                  Réessayer
+                </button>
+              </div>
+            )}
             <div className="mt-6 flex justify-center">
               <button
                 type="button"
@@ -126,9 +271,24 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 ref={webcamRef}
                 audio={false}
                 screenshotFormat="image/jpeg"
-                videoConstraints={{ facingMode: 'environment' }}
+                screenshotQuality={0.95}
+                videoConstraints={
+                  {
+                    facingMode: 'environment',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    focusMode: 'continuous',
+                  } as any
+                }
                 className="w-full h-full object-cover"
               />
+
+              {isAnalyzing && (
+                <div className="absolute inset-0 z-10 bg-black/50 flex flex-col items-center justify-center gap-3">
+                  <span className="inline-block h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <p className="text-lg font-medium">Analyse en cours...</p>
+                </div>
+              )}
 
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <div className="relative w-[85%] h-[55%] rounded-[12px] border-[3px] border-[#1e3a8a]">
@@ -140,7 +300,12 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               </div>
             </div>
 
-            <p className="mt-5 text-center text-white">Placez le document dans le cadre</p>
+            <div className="mt-5 w-full max-w-xl text-center text-white text-sm space-y-1">
+              <p>📏 Placez le document bien à plat</p>
+              <p>💡 Assurez-vous d'avoir un bon éclairage</p>
+              <p>🔍 Remplissez le cadre avec le document</p>
+              <p>⏱️ Restez immobile au moment de capturer</p>
+            </div>
 
             <div className="mt-8 w-full max-w-xl flex flex-col items-center gap-4">
               <button

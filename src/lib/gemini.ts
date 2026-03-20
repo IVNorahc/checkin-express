@@ -9,7 +9,7 @@ export async function analyzeDocument(
   mimeType: string = "image/jpeg"
 ) {
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash" 
+    model: "gemini-1.5-pro" 
   });
 
   const prompt = `Tu es un expert en lecture de documents 
@@ -31,6 +31,9 @@ export async function analyzeDocument(
     "confidence": nombre entre 0 et 1
   }
   Si un champ est illisible mets null.`;
+  const improvedPrompt = `${prompt}
+L'image peut être légèrement floue, fais de ton mieux pour lire les informations.
+Concentre-toi sur les zones de texte imprimé.`;
 
   const imagePart = {
     inlineData: {
@@ -39,7 +42,7 @@ export async function analyzeDocument(
     },
   };
 
-  const result = await model.generateContent([prompt, imagePart]);
+  const result = await model.generateContent([improvedPrompt, imagePart]);
   const response = await result.response;
   const text = response.text();
   
