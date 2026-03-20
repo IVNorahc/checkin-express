@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": 
+    "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type",
   }
 
@@ -14,83 +14,67 @@ serve(async (req) => {
   try {
     const { image, mimeType } = await req.json()
 
-    const response = await fetch(
-      "https://api.anthropic.com/v1/messages",
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${Deno.env.get("GEMINI_API_KEY")}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": Deno.env.get("ANTHROPIC_API_KEY") ?? "",
-          "anthropic-version": "2023-06-01"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-opus-4-5",
-          max_tokens: 1024,
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: mimeType || "image/jpeg",
-                    data: image
-                  }
-                },
-                {
-                  type: "text",
-                  text: `Tu es un expert en lecture de documents 
-                  d'identité officiels du monde entier.
-                  Analyse cette image de document d'identité 
-                  et retourne UNIQUEMENT un JSON brut valide, 
-                  sans markdown, sans backticks, sans explication.
-                  Format exact :
-                  {
-                    "documentType": "passport" ou "id_card" 
-                      ou "driving_license",
-                    "issuingCountry": "code ISO 3 lettres ex: SEN, FRA",
-                    "surname": "NOM EN MAJUSCULES",
-                    "givenNames": "Prénoms",
-                    "dateOfBirth": "YYYY-MM-DD",
-                    "documentNumber": "numéro du document",
-                    "nationality": "nationalité en français",
-                    "sex": "M" ou "F",
-                    "expiryDate": "YYYY-MM-DD",
-                    "address": null,
-                    "needsBackSide": true si carte d'identité 
-                      ou permis sinon false,
-                    "confidence": nombre entre 0.0 et 1.0
-                  }
-                  Si un champ est illisible mets null.
-                  Retourne uniquement le JSON, rien d'autre.`
-                }
-              ]
-            }
-          ]
+          contents: [{
+            parts: [
+              { 
+                text: `Tu es un expert en lecture de documents 
+                d'identité officiels du monde entier.
+                Analyse cette image et retourne UNIQUEMENT 
+                un JSON brut valide sans markdown ni backticks :
+                {"documentType":"id_card","issuingCountry":"SEN",
+                "surname":"NOM","givenNames":"Prenom",
+                "dateOfBirth":"1990-01-01","documentNumber":"AB123",
+                "nationality":"SÉNÉGALAISE","sex":"M",
+                "expiryDate":"2030-01-01","address":null,
+                "needsBackSide":true,"confidence":0.95}
+                Adapte selon le vrai document.
+                Si illisible mets null.
+                RETOURNE UNIQUEMENT LE JSON.`
+              },
+              { 
+                inline_data: { 
+                  mime_type: mimeType || "image/jpeg", 
+                  data: image 
+                } 
+              }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 512
+          }
         })
       }
     )
 
-    const data = await response.json()
-    console.log("Claude response:", JSON.stringify(data))
+    const geminiData = await geminiResponse.json()
+    console.log("Gemini raw:", JSON.stringify(geminiData))
 
-    if (!data.content || data.content.length === 0) {
+    if (!geminiData.candidates || 
+        geminiData.candidates.length === 0) {
       throw new Error(
-        "Claude n'a pas retourné de résultat: " + 
-        JSON.stringify(data)
+        "Pas de résultat Gemini: " + 
+        JSON.stringify(geminiData)
       )
     }
 
-    const text = data.content[0].text
-    console.log("Claude text:", text)
-
-    const cleaned = text
+    const text = geminiData
+      .candidates[0]
+      .content
+      .parts[0]
+      .text
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim()
 
-    const parsed = JSON.parse(cleaned)
+    console.log("Gemini text:", text)
+    const parsed = JSON.parse(text)
 
     return new Response(
       JSON.stringify(parsed),
