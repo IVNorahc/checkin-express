@@ -205,6 +205,24 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
   }
 
+  const handleManualInput = () => {
+    const manualData: OCRData = {
+      documentType: "id_card",
+      issuingCountry: "",
+      surname: "",
+      givenNames: "",
+      dateOfBirth: "",
+      documentNumber: "",
+      nationality: "",
+      sex: "M",
+      expiryDate: "",
+      address: null,
+      needsBackSide: false,
+      confidence: 1.0
+    }
+    onCapture(manualData)
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="h-16 px-4 flex items-center relative">
@@ -318,11 +336,23 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               </button>
               <button
                 type="button"
+                onClick={handleManualInput}
+                disabled={isAnalyzing}
+                className="w-full max-w-[340px] h-12 rounded-lg bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] text-base font-medium hover:bg-gray-50 transition-colors"
+                style={{ marginTop: '12px' }}
+              >
+                ✏️ SAISIE MANUELLE
+              </button>
+              <button
+                type="button"
                 onClick={onBack}
                 className="w-full max-w-[340px] h-12 rounded-[50px] border border-white text-white bg-transparent hover:bg-white/10 transition-colors"
               >
                 ✕ Annuler
               </button>
+              <p className="w-full max-w-[340px] text-center text-gray-400 text-sm mt-2">
+                💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
+              </p>
             </div>
           </>
         )}
