@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
 import Admin from './pages/Admin'
+import Subscribe from './pages/Subscribe'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
@@ -75,6 +76,7 @@ export default function App() {
           setCurrentPage('scan')
         }}
         onAdminClick={() => setCurrentPage('admin')}
+        onSubscribeClick={() => setCurrentPage('subscribe')}
       />
     )
   }
@@ -106,6 +108,10 @@ export default function App() {
 
   if (currentPage === 'admin') {
     return <Admin />
+  }
+
+  if (currentPage === 'subscribe') {
+    return <Subscribe onBack={() => setCurrentPage('dashboard')} />
   }
 
   return null
