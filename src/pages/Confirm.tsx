@@ -350,14 +350,14 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] py-4 sm:py-8 px-4">
+    <div className="min-h-screen bg-[#f1f5f9] py-4 sm:py-8 px-4">
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded-xl p-4 sm:p-6 lg:p-8 border border-[#e2e8f0]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1a2744]">Confirmation des données</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Confirmation des données</h1>
           <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs sm:text-sm font-semibold ${
             confidencePercent >= 80 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-orange-100 text-[#c17b3f]'
+              ? 'bg-[#dcfce7] text-[#166534]' 
+              : 'bg-[#fef3c7] text-[#92400e]'
           }`}>
             Confiance : {confidencePercent}%
           </span>
@@ -367,7 +367,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           {/* Mobile: Cards view - Desktop: Table view */}
           <div className="sm:hidden space-y-3">
             {(Object.keys(fieldLabels) as EditableKey[]).map((key) => (
-              <div key={key} className="bg-[#f1f5f9] rounded-lg p-3">
+              <div key={key} className="bg-[#f8fafc] rounded-lg p-3">
                 <label className="block text-xs font-semibold text-[#64748b] mb-1">
                   {fieldLabels[key]}
                 </label>
@@ -375,7 +375,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                   type="text"
                   value={formData[key]}
                   onChange={handleFieldChange(key)}
-                  className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#c17b3f] min-h-[48px] text-[#0f172a]"
+                  className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
                 />
               </div>
             ))}
@@ -387,7 +387,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               <tbody>
                 {(Object.keys(fieldLabels) as EditableKey[]).map((key) => (
                   <tr key={key} className="border-b border-[#e2e8f0] last:border-b-0">
-                    <th className="w-1/3 text-left font-semibold text-[#64748b] bg-[#f8f9fa] px-4 py-3">
+                    <th className="w-1/3 text-left font-semibold text-[#64748b] bg-[#f8fafc] px-4 py-3">
                       {fieldLabels[key]}
                     </th>
                     <td className="px-4 py-3">
@@ -395,7 +395,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                         type="text"
                         value={formData[key]}
                         onChange={handleFieldChange(key)}
-                        className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#c17b3f] text-[#0f172a]"
+                        className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
                       />
                     </td>
                   </tr>
@@ -405,7 +405,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           </div>
 
           <div>
-            <label htmlFor="roomNumber" className="block text-sm font-semibold text-[#0f172a] mb-2">
+            <label htmlFor="roomNumber" className="block text-sm font-semibold text-[#1e293b] mb-2">
               Numéro de chambre <span className="text-red-600">*</span>
             </label>
             <input
@@ -414,7 +414,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               required
               value={roomNumber}
               onChange={(e) => setRoomNumber(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#c17b3f] min-h-[48px] text-[#0f172a]"
+              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
               placeholder="Ex: 204"
             />
             {submitted && !roomNumber.trim() && (
@@ -453,7 +453,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
             <button
               type="submit"
               disabled={isGenerating}
-              className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#c17b3f] text-white font-bold hover:bg-[#a86835] transition-colors text-base sm:text-sm"
+              className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#1e3a8a] text-white font-bold hover:bg-[#1e40af] transition-colors text-base sm:text-sm"
             >
               {isGenerating ? 'Generation...' : '✓ CONFIRMER'}
             </button>
@@ -461,7 +461,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               type="button"
               disabled={isGenerating}
               onClick={handleReset}
-              className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#f1f5f9] text-[#64748b] font-semibold hover:bg-[#e2e8f0] transition-colors text-base sm:text-sm"
+              className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] font-semibold transition-colors text-base sm:text-sm"
             >
               ↻ RECOMMENCER
             </button>

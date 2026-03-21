@@ -4,24 +4,24 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-8">
       <div className="max-w-4xl w-full">
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-[#1a2744] rounded-full mb-3 sm:mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-[#1e3a8a] rounded-full mb-3 sm:mb-4">
             <span className="text-xl sm:text-2xl">🏨</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1a2744]">Check-in Express</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Check-in Express</h1>
           <p className="text-[#64748b] mt-2 text-sm sm:text-base">Choisissez votre formule d'abonnement</p>
         </div>
 
         {/* Pricing Cards */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Monthly Plan */}
-          <div className="bg-white border-2 border-[#e2e8f0] shadow-md rounded-2xl p-4 sm:p-6 w-full">
+          <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl shadow-md p-4 sm:p-6 w-full">
             <div className="text-center">
-              <h3 className="text-lg sm:text-xl font-bold text-[#1a2744] mb-2">Mensuel</h3>
-              <div className="text-2xl sm:text-3xl font-bold text-[#c17b3f] mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-[#1e3a8a] mb-2">Mensuel</h3>
+              <div className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-4">
                 89,99€
                 <span className="text-sm sm:text-lg font-normal text-[#64748b]">/mois</span>
               </div>
@@ -45,7 +45,7 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
               </ul>
               <button
                 onClick={handleSubscribe}
-                className="w-full bg-[#1a2744] text-white py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-bold hover:bg-[#243557] transition-colors text-base sm:text-sm"
+                className="w-full bg-[#1e3a8a] text-white py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-semibold hover:bg-[#1e40af] transition-colors text-base sm:text-sm"
               >
                 🚀 Choisir le mensuel
               </button>
@@ -53,10 +53,10 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* Annual Plan */}
-          <div className="bg-[#1a2744] border-2 border-[#c17b3f] shadow-xl rounded-2xl p-4 sm:p-6 text-white relative w-full">
+          <div className="bg-[#1e3a8a] border-2 border-[#1e3a8a] rounded-2xl shadow-xl p-4 sm:p-6 text-white relative w-full">
             {/* Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <span className="bg-[#c17b3f] text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
+              <span className="bg-yellow-400 text-[#1e3a8a] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
                 2 mois offerts !
               </span>
             </div>
@@ -65,36 +65,36 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
               <h3 className="text-lg sm:text-xl font-bold mb-2">Annuel</h3>
               <div className="text-2xl sm:text-3xl font-bold mb-4">
                 899,90€
-                <span className="text-sm sm:text-lg font-normal opacity-90">/an</span>
+                <span className="text-sm sm:text-lg font-normal text-blue-200">/an</span>
               </div>
-              <div className="text-xs sm:text-sm opacity-70 mb-4">
+              <div className="text-xs sm:text-sm text-blue-200 mb-4">
                 Économisez 179,98€ par an
               </div>
               <ul className="text-left space-y-2 mb-4 sm:mb-6 text-sm sm:text-base">
                 <li className="flex items-center">
-                  <span className="text-[#c17b3f] mr-2">✓</span>
+                  <span className="text-yellow-400 mr-2">✓</span>
                   Accès illimité aux scans
                 </li>
                 <li className="flex items-center">
-                  <span className="text-[#c17b3f] mr-2">✓</span>
+                  <span className="text-yellow-400 mr-2">✓</span>
                   Fiches de police personnalisées
                 </li>
                 <li className="flex items-center">
-                  <span className="text-[#c17b3f] mr-2">✓</span>
+                  <span className="text-yellow-400 mr-2">✓</span>
                   Support prioritaire 24/7
                 </li>
                 <li className="flex items-center">
-                  <span className="text-[#c17b3f] mr-2">✓</span>
+                  <span className="text-yellow-400 mr-2">✓</span>
                   Mises à jour automatiques
                 </li>
                 <li className="flex items-center">
-                  <span className="text-[#c17b3f] mr-2">✓</span>
+                  <span className="text-yellow-400 mr-2">✓</span>
                   Export avancé des données
                 </li>
               </ul>
               <button
                 onClick={handleSubscribe}
-                className="w-full bg-[#c17b3f] text-white py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-bold hover:bg-[#a86835] transition-colors text-base sm:text-sm"
+                className="w-full bg-white text-[#1e3a8a] py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-bold hover:bg-blue-50 transition-colors text-base sm:text-sm"
               >
                 🏆 Choisir l'annuel
               </button>
@@ -106,7 +106,7 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
         <div className="text-center">
           <button
             onClick={onBack}
-            className="inline-flex items-center text-[#c17b3f] hover:text-[#a86835] font-medium transition-colors text-sm sm:text-base"
+            className="inline-flex items-center text-[#1e3a8a] hover:text-[#1e40af] font-medium transition-colors text-sm sm:text-base"
           >
             ← Retour au dashboard
           </button>

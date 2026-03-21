@@ -98,11 +98,11 @@ export default function Admin() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Essai': return 'bg-yellow-100 text-yellow-700'
-      case 'Actif': return 'bg-green-100 text-green-700'
-      case 'Expiré': return 'bg-red-100 text-red-700'
-      case 'Suspendu': return 'bg-gray-100 text-gray-600'
-      default: return 'bg-gray-100 text-gray-600'
+      case 'Essai': return 'bg-[#fef3c7] text-[#92400e]'
+      case 'Actif': return 'bg-[#dcfce7] text-[#166534]'
+      case 'Expiré': return 'bg-[#fee2e2] text-[#991b1b]'
+      case 'Suspendu': return 'bg-[#f1f5f9] text-[#64748b]'
+      default: return 'bg-[#f1f5f9] text-[#64748b]'
     }
   }
 
@@ -198,9 +198,9 @@ export default function Admin() {
   const expiringTrials = getExpiringTrials()
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-[#f1f5f9]">
       {/* Header */}
-      <header className="bg-[#1a2744]">
+      <header className="bg-[#1e3a8a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -209,7 +209,7 @@ export default function Admin() {
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-md bg-transparent text-white border border-white/30 hover:bg-white/10 transition-colors"
+              className="px-4 py-2 rounded-md bg-transparent text-white border border-white hover:bg-white/10 transition-colors"
             >
               Déconnexion
             </button>
@@ -220,7 +220,7 @@ export default function Admin() {
       <main className="p-4 sm:p-6">
         {/* Alert Banner */}
         {expiringTrials.length > 0 && (
-          <div className="mb-6 bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-[#fee2e2] border border-red-200 text-[#991b1b] px-4 py-3 rounded-lg">
             <p className="font-medium">⚠️ {expiringTrials.length} compte(s) expirent dans moins de 2 jours</p>
           </div>
         )}
@@ -228,19 +228,19 @@ export default function Admin() {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#c17b3f] font-bold text-2xl sm:text-3xl mb-2">{stats.total}</div>
+            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.total}</div>
             <div className="text-[#64748b] text-xs sm:text-sm">Total inscrits</div>
           </div>
           <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#c17b3f] font-bold text-2xl sm:text-3xl mb-2">{stats.trial}</div>
+            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.trial}</div>
             <div className="text-[#64748b] text-xs sm:text-sm">En essai (live)</div>
           </div>
           <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#c17b3f] font-bold text-2xl sm:text-3xl mb-2">{stats.active}</div>
+            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.active}</div>
             <div className="text-[#64748b] text-xs sm:text-sm">Actifs (payants)</div>
           </div>
           <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#c17b3f] font-bold text-2xl sm:text-3xl mb-2">{stats.expired}</div>
+            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.expired}</div>
             <div className="text-[#64748b] text-xs sm:text-sm">Expirés</div>
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function Admin() {
         {/* Users Table */}
         <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#e2e8f0]">
-            <h2 className="text-base sm:text-lg font-bold text-[#1a2744]">Utilisateurs</h2>
+            <h2 className="text-base sm:text-lg font-bold text-[#1e3a8a]">Utilisateurs</h2>
           </div>
           
           {/* Mobile: Cards View */}
@@ -259,7 +259,7 @@ export default function Admin() {
                 <div key={profile.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[#0f172a] text-sm truncate">
+                      <div className="font-semibold text-[#1e293b] text-sm truncate">
                         {profile.hotel_name || 'Non spécifié'}
                       </div>
                       <div className="text-xs text-[#64748b] truncate">
@@ -274,11 +274,11 @@ export default function Admin() {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-[#64748b]">Pays:</span>
-                      <span className="ml-1 text-[#0f172a]">{profile.country || '-'}</span>
+                      <span className="ml-1 text-[#1e293b]">{profile.country || '-'}</span>
                     </div>
                     <div>
                       <span className="text-[#64748b]">Inscription:</span>
-                      <span className="ml-1 text-[#0f172a]">
+                      <span className="ml-1 text-[#1e293b]">
                         {new Date(profile.created_at).toLocaleDateString('fr-FR', {
                           day: '2-digit',
                           month: '2-digit',
@@ -288,7 +288,7 @@ export default function Admin() {
                     </div>
                     <div>
                       <span className="text-[#64748b]">Fin essai:</span>
-                      <span className="ml-1 text-[#0f172a]">
+                      <span className="ml-1 text-[#1e293b]">
                         {profile.trial_end 
                           ? new Date(profile.trial_end).toLocaleDateString('fr-FR', {
                               day: '2-digit',
@@ -301,16 +301,16 @@ export default function Admin() {
                     </div>
                     <div>
                       <span className="text-[#64748b]">Scans:</span>
-                      <span className="ml-1 text-[#0f172a]">{profile.total_scans || 0}</span>
+                      <span className="ml-1 text-[#1e293b]">{profile.total_scans || 0}</span>
                     </div>
                   </div>
                   
                   <div className="flex flex-wrap gap-2 pt-2">
-                    <button className="text-[#c17b3f] hover:underline text-xs">👁</button>
+                    <button className="text-[#1e3a8a] hover:underline text-xs">👁</button>
                     {status === 'Essai' && (
                       <button 
                         onClick={() => handleExtendTrial(profile.id)}
-                        className="text-[#c17b3f] hover:underline text-xs"
+                        className="text-[#1e3a8a] hover:underline text-xs"
                       >
                         ⏱ +7j
                       </button>
@@ -318,7 +318,7 @@ export default function Admin() {
                     {(status === 'Actif' || status === 'Essai') && (
                       <button 
                         onClick={() => handleSuspendUser(profile.id)}
-                        className="text-[#c17b3f] hover:underline text-xs"
+                        className="text-[#1e3a8a] hover:underline text-xs"
                       >
                         🚫
                       </button>
@@ -326,7 +326,7 @@ export default function Admin() {
                     {(status === 'Suspendu' || status === 'Expiré') && (
                       <button 
                         onClick={() => handleReactivateUser(profile.id)}
-                        className="text-[#c17b3f] hover:underline text-xs"
+                        className="text-[#1e3a8a] hover:underline text-xs"
                       >
                         ✅
                       </button>
@@ -340,7 +340,7 @@ export default function Admin() {
           {/* Desktop Table View */}
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#f8f9fa]">
+              <thead className="bg-[#f8fafc]">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#64748b] uppercase tracking-wider border-b border-[#e2e8f0]">Hôtel</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#64748b] uppercase tracking-wider border-b border-[#e2e8f0]">Email</th>
@@ -356,24 +356,24 @@ export default function Admin() {
                 {profiles.map((profile) => {
                   const status = getStatus(profile)
                   return (
-                    <tr key={profile.id} className="hover:bg-[#f8f9fa]">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0f172a]">
+                    <tr key={profile.id} className="hover:bg-[#f8fafc]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1e293b]">
                         {profile.hotel_name || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0f172a]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1e293b]">
                         {profile.email || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0f172a]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1e293b]">
                         {profile.country || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0f172a]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1e293b]">
                         {new Date(profile.created_at).toLocaleDateString('fr-FR', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric'
                         })}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0f172a]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1e293b]">
                         {profile.trial_end 
                           ? new Date(profile.trial_end).toLocaleDateString('fr-FR', {
                               day: '2-digit',
@@ -388,15 +388,15 @@ export default function Admin() {
                           {status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0f172a]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1e293b]">
                         {profile.total_scans || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button className="text-[#c17b3f] hover:underline text-xs">👁 Voir</button>
+                        <button className="text-[#1e3a8a] hover:underline text-xs">👁 Voir</button>
                         {status === 'Essai' && (
                           <button 
                             onClick={() => handleExtendTrial(profile.id)}
-                            className="text-[#c17b3f] hover:underline text-xs"
+                            className="text-[#1e3a8a] hover:underline text-xs"
                           >
                             ⏱ +7j
                           </button>
@@ -404,7 +404,7 @@ export default function Admin() {
                         {(status === 'Actif' || status === 'Essai') && (
                           <button 
                             onClick={() => handleSuspendUser(profile.id)}
-                            className="text-[#c17b3f] hover:underline text-xs"
+                            className="text-[#1e3a8a] hover:underline text-xs"
                           >
                             🚫 Suspendre
                           </button>
@@ -412,7 +412,7 @@ export default function Admin() {
                         {(status === 'Suspendu' || status === 'Expiré') && (
                           <button 
                             onClick={() => handleReactivateUser(profile.id)}
-                            className="text-[#c17b3f] hover:underline text-xs"
+                            className="text-[#1e3a8a] hover:underline text-xs"
                           >
                             ✅ Réactiver
                           </button>

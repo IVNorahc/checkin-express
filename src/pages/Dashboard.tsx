@@ -184,8 +184,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
-      <header className="fixed top-0 left-0 right-0 h-16 bg-[#1a2744] z-20 shadow-md">
+    <div className="min-h-screen bg-[#f1f5f9]">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[#1e3a8a] z-20 shadow-md">
         <div className="max-w-5xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between text-white flex-wrap gap-2">
           <p className="font-bold text-base sm:text-lg truncate flex-1 min-w-0">🏨 Check-in Express</p>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -193,7 +193,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               <button
                 type="button"
                 onClick={onAdminClick}
-                className="px-4 py-2 rounded-lg bg-[#c17b3f] hover:bg-[#a86835] text-white text-xs sm:text-sm font-medium transition-colors"
+                className="px-4 py-2 rounded-lg bg-white text-[#1e3a8a] text-xs sm:text-sm font-semibold hover:bg-[#dbeafe] transition-colors"
               >
                 ⚙️ Admin
               </button>
@@ -202,7 +202,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             <button
               type="button"
               onClick={handleSignOut}
-              className="px-2 py-1 sm:px-3 sm:py-1 rounded-lg border border-white/30 text-white text-xs sm:text-sm hover:bg-white/10 transition-colors"
+              className="px-2 py-1 sm:px-3 sm:py-1 rounded-lg border border-white text-white text-xs sm:text-sm hover:bg-white/10 transition-colors"
             >
               Déconnexion
             </button>
@@ -213,10 +213,10 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-10">
         <div className={`rounded-md px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base font-medium border ${
           trialBanner.className === 'bg-yellow-100 text-yellow-800' 
-            ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+            ? 'bg-[#fef3c7] text-[#92400e] border border-yellow-200'
             : trialBanner.className === 'bg-green-100 text-green-800'
-            ? 'bg-green-50 text-green-700 border border-green-200'
-            : 'bg-red-50 text-red-700 border border-red-200'
+            ? 'bg-[#dcfce7] text-[#166534] border border-green-200'
+            : 'bg-[#fee2e2] text-[#991b1b] border border-red-200'
         }`}>
           {trialBanner.text}
         </div>
@@ -229,7 +229,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={onScanComplete}
-            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-14 sm:h-16 rounded-xl bg-[#c17b3f] text-white text-base sm:text-[18px] font-bold shadow-lg hover:bg-[#a86835] transition-colors shadow-[#c17b3f]/25"
+            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-14 sm:h-16 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-[18px] font-bold shadow-lg hover:bg-[#1e40af] transition-colors"
           >
             📸 SCANNER UN DOCUMENT
           </button>
@@ -239,7 +239,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={handleSubscribeClick}
-            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-12 rounded-xl border-2 border-[#c17b3f] text-[#c17b3f] text-sm sm:text-[16px] font-semibold hover:bg-[#c17b3f] hover:text-white transition-colors"
+            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-12 rounded-xl border-2 border-[#1e3a8a] text-[#1e3a8a] text-sm sm:text-[16px] font-semibold hover:bg-[#1e3a8a] hover:text-white transition-colors"
           >
             💳 Passer à l'abonnement
           </button>
@@ -247,17 +247,17 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
         <section className="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-4">
           <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-5 text-center">
-            <div className="text-[#1a2744] font-bold text-2xl sm:text-3xl mb-2">{scansToday}</div>
+            <div className="text-[#1e3a8a] font-bold text-2xl sm:text-3xl mb-2">{scansToday}</div>
             <div className="text-[#64748b] text-xs sm:text-sm">Scans aujourd&apos;hui</div>
           </div>
           <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-5 text-center">
-            <div className="text-[#1a2744] font-bold text-2xl sm:text-3xl mb-2">{scansThisMonth}</div>
+            <div className="text-[#1e3a8a] font-bold text-2xl sm:text-3xl mb-2">{scansThisMonth}</div>
             <div className="text-[#64748b] text-xs sm:text-sm">Scans ce mois</div>
           </div>
         </section>
 
         <section className="mt-6 sm:mt-8 bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-          <h2 className="text-base sm:text-lg font-bold text-[#1a2744]">Derniers clients scannés</h2>
+          <h2 className="text-base sm:text-lg font-bold text-[#1e3a8a]">Derniers clients scannés</h2>
           {lastClients.length === 0 ? (
             <p className="mt-4 sm:mt-6 text-center text-gray-500 text-sm sm:text-base">Aucun scan pour le moment</p>
           ) : (
@@ -277,7 +277,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                     className="border border-[#e2e8f0] rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[#0f172a] text-sm sm:text-base truncate">
+                      <div className="font-semibold text-[#1e293b] text-sm sm:text-base truncate">
                         {client.surname} {client.givenNames}
                       </div>
                       <div className="text-xs sm:text-sm text-[#64748b]">
@@ -286,7 +286,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                     </div>
                     <div
                       className={`text-xs sm:text-sm font-semibold rounded-full px-2 sm:px-3 py-1 flex-shrink-0 ${
-                        client.printed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        client.printed ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[#fef3c7] text-[#92400e]'
                       }`}
                     >
                       {badgeText}
@@ -299,7 +299,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </section>
 
         <div className="mt-4 sm:mt-6 text-center">
-          <a href="#" className="text-[#c17b3f] font-medium hover:text-[#a86835] text-sm sm:text-base">
+          <a href="#" className="text-[#1e3a8a] font-medium hover:text-[#1e40af] text-sm sm:text-base">
             Voir l&apos;historique complet
           </a>
         </div>

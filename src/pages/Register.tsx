@@ -50,9 +50,9 @@ export default function Register({ onLoginClick }: RegisterProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-8">
       <div className="w-full max-w-md mx-4 sm:mx-auto bg-white shadow-md rounded-xl p-6 sm:p-8 border border-[#e2e8f0]">
-        <h1 className="text-center text-[#1a2744] font-bold text-2xl sm:text-3xl">
+        <h1 className="text-center text-[#1e3a8a] font-bold text-2xl sm:text-3xl">
           🏨 Check-in Express
         </h1>
         <p className="mt-1 text-center text-[#64748b] text-sm sm:text-base">
@@ -74,7 +74,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
               value={hotelName}
               onChange={(e) => setHotelName(e.target.value)}
               className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#c17b3f] focus:ring-1 focus:ring-[#c17b3f] min-h-[48px] text-[#0f172a] placeholder-[#94a3b8]"
+                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b] placeholder-[#94a3b8]"
             />
           </div>
 
@@ -89,7 +89,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#c17b3f] focus:ring-1 focus:ring-[#c17b3f] min-h-[48px] text-[#0f172a] placeholder-[#94a3b8]"
+                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b] placeholder-[#94a3b8]"
             />
           </div>
 
@@ -104,7 +104,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#c17b3f] focus:ring-1 focus:ring-[#c17b3f] min-h-[48px] text-[#0f172a] placeholder-[#94a3b8]"
+                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b] placeholder-[#94a3b8]"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#c17b3f] focus:ring-1 focus:ring-[#c17b3f] min-h-[48px] text-[#0f172a] placeholder-[#94a3b8]"
+                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b] placeholder-[#94a3b8]"
             />
           </div>
 
@@ -132,7 +132,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#c17b3f] focus:ring-1 focus:ring-[#c17b3f] min-h-[48px] text-[#0f172a]"
+                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b]"
             >
               <option value="France">France</option>
               <option value="Allemagne">Allemagne</option>
@@ -150,8 +150,8 @@ export default function Register({ onLoginClick }: RegisterProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 sm:h-12 bg-[#1a2744] text-white rounded-lg
-              hover:bg-[#243557] transition-colors disabled:opacity-60 disabled:cursor-not-allowed
+            className="w-full h-12 sm:h-12 bg-[#1e3a8a] text-white rounded-lg
+              hover:bg-[#1e40af] transition-colors disabled:opacity-60 disabled:cursor-not-allowed
               flex items-center justify-center gap-2 text-base sm:text-sm font-semibold"
           >
             {isLoading ? (
@@ -178,7 +178,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
         <div className="mt-4 text-center">
           <a
             href="#"
-            className="text-sm sm:text-base font-medium text-[#c17b3f] hover:text-[#a86835]"
+            className="text-sm sm:text-base font-medium text-[#1e3a8a] hover:text-[#1e40af]"
             onClick={(e) => {
               e.preventDefault()
               onLoginClick()
