@@ -64,7 +64,12 @@ export default function App() {
   }
 
   if (currentPage === 'register') {
-    return <Register onLoginClick={() => setCurrentPage('login')} />
+    return (
+      <Register 
+        onLoginClick={() => setCurrentPage('login')} 
+        onSubscribe={() => setCurrentPage('subscribe')} 
+      />
+    )
   }
 
   if (currentPage === 'dashboard') {
@@ -111,7 +116,11 @@ export default function App() {
   }
 
   if (currentPage === 'subscribe') {
-    return <Subscribe onBack={() => setCurrentPage('dashboard')} />
+    return (
+      <Subscribe 
+        onSubscribeSuccess={() => setCurrentPage('dashboard')} 
+      />
+    )
   }
 
   return null

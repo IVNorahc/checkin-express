@@ -3,9 +3,10 @@ import { supabase } from '../lib/supabase'
 
 type RegisterProps = {
   onLoginClick: () => void
+  onSubscribe: () => void
 }
 
-export default function Register({ onLoginClick }: RegisterProps) {
+export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
   const [hotelName, setHotelName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,7 +47,12 @@ export default function Register({ onLoginClick }: RegisterProps) {
       return
     }
 
-    setFeedback({ type: 'success', text: 'Compte créé ! Vérifiez votre email.' })
+    setFeedback({ type: 'success', text: 'Compte créé avec succès ! 🎉\nRedirection vers les abonnements...' })
+    
+    // Rediriger vers Subscribe après 2 secondes
+    setTimeout(() => {
+      onSubscribe()
+    }, 2000)
   }
 
   return (

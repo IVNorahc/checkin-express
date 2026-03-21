@@ -1,6 +1,16 @@
-export default function Subscribe({ onBack }: { onBack: () => void }) {
-  const handleSubscribe = () => {
-    window.open('https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02', '_blank')
+type SubscribeProps = {
+  onSubscribeSuccess: () => void
+}
+
+export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
+  const handleSubscribe = (planType: 'monthly' | 'annual') => {
+    const url = planType === 'monthly' 
+      ? 'https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02'
+      : 'https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02'
+    window.open(url, '_blank')
+    
+    // Rediriger vers le dashboard après clic sur un plan
+    onSubscribeSuccess()
   }
 
   return (
@@ -11,8 +21,16 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-[#1e3a8a] rounded-full mb-3 sm:mb-4">
             <span className="text-xl sm:text-2xl">🏨</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Check-in Express</h1>
-          <p className="text-[#64748b] mt-2 text-sm sm:text-base">Choisissez votre formule d'abonnement</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Bienvenue sur Check-in Express ! 🎉</h1>
+          <p className="text-[#64748b] mt-2 text-sm sm:text-base">Choisissez votre formule pour commencer</p>
+        </div>
+
+        {/* Success Banner */}
+        <div className="mb-6 sm:mb-8 bg-[#dcfce7] border border-green-200 text-[#166534] px-4 py-3 rounded-lg">
+          <p className="font-medium text-sm sm:text-base">
+            ✅ Votre compte a été créé avec succès !<br />
+            Complétez votre inscription en choisissant un abonnement.
+          </p>
         </div>
 
         {/* Pricing Cards */}
@@ -44,7 +62,7 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
                 </li>
               </ul>
               <button
-                onClick={handleSubscribe}
+                onClick={() => handleSubscribe('monthly')}
                 className="w-full bg-[#1e3a8a] text-white py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-semibold hover:bg-[#1e40af] transition-colors text-base sm:text-sm"
               >
                 🚀 Choisir le mensuel
@@ -93,7 +111,7 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
                 </li>
               </ul>
               <button
-                onClick={handleSubscribe}
+                onClick={() => handleSubscribe('annual')}
                 className="w-full bg-white text-[#1e3a8a] py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-bold hover:bg-blue-50 transition-colors text-base sm:text-sm"
               >
                 🏆 Choisir l'annuel
@@ -102,20 +120,19 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        {/* Back Button */}
-        <div className="text-center">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center text-[#1e3a8a] hover:text-[#1e40af] font-medium transition-colors text-sm sm:text-base"
-          >
-            ← Retour au dashboard
-          </button>
-        </div>
-
         {/* Trust indicators */}
         <div className="mt-8 sm:mt-12 text-center text-[#64748b] text-xs sm:text-sm">
-          <p className="mb-2">🔒 Paiement sécurisé via Lemon Squeezy</p>
-          <p>Annulation à tout moment • Sans engagement</p>
+          <p className="mb-2">🔒 Paiement 100% sécurisé via Lemon Squeezy • Annulation à tout moment</p>
+        </div>
+
+        {/* Free trial link */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={onSubscribeSuccess}
+            className="text-[#1e3a8a] hover:text-[#1e40af] font-medium transition-colors text-sm sm:text-base"
+          >
+            Essayer gratuitement 7 jours →
+          </button>
         </div>
       </div>
     </div>
