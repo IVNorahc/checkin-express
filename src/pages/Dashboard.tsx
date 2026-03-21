@@ -184,8 +184,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9]">
-      <header className="fixed top-0 left-0 right-0 h-16 bg-[#1e3a8a] z-20">
+    <div className="min-h-screen bg-dark">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-dark-blue z-20 border-b border-dark-border">
         <div className="max-w-5xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between text-white flex-wrap gap-2">
           <p className="font-semibold text-base sm:text-lg truncate flex-1 min-w-0">🏨 Check-in Express</p>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -193,7 +193,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               <button
                 type="button"
                 onClick={onAdminClick}
-                className="px-3 py-1 sm:px-4 sm:py-2 rounded-md bg-white text-[#1e3a8a] border border-[#1e3a8a] text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="px-3 py-1 sm:px-4 sm:py-2 rounded-md border border-primary text-primary text-xs sm:text-sm font-medium hover:bg-primary hover:text-white transition-colors"
                 style={{ borderRadius: '6px', padding: '8px 12px' }}
               >
                 ⚙️ Admin
@@ -203,7 +203,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             <button
               type="button"
               onClick={handleSignOut}
-              className="px-2 py-1 sm:px-3 sm:py-1 rounded-md border border-white text-white text-xs sm:text-sm hover:bg-white hover:text-[#1e3a8a] transition-colors"
+              className="px-2 py-1 sm:px-3 sm:py-1 rounded-md border border-gray-600 text-gray-300 text-xs sm:text-sm hover:bg-gray-700 transition-colors"
             >
               Déconnexion
             </button>
@@ -212,7 +212,11 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-10">
-        <div className={`rounded-md px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base font-medium ${trialBanner.className}`}>
+        <div className={`rounded-md px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base font-medium border ${
+          trialBanner.className === 'bg-yellow-100 text-yellow-800' 
+            ? 'bg-green-900/30 text-green-400 border border-green-800'
+            : trialBanner.className
+        }`}>
           {trialBanner.text}
         </div>
 
@@ -224,7 +228,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={onScanComplete}
-            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-14 sm:h-16 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-[18px] font-semibold shadow-lg hover:bg-[#162f6b] transition-colors"
+            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-14 sm:h-16 rounded-xl bg-primary text-white text-base sm:text-[18px] font-semibold shadow-lg hover:bg-primary-hover transition-colors shadow-primary/25"
           >
             📸 SCANNER UN DOCUMENT
           </button>
@@ -234,23 +238,23 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={handleSubscribeClick}
-            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-12 rounded-lg border-2 border-[#1e3a8a] text-[#1e3a8a] text-sm sm:text-[16px] font-medium hover:bg-[#1e3a8a] hover:text-white transition-colors"
+            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-12 rounded-lg border border-primary text-primary text-sm sm:text-[16px] font-medium hover:bg-primary hover:text-white transition-colors"
           >
             💳 Passer à l'abonnement
           </button>
         </section>
 
         <section className="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-4">
-          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-5 text-center font-medium text-sm sm:text-base">
+          <div className="bg-dark-card rounded-lg shadow-sm p-4 sm:p-5 text-center font-medium text-sm sm:text-base border border-dark-border text-white">
             Scans aujourd&apos;hui : {scansToday}
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-5 text-center font-medium text-sm sm:text-base">
+          <div className="bg-dark-card rounded-lg shadow-sm p-4 sm:p-5 text-center font-medium text-sm sm:text-base border border-dark-border text-white">
             Scans ce mois : {scansThisMonth}
           </div>
         </section>
 
-        <section className="mt-6 sm:mt-8 bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a8a]">Derniers clients scannés</h2>
+        <section className="mt-6 sm:mt-8 bg-dark-card rounded-lg shadow-sm p-4 sm:p-6 border border-dark-border">
+          <h2 className="text-base sm:text-lg font-semibold text-white">Derniers clients scannés</h2>
           {lastClients.length === 0 ? (
             <p className="mt-4 sm:mt-6 text-center text-gray-500 text-sm sm:text-base">Aucun scan pour le moment</p>
           ) : (
@@ -267,19 +271,19 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                 return (
                   <div
                     key={client.id}
-                    className="border border-gray-200 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3"
+                    className="border border-dark-border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                      <div className="font-semibold text-white text-sm sm:text-base truncate">
                         {client.surname} {client.givenNames}
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-600">
+                      <div className="text-xs sm:text-sm text-gray-400">
                         {dd}/{mm}/{yyyy} {hh}:{min} · Chambre {client.roomNumber}
                       </div>
                     </div>
                     <div
                       className={`text-xs sm:text-sm font-semibold rounded-full px-2 sm:px-3 py-1 flex-shrink-0 ${
-                        client.printed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800'
+                        client.printed ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'
                       }`}
                     >
                       {badgeText}
@@ -292,7 +296,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </section>
 
         <div className="mt-4 sm:mt-6 text-center">
-          <a href="#" className="text-[#1e3a8a] font-medium hover:underline text-sm sm:text-base">
+          <a href="#" className="text-primary font-medium hover:underline text-sm sm:text-base">
             Voir l&apos;historique complet
           </a>
         </div>

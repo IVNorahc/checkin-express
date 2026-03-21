@@ -309,11 +309,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               )}
 
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
-                <div className="relative w-[85%] h-[55%] rounded-[12px] border-[3px] border-[#1e3a8a]">
-                  <span className="absolute -top-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-l-[4px] border-[#60a5fa] rounded-tl-[12px]" />
-                  <span className="absolute -top-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-r-[4px] border-[#60a5fa] rounded-tr-[12px]" />
-                  <span className="absolute -bottom-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-l-[4px] border-[#60a5fa] rounded-bl-[12px]" />
-                  <span className="absolute -bottom-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-r-[4px] border-[#60a5fa] rounded-br-[12px]" />
+                <div className="relative w-[85%] h-[55%] rounded-[12px] border-[3px] border-primary">
+                  <span className="absolute -top-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-l-[4px] border-primary-hover rounded-tl-[12px]" />
+                  <span className="absolute -top-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-r-[4px] border-primary-hover rounded-tr-[12px]" />
+                  <span className="absolute -bottom-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-l-[4px] border-primary-hover rounded-bl-[12px]" />
+                  <span className="absolute -bottom-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-r-[4px] border-primary-hover rounded-br-[12px]" />
                 </div>
               </div>
             </div>
@@ -330,7 +330,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 type="button"
                 onClick={handleCapture}
                 disabled={isAnalyzing}
-                className="w-full h-12 sm:h-14 rounded-[50px] bg-[#1e3a8a] text-white text-base sm:text-lg font-semibold shadow-lg hover:bg-[#162f6b] transition-colors"
+                className="w-full h-12 sm:h-14 rounded-[50px] bg-primary text-white text-base sm:text-lg font-semibold shadow-lg hover:bg-primary-hover transition-colors"
               >
                 📸 CAPTURER
               </button>
@@ -338,7 +338,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 type="button"
                 onClick={handleManualInput}
                 disabled={isAnalyzing}
-                className="w-full h-12 rounded-lg bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] text-base font-medium hover:bg-gray-50 transition-colors"
+                className="w-full h-12 rounded-lg border border-primary text-primary bg-transparent font-medium hover:bg-primary hover:text-white transition-colors"
                 style={{ marginTop: '12px' }}
               >
                 ✏️ SAISIE MANUELLE
@@ -346,11 +346,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               <button
                 type="button"
                 onClick={onBack}
-                className="w-full h-12 rounded-[50px] border border-white text-white bg-transparent hover:bg-white/10 transition-colors"
+                className="w-full h-12 rounded-[50px] border border-gray-600 text-gray-300 bg-transparent hover:bg-gray-700 transition-colors"
               >
                 ✕ Annuler
               </button>
-              <p className="w-full text-center text-gray-400 text-xs sm:text-sm mt-2 px-4">
+              <p className="w-full text-center text-gray-500 text-xs sm:text-sm mt-2 px-4">
                 💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
               </p>
             </div>

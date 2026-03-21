@@ -35,12 +35,12 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-md mx-4 sm:mx-auto bg-white shadow-lg rounded-xl p-6 sm:p-8">
-        <h1 className="text-center text-[#1e3a8a] font-bold text-2xl sm:text-3xl">
+    <div className="min-h-screen bg-dark flex items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-md mx-4 sm:mx-auto bg-dark-card shadow-lg rounded-xl p-6 sm:p-8 border border-dark-border">
+        <h1 className="text-center text-primary font-bold text-2xl sm:text-3xl">
           🏨 Check-in Express
         </h1>
-        <p className="mt-1 text-center text-gray-500 text-sm sm:text-base">by Percepta</p>
+        <p className="mt-1 text-center text-gray-400 text-sm sm:text-base">by Percepta</p>
 
         <form
           className="mt-6 space-y-4"
@@ -56,8 +56,8 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
               placeholder="Email de l'hôtel"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#1e3a8a] focus:outline-none focus:ring-0 min-h-[48px]"
+              className="w-full border border-dark-border rounded-md px-4 py-3 text-base sm:text-sm bg-dark-secondary
+                focus:border-primary focus:outline-none focus:ring-0 min-h-[48px] text-white placeholder-gray-500"
             />
           </div>
 
@@ -71,18 +71,18 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
               placeholder="Mot de passe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#1e3a8a] focus:outline-none focus:ring-0 min-h-[48px]"
+              className="w-full border border-dark-border rounded-md px-4 py-3 text-base sm:text-sm bg-dark-secondary
+                focus:border-primary focus:outline-none focus:ring-0 min-h-[48px] text-white placeholder-gray-500"
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm sm:text-base text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm sm:text-base text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-[#1e3a8a]
-                focus:border-[#1e3a8a] focus:outline-none focus:ring-0"
+              className="h-4 w-4 rounded border-gray-300 text-primary
+                focus:border-primary focus:outline-none focus:ring-0"
             />
             Se souvenir de moi
           </label>
@@ -90,8 +90,8 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 sm:h-12 bg-[#1e3a8a] text-white rounded-lg
-              hover:bg-[#162f6b] transition-colors disabled:opacity-60 disabled:cursor-not-allowed
+            className="w-full h-12 sm:h-12 bg-primary text-white rounded-lg
+              hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed
               flex items-center justify-center gap-2 text-base sm:text-sm font-medium"
           >
             {isLoading ? (
@@ -108,7 +108,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
         {feedback && (
           <p
             className={`mt-4 text-sm sm:text-base text-center ${
-              feedback.type === 'success' ? 'text-green-600' : 'text-red-600'
+              feedback.type === 'success' ? 'text-green-400' : 'text-red-400'
             }`}
           >
             {feedback.text}
@@ -118,7 +118,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
         <div className="mt-4 text-center">
           <a
             href="#"
-            className="text-sm sm:text-base font-medium text-[#1e3a8a] hover:underline"
+            className="text-sm sm:text-base font-medium text-primary hover:underline"
             onClick={(e) => {
               e.preventDefault()
               onRegisterClick()

@@ -350,11 +350,15 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] py-4 sm:py-8 px-4">
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-dark py-4 sm:py-8 px-4">
+      <div className="max-w-3xl mx-auto bg-dark-card shadow-lg rounded-xl p-4 sm:p-6 lg:p-8 border border-dark-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Confirmation des données</h1>
-          <span className="inline-flex items-center justify-center rounded-full bg-[#dcfce7] px-3 py-1 text-xs sm:text-sm font-semibold text-[#166534]">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Confirmation des données</h1>
+          <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs sm:text-sm font-semibold ${
+            confidencePercent >= 80 
+              ? 'bg-green-900/30 text-green-400' 
+              : 'bg-orange-900/30 text-primary'
+          }`}>
             Confiance : {confidencePercent}%
           </span>
         </div>
@@ -363,27 +367,27 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           {/* Mobile: Cards view - Desktop: Table view */}
           <div className="sm:hidden space-y-3">
             {(Object.keys(fieldLabels) as EditableKey[]).map((key) => (
-              <div key={key} className="bg-gray-50 rounded-lg p-3">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <div key={key} className="bg-dark-secondary rounded-lg p-3">
+                <label className="block text-xs font-semibold text-gray-400 mb-1">
                   {fieldLabels[key]}
                 </label>
                 <input
                   type="text"
                   value={formData[key]}
                   onChange={handleFieldChange(key)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:border-[#1e3a8a] focus:outline-none focus:ring-0 min-h-[48px]"
+                  className="w-full border border-dark-border rounded-md px-3 py-2 text-base bg-dark-secondary focus:border-primary focus:outline-none focus:ring-0 min-h-[48px] text-white"
                 />
               </div>
             ))}
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto rounded-lg border border-gray-200">
+          <div className="hidden sm:block overflow-x-auto rounded-lg border border-dark-border">
             <table className="w-full text-sm">
               <tbody>
                 {(Object.keys(fieldLabels) as EditableKey[]).map((key) => (
-                  <tr key={key} className="border-b border-gray-100 last:border-b-0">
-                    <th className="w-1/3 text-left font-semibold text-gray-700 bg-gray-50 px-4 py-3">
+                  <tr key={key} className="border-b border-dark-border last:border-b-0">
+                    <th className="w-1/3 text-left font-semibold text-gray-400 bg-dark-secondary px-4 py-3">
                       {fieldLabels[key]}
                     </th>
                     <td className="px-4 py-3">
@@ -391,7 +395,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                         type="text"
                         value={formData[key]}
                         onChange={handleFieldChange(key)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:border-[#1e3a8a] focus:outline-none focus:ring-0"
+                        className="w-full border border-dark-border rounded-md px-3 py-2 bg-dark-secondary focus:border-primary focus:outline-none focus:ring-0 text-white"
                       />
                     </td>
                   </tr>
@@ -401,8 +405,8 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           </div>
 
           <div>
-            <label htmlFor="roomNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-              Numéro de chambre <span className="text-red-600">*</span>
+            <label htmlFor="roomNumber" className="block text-sm font-semibold text-gray-300 mb-2">
+              Numéro de chambre <span className="text-red-400">*</span>
             </label>
             <input
               id="roomNumber"
@@ -410,24 +414,24 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               required
               value={roomNumber}
               onChange={(e) => setRoomNumber(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-4 py-3 text-base bg-white focus:border-[#1e3a8a] focus:outline-none focus:ring-0 min-h-[48px]"
+              className="w-full border border-dark-border rounded-md px-4 py-3 text-base bg-dark-secondary focus:border-primary focus:outline-none focus:ring-0 min-h-[48px] text-white"
               placeholder="Ex: 204"
             />
             {submitted && !roomNumber.trim() && (
-              <p className="mt-2 text-sm text-red-600">Le numéro de chambre est obligatoire.</p>
+              <p className="mt-2 text-sm text-red-400">Le numéro de chambre est obligatoire.</p>
             )}
             {submitted && signatureEmpty && (
-              <p className="mt-2 text-sm text-red-600">La signature du client est obligatoire.</p>
+              <p className="mt-2 text-sm text-red-400">La signature du client est obligatoire.</p>
             )}
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Signature du client</p>
+            <p className="text-sm font-semibold text-gray-300 mb-2">Signature du client</p>
             <canvas
               ref={canvasRef}
               width={800}
               height={300}
-              className="w-full h-[120px] sm:h-[150px] bg-white border border-gray-300 rounded-lg touch-none"
+              className="w-full h-[120px] sm:h-[150px] bg-white border border-dark-border rounded-lg touch-none"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={stopDrawing}
@@ -439,7 +443,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
             <button
               type="button"
               onClick={handleClearSignature}
-              className="mt-2 text-xs text-gray-600 hover:underline"
+              className="mt-2 text-xs text-gray-400 hover:underline"
             >
               Effacer la signature
             </button>
@@ -449,7 +453,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
             <button
               type="submit"
               disabled={isGenerating}
-              className="h-12 w-full sm:w-auto px-6 rounded-lg bg-[#1e3a8a] text-white font-semibold shadow-sm hover:bg-[#162f6b] transition-colors text-base sm:text-sm"
+              className="h-12 w-full sm:w-auto px-6 rounded-lg bg-primary text-white font-semibold shadow-sm hover:bg-primary-hover transition-colors text-base sm:text-sm"
             >
               {isGenerating ? 'Generation...' : '✓ CONFIRMER'}
             </button>
@@ -457,13 +461,13 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               type="button"
               disabled={isGenerating}
               onClick={handleReset}
-              className="h-12 w-full sm:w-auto px-6 rounded-lg bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300 transition-colors text-base sm:text-sm"
+              className="h-12 w-full sm:w-auto px-6 rounded-lg bg-dark-secondary text-gray-300 font-semibold hover:bg-dark-secondary border border-dark-border transition-colors text-base sm:text-sm"
             >
               ↻ RECOMMENCER
             </button>
           </div>
 
-          {successMessage && <p className="text-sm text-green-600 font-medium">{successMessage}</p>}
+          {successMessage && <p className="text-sm text-green-400 font-medium">{successMessage}</p>}
         </form>
       </div>
     </div>

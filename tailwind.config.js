@@ -4,7 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: "#1e3a8a",
+        primary: "#c17b3f",
+        "primary-hover": "#d4863f",
+        dark: "#0a0f1e",
+        "dark-secondary": "#0d1526",
+        "dark-card": "#111827",
+        "dark-blue": "#1a2744",
+        "dark-border": "#1e2d45",
       },
     },
   },
