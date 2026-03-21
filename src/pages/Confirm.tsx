@@ -273,77 +273,334 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       printed,
     })
 
-    const pdf = new jsPDF()
-    let y = 18
-
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(16)
-    pdf.text('FICHE DE POLICE', 105, y, { align: 'center' })
-    y += 6
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(10)
-    pdf.text('(conforme decret 2013-981)', 105, y, { align: 'center' })
-    y += 8
-    pdf.text(`Date: ${now.toLocaleDateString('fr-FR')}`, 14, y)
-    y += 6
-    pdf.text(`N° enregistrement: ${registrationNumber}`, 14, y)
-
-    y += 10
-    pdf.setFont('helvetica', 'bold')
-    pdf.text('ETABLISSEMENT', 14, y)
-    y += 6
-    pdf.setFont('helvetica', 'normal')
-    pdf.text(`Nom: ${hotelName}`, 14, y)
-
-    y += 10
-    pdf.setFont('helvetica', 'bold')
-    pdf.text('IDENTITE DU CLIENT', 14, y)
-    y += 6
-    pdf.setFont('helvetica', 'normal')
-    const identityLines = [
-      `Type de document: ${formData.documentType}`,
-      `Pays d'emission: ${formData.issuingCountry}`,
-      `Nom: ${formData.surname}`,
-      `Prenom(s): ${formData.givenNames}`,
-      `Date de naissance: ${formData.dateOfBirth}`,
-      `Numero du document: ${formData.documentNumber}`,
-      `Nationalite: ${formData.nationality}`,
-      `Sexe: ${formData.sex}`,
-      `Date d'expiration: ${formData.expiryDate}`,
-      `Adresse: ${formData.address || '-'}`,
-      `Numero de chambre: ${roomNumber}`,
-    ]
-    identityLines.forEach((line) => {
-      pdf.text(line, 14, y)
-      y += 6
-    })
-
-    y += 2
-    pdf.setFont('helvetica', 'bold')
-    pdf.text("DOCUMENT D'IDENTITE", 14, y)
-    y += 6
-    pdf.setFont('helvetica', 'normal')
-    pdf.text(`Type: ${formData.documentType}`, 14, y)
-    y += 6
-    pdf.text(`Numero: ${formData.documentNumber}`, 14, y)
-    y += 6
-    pdf.text(`Expiration: ${formData.expiryDate}`, 14, y)
-    y += 10
-    pdf.text('Signature :', 14, y)
-
-    if (signatureDataUrl) {
-      pdf.addImage(signatureDataUrl, 'PNG', 40, y - 7, 80, 28)
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
+    
+    // Constants for card layout
+    const cardWidth = 100
+    const cardHeight = 140
+    const cardSpacing = 5
+    const pageWidth = 210
+    const pageHeight = 297
+    const borderWidth = 0.3
+    
+    // Helper function to draw dotted lines
+    const drawDottedLine = (x: number, y: number, width: number) => {
+      const dashLength = 2
+      const gapLength = 1
+      let currentX = x
+      
+      while (currentX < x + width) {
+        pdf.line(currentX, y, Math.min(currentX + dashLength, x + width), y)
+        currentX += dashLength + gapLength
+      }
     }
-
-    pdf.setFontSize(9)
-    pdf.text('Document genere par Check-in Express by Percepta', 105, 285, { align: 'center' })
+    
+    // Helper function to draw one card
+    const drawCard = (startX: number, startY: number) => {
+      // Draw card border
+      pdf.setLineWidth(borderWidth)
+      pdf.rect(startX, startY, cardWidth, cardHeight)
+      
+      let y = startY + 3
+      const x = startX + 3
+      const maxWidth = cardWidth - 6
+      
+      // EN-TÊTE
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(9)
+      pdf.text('HÔTEL EXEMPLE', x, y)
+      pdf.text('☎ 33 000 000 000', x + 45, y)
+      pdf.text('FICHE DE CONTRÔLE', x + 70, y)
+      y += 4
+      
+      // Separator line under header
+      pdf.line(x, y, x + maxWidth, y)
+      y += 3
+      
+      // SECTION 1 — IDENTITÉ
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      
+      // NOM
+      pdf.text('NOM :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.surname?.toUpperCase() || '', x + 15, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Name in capital letters', x, y + 2.5)
+      y += 5
+      
+      // Nom de jeune fille
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Nom de jeune fille :', x, y)
+      drawDottedLine(x + 25, y, maxWidth - 25)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Maiden name', x, y + 2.5)
+      y += 5
+      
+      // Prénoms
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Prénoms :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.givenNames || '', x + 15, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Christian name', x, y + 2.5)
+      y += 5
+      
+      // Né(e) le
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Né(e) le :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.dateOfBirth || '', x + 15, y)
+      pdf.text(' lieu', x + 30, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Date and place of birth', x, y + 2.5)
+      y += 5
+      
+      // Département
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Département :', x, y)
+      drawDottedLine(x + 20, y, maxWidth - 20)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('ou pays pour l\'étranger', x, y + 2.5)
+      y += 5
+      
+      // Country
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Country :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.issuingCountry || '', x + 15, y)
+      y += 6
+      
+      // SECTION 2 — PIÈCES D'IDENTITÉ
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7)
+      pdf.text('PIÈCES D\'IDENTITÉ', x, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Identity documents produced', x, y + 2.5)
+      y += 5
+      
+      // Nature
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Nature :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.documentType || '', x + 15, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Type of identity documents', x, y + 2.5)
+      y += 5
+      
+      // N°
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('N° :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.documentNumber || '', x + 8, y)
+      pdf.text('délivré le :', x + 35, y)
+      drawDottedLine(x + 50, y, maxWidth - 50)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('issued on', x + 35, y + 2.5)
+      y += 5
+      
+      // Second N°
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('N° :', x, y)
+      drawDottedLine(x + 8, y, maxWidth - 8)
+      y += 4
+      pdf.text('at :', x, y)
+      drawDottedLine(x + 10, y, maxWidth - 10)
+      y += 5
+      
+      // Date d'entrée
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Date d\'entrée au Sénégal :', x, y)
+      drawDottedLine(x + 35, y, maxWidth - 35)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Date of entry into Senegal', x, y + 2.5)
+      y += 5
+      
+      // Nationalité
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Nationalité :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.nationality || '', x + 20, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Nationality', x, y + 2.5)
+      y += 6
+      
+      // SECTION 3 — VOYAGE
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7)
+      pdf.text('SECTION 3 — VOYAGE (verso)', x, y)
+      y += 4
+      
+      // Profession
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Profession ou qualité :', x, y)
+      drawDottedLine(x + 35, y, maxWidth - 35)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Occupation', x, y + 2.5)
+      y += 5
+      
+      // Domicile
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Domicile habituel :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.address || '', x + 25, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Home address', x, y + 2.5)
+      y += 5
+      
+      // Date d'arrivée
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Date d\'arrivée dans l\'Établissement :', x, y)
+      pdf.setFont('helvetica', 'bold')
+      const arrivalDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      pdf.text(arrivalDate, x + 45, y)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Date of arriving in to Hotel', x, y + 2.5)
+      y += 5
+      
+      // Venant de
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Venant de :', x, y)
+      drawDottedLine(x + 20, y, maxWidth - 20)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Coming from', x, y + 2.5)
+      y += 5
+      
+      // Allant à
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Allant à :', x, y)
+      drawDottedLine(x + 20, y, maxWidth - 20)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Going to', x, y + 2.5)
+      y += 5
+      
+      // Country
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Country :', x, y)
+      drawDottedLine(x + 15, y, maxWidth - 15)
+      y += 5
+      
+      // Objet du voyage
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Objet du voyage :', x, y)
+      drawDottedLine(x + 30, y, maxWidth - 30)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Business, Health, Touring', x, y + 2.5)
+      y += 5
+      
+      // Nombre d'enfants
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Nombre d\'enfants < 15 ans :', x, y)
+      drawDottedLine(x + 35, y, maxWidth - 35)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Number of children under 15', x, y + 2.5)
+      y += 5
+      
+      // Immatriculation
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('N° immatriculation véhicule :', x, y)
+      drawDottedLine(x + 35, y, maxWidth - 35)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(5)
+      pdf.text('Car number plate', x, y + 2.5)
+      y += 6
+      
+      // SECTION 4 — SIGNATURE
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text('Le : ___________  Signature', x, y)
+      y += 3
+      
+      // Add signature image
+      if (signatureDataUrl) {
+        pdf.addImage(signatureDataUrl, 'PNG', x + 30, y - 2, 30, 12)
+      }
+      y += 8
+      
+      // Registration number
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.text(`N° d\'inscription sur le registre : ${registrationNumber}`, x, y)
+      y += 4
+      
+      // Room number
+      pdf.text(`Chambre N° : ${roomNumber}`, x, y)
+      y += 4
+      
+      // Phone
+      pdf.text('☎ :', x, y)
+      drawDottedLine(x + 8, y, maxWidth - 8)
+    }
+    
+    // Draw 4 cards (2x2 grid)
+    const startX = (pageWidth - (2 * cardWidth + cardSpacing)) / 2
+    const startY = (pageHeight - (2 * cardHeight + cardSpacing)) / 2
+    
+    // Top-left card
+    drawCard(startX, startY)
+    
+    // Top-right card
+    drawCard(startX + cardWidth + cardSpacing, startY)
+    
+    // Bottom-left card
+    drawCard(startX, startY + cardHeight + cardSpacing)
+    
+    // Bottom-right card
+    drawCard(startX + cardWidth + cardSpacing, startY + cardHeight + cardSpacing)
+    
+    // Draw separator lines
+    pdf.setLineWidth(borderWidth)
+    // Vertical separator
+    pdf.line(pageWidth / 2, startY - 2, pageWidth / 2, startY + 2 * cardHeight + cardSpacing + 2)
+    // Horizontal separator
+    pdf.line(startX - 2, pageHeight / 2, startX + 2 * cardWidth + cardSpacing + 2, pageHeight / 2)
 
     // 3) Générer et télécharger le PDF
     const pdfData = pdf.output('datauristring')
     await db.fichesPolice.update(fichePoliceId, { pdfData })
-    pdf.save(`fiche-police-${registrationNumber}.pdf`)
+    
+    // Generate filename with customer name and date
+    const customerName = formData.surname?.toUpperCase() || 'CLIENT'
+    const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+    pdf.save(`fiche-controle-${customerName}-${today}.pdf`)
 
-    setSuccessMessage('Fiche générée !')
+    setSuccessMessage('✅ 4 fiches générées !')
     setIsGenerating(false)
     // 4) Revenir au dashboard après affichage du message
     setTimeout(() => onConfirm(), 600)
