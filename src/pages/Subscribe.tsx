@@ -4,28 +4,28 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-8">
       <div className="max-w-4xl w-full">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1e3a8a] rounded-full mb-4">
-            <span className="text-2xl">🏨</span>
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-[#1e3a8a] rounded-full mb-3 sm:mb-4">
+            <span className="text-xl sm:text-2xl">🏨</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Check-in Express</h1>
-          <p className="text-gray-600 mt-2">Choisissez votre formule d'abonnement</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Check-in Express</h1>
+          <p className="text-gray-600 mt-2 text-sm sm:text-base">Choisissez votre formule d'abonnement</p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Monthly Plan */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-[#1e3a8a]">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-[#1e3a8a] w-full">
             <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Mensuel</h3>
-              <div className="text-3xl font-bold text-[#1e3a8a] mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Mensuel</h3>
+              <div className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-4">
                 89,99€
-                <span className="text-lg font-normal text-gray-600">/mois</span>
+                <span className="text-sm sm:text-lg font-normal text-gray-600">/mois</span>
               </div>
-              <ul className="text-left text-gray-600 mb-6 space-y-2">
+              <ul className="text-left text-gray-600 mb-4 sm:mb-6 space-y-2 text-sm sm:text-base">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
                   Accès illimité aux scans
@@ -45,7 +45,7 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
               </ul>
               <button
                 onClick={handleSubscribe}
-                className="w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors"
+                className="w-full bg-[#1e3a8a] text-white py-3 px-4 sm:py-3 sm:px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors text-base sm:text-sm"
               >
                 🚀 Choisir le mensuel
               </button>
@@ -53,24 +53,24 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* Annual Plan */}
-          <div className="bg-[#1e3a8a] rounded-xl shadow-lg p-6 text-white relative">
+          <div className="bg-[#1e3a8a] rounded-xl shadow-lg p-4 sm:p-6 text-white relative w-full">
             {/* Badge */}
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <span className="bg-yellow-400 text-[#1e3a8a] px-3 py-1 rounded-full text-sm font-bold">
+              <span className="bg-yellow-400 text-[#1e3a8a] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
                 2 mois offerts !
               </span>
             </div>
             
             <div className="text-center">
-              <h3 className="text-xl font-bold mb-2">Annuel</h3>
-              <div className="text-3xl font-bold mb-4">
+              <h3 className="text-lg sm:text-xl font-bold mb-2">Annuel</h3>
+              <div className="text-2xl sm:text-3xl font-bold mb-4">
                 899,90€
-                <span className="text-lg font-normal opacity-90">/an</span>
+                <span className="text-sm sm:text-lg font-normal opacity-90">/an</span>
               </div>
-              <div className="text-sm opacity-90 mb-4">
+              <div className="text-xs sm:text-sm opacity-90 mb-4">
                 Économisez 179,98€ par an
               </div>
-              <ul className="text-left space-y-2 mb-6">
+              <ul className="text-left space-y-2 mb-4 sm:mb-6 text-sm sm:text-base">
                 <li className="flex items-center">
                   <span className="text-yellow-300 mr-2">✓</span>
                   Accès illimité aux scans
@@ -94,7 +94,7 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
               </ul>
               <button
                 onClick={handleSubscribe}
-                className="w-full bg-white text-[#1e3a8a] py-3 px-6 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                className="w-full bg-white text-[#1e3a8a] py-3 px-4 sm:py-3 sm:px-6 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-base sm:text-sm"
               >
                 🏆 Choisir l'annuel
               </button>
@@ -106,14 +106,14 @@ export default function Subscribe({ onBack }: { onBack: () => void }) {
         <div className="text-center">
           <button
             onClick={onBack}
-            className="inline-flex items-center text-[#1e3a8a] hover:text-[#162f6b] font-medium transition-colors"
+            className="inline-flex items-center text-[#1e3a8a] hover:text-[#162f6b] font-medium transition-colors text-sm sm:text-base"
           >
             ← Retour au dashboard
           </button>
         </div>
 
         {/* Trust indicators */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
+        <div className="mt-8 sm:mt-12 text-center text-gray-500 text-xs sm:text-sm">
           <p className="mb-2">🔒 Paiement sécurisé via Lemon Squeezy</p>
           <p>Annulation à tout moment • Sans engagement</p>
         </div>

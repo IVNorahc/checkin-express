@@ -221,32 +221,119 @@ export default function Admin() {
         )}
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="text-3xl font-bold text-[#1e3a8a] mb-2">{stats.total}</div>
-            <div className="text-gray-600 text-sm">Total inscrits</div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-2">{stats.total}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Total inscrits</div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="text-3xl font-bold text-[#1e3a8a] mb-2">{stats.trial}</div>
-            <div className="text-gray-600 text-sm">En essai (live)</div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-2">{stats.trial}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">En essai (live)</div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="text-3xl font-bold text-[#1e3a8a] mb-2">{stats.active}</div>
-            <div className="text-gray-600 text-sm">Actifs (payants)</div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-2">{stats.active}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Actifs (payants)</div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="text-3xl font-bold text-[#1e3a8a] mb-2">{stats.expired}</div>
-            <div className="text-gray-600 text-sm">Expirés</div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-2">{stats.expired}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Expirés</div>
           </div>
         </div>
 
         {/* Users Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Utilisateurs</h2>
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Utilisateurs</h2>
           </div>
           
-          <div className="overflow-x-auto">
+          {/* Mobile: Cards View */}
+          <div className="sm:hidden divide-y divide-gray-200">
+            {profiles.map((profile) => {
+              const status = getStatus(profile)
+              return (
+                <div key={profile.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 text-sm truncate">
+                        {profile.hotel_name || 'Non spécifié'}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {profile.email || '-'}
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full flex-shrink-0 ${getStatusColor(status)}`}>
+                      {status}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-500">Pays:</span>
+                      <span className="ml-1 text-gray-900">{profile.country || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Inscription:</span>
+                      <span className="ml-1 text-gray-900">
+                        {new Date(profile.created_at).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Fin essai:</span>
+                      <span className="ml-1 text-gray-900">
+                        {profile.trial_end 
+                          ? new Date(profile.trial_end).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })
+                          : '-'
+                        }
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Scans:</span>
+                      <span className="ml-1 text-gray-900">{profile.total_scans || 0}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button className="text-blue-600 hover:text-blue-900 text-xs">👁</button>
+                    {status === 'Essai' && (
+                      <button 
+                        onClick={() => handleExtendTrial(profile.id)}
+                        className="text-green-600 hover:text-green-900 text-xs"
+                      >
+                        ⏱ +7j
+                      </button>
+                    )}
+                    {(status === 'Actif' || status === 'Essai') && (
+                      <button 
+                        onClick={() => handleSuspendUser(profile.id)}
+                        className="text-red-600 hover:text-red-900 text-xs"
+                      >
+                        🚫
+                      </button>
+                    )}
+                    {(status === 'Suspendu' || status === 'Expiré') && (
+                      <button 
+                        onClick={() => handleReactivateUser(profile.id)}
+                        className="text-green-600 hover:text-green-900 text-xs"
+                      >
+                        ✅
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>

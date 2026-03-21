@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+  import { useEffect, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import { analyzeDocument } from '../lib/gemini'
 
@@ -284,7 +284,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
           </div>
         ) : (
           <>
-            <div className="w-full max-w-xl aspect-[3/4] relative rounded-xl overflow-hidden">
+            <div className="w-full max-w-xl aspect-[3/4] relative rounded-xl overflow-hidden h-[60vh] max-h-[500px]">
               <Webcam
                 ref={webcamRef}
                 audio={false}
@@ -304,33 +304,33 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               {isAnalyzing && (
                 <div className="absolute inset-0 z-10 bg-black/50 flex flex-col items-center justify-center gap-3">
                   <span className="inline-block h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  <p className="text-lg font-medium">Analyse en cours...</p>
+                  <p className="text-base sm:text-lg font-medium text-center px-4">Analyse en cours...</p>
                 </div>
               )}
 
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
                 <div className="relative w-[85%] h-[55%] rounded-[12px] border-[3px] border-[#1e3a8a]">
-                  <span className="absolute -top-[3px] -left-[3px] w-10 h-10 border-t-[4px] border-l-[4px] border-[#60a5fa] rounded-tl-[12px]" />
-                  <span className="absolute -top-[3px] -right-[3px] w-10 h-10 border-t-[4px] border-r-[4px] border-[#60a5fa] rounded-tr-[12px]" />
-                  <span className="absolute -bottom-[3px] -left-[3px] w-10 h-10 border-b-[4px] border-l-[4px] border-[#60a5fa] rounded-bl-[12px]" />
-                  <span className="absolute -bottom-[3px] -right-[3px] w-10 h-10 border-b-[4px] border-r-[4px] border-[#60a5fa] rounded-br-[12px]" />
+                  <span className="absolute -top-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-l-[4px] border-[#60a5fa] rounded-tl-[12px]" />
+                  <span className="absolute -top-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-r-[4px] border-[#60a5fa] rounded-tr-[12px]" />
+                  <span className="absolute -bottom-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-l-[4px] border-[#60a5fa] rounded-bl-[12px]" />
+                  <span className="absolute -bottom-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-r-[4px] border-[#60a5fa] rounded-br-[12px]" />
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 w-full max-w-xl text-center text-white text-sm space-y-1">
+            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-white text-sm sm:text-base space-y-1 px-4">
               <p>📏 Placez le document bien à plat</p>
               <p>💡 Assurez-vous d'avoir un bon éclairage</p>
               <p>🔍 Remplissez le cadre avec le document</p>
               <p>⏱️ Restez immobile au moment de capturer</p>
             </div>
 
-            <div className="mt-8 w-full max-w-xl flex flex-col items-center gap-4">
+            <div className="mt-6 sm:mt-8 w-full max-w-xl flex flex-col items-center gap-3 sm:gap-4 px-4">
               <button
                 type="button"
                 onClick={handleCapture}
                 disabled={isAnalyzing}
-                className="w-full max-w-[340px] h-14 rounded-[50px] bg-[#1e3a8a] text-white text-lg font-semibold shadow-lg hover:bg-[#162f6b] transition-colors"
+                className="w-full h-12 sm:h-14 rounded-[50px] bg-[#1e3a8a] text-white text-base sm:text-lg font-semibold shadow-lg hover:bg-[#162f6b] transition-colors"
               >
                 📸 CAPTURER
               </button>
@@ -338,7 +338,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 type="button"
                 onClick={handleManualInput}
                 disabled={isAnalyzing}
-                className="w-full max-w-[340px] h-12 rounded-lg bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] text-base font-medium hover:bg-gray-50 transition-colors"
+                className="w-full h-12 rounded-lg bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] text-base font-medium hover:bg-gray-50 transition-colors"
                 style={{ marginTop: '12px' }}
               >
                 ✏️ SAISIE MANUELLE
@@ -346,11 +346,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               <button
                 type="button"
                 onClick={onBack}
-                className="w-full max-w-[340px] h-12 rounded-[50px] border border-white text-white bg-transparent hover:bg-white/10 transition-colors"
+                className="w-full h-12 rounded-[50px] border border-white text-white bg-transparent hover:bg-white/10 transition-colors"
               >
                 ✕ Annuler
               </button>
-              <p className="w-full max-w-[340px] text-center text-gray-400 text-sm mt-2">
+              <p className="w-full text-center text-gray-400 text-xs sm:text-sm mt-2 px-4">
                 💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
               </p>
             </div>
