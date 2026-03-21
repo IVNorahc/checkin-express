@@ -6,11 +6,12 @@ import { getDB, initDB, type Client } from '../lib/db'
 type DashboardProps = {
   onRequireLogin: () => void
   onScanComplete: () => void
+  onAdminClick?: () => void
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-export default function Dashboard({ onRequireLogin, onScanComplete }: DashboardProps) {
+export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick }: DashboardProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [now, setNow] = useState(Date.now())
@@ -92,6 +93,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete }: DashboardP
   const email = session?.user.email ?? ''
   const hotelName = (session?.user.user_metadata?.hotel_name as string | undefined) || email || 'Mon hôtel'
   const createdAt = session?.user.created_at
+  const isAdmin = email === 'admin@percepta.io'
 
   const daysRemaining = useMemo(() => {
     if (!createdAt) return 0
@@ -136,6 +138,15 @@ export default function Dashboard({ onRequireLogin, onScanComplete }: DashboardP
         <div className="max-w-5xl mx-auto h-full px-4 flex items-center justify-between text-white">
           <p className="font-semibold">🏨 Check-in Express</p>
           <div className="flex items-center gap-3">
+            {isAdmin && onAdminClick && (
+              <button
+                type="button"
+                onClick={onAdminClick}
+                className="px-3 py-1 rounded-md bg-white text-[#1e3a8a] text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                Dashboard Admin
+              </button>
+            )}
             <span className="text-sm">{hotelName}</span>
             <button
               type="button"

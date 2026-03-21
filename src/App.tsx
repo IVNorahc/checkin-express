@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
+import Admin from './pages/Admin'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
@@ -73,6 +74,7 @@ export default function App() {
           setOcrData(null)
           setCurrentPage('scan')
         }}
+        onAdminClick={() => setCurrentPage('admin')}
       />
     )
   }
@@ -100,6 +102,10 @@ export default function App() {
         onConfirm={() => setCurrentPage('dashboard')}
       />
     )
+  }
+
+  if (currentPage === 'admin') {
+    return <Admin />
   }
 
   return null
