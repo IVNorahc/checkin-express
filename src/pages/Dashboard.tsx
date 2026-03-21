@@ -93,7 +93,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const email = session?.user.email ?? ''
   const hotelName = (session?.user.user_metadata?.hotel_name as string | undefined) || email || 'Mon hôtel'
   const createdAt = session?.user.created_at
-  const isAdmin = email === 'admin@percepta.io'
+  const isAdmin = session?.user?.user_metadata?.is_admin === true
 
   const daysRemaining = useMemo(() => {
     if (!createdAt) return 0
@@ -142,9 +142,10 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               <button
                 type="button"
                 onClick={onAdminClick}
-                className="px-3 py-1 rounded-md bg-white text-[#1e3a8a] text-sm font-medium hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 rounded-md bg-white text-[#1e3a8a] border border-[#1e3a8a] text-sm font-medium hover:bg-gray-50 transition-colors"
+                style={{ borderRadius: '6px', padding: '8px 16px' }}
               >
-                Dashboard Admin
+                ⚙️ Admin
               </button>
             )}
             <span className="text-sm">{hotelName}</span>

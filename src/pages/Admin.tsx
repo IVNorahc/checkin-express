@@ -25,8 +25,8 @@ export default function Admin() {
     // Check if current user is admin
     const checkAdminAccess = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || user.email !== 'admin@percepta.io') {
-        setError('Accès refusé')
+      if (!user || !user.user_metadata?.is_admin) {
+        setError('Accès refusé ❌')
         return
       }
       loadUsers()
