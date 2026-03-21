@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-type User = {
+type Profile = {
   id: string
-  email: string
+  hotel_name: string | null
+  email: string | null
+  country: string | null
+  status: string
+  trial_start: string
+  trial_end: string
+  total_scans: number
   created_at: string
-  user_metadata: any
 }
 
 type UserStats = {
@@ -16,7 +21,7 @@ type UserStats = {
 }
 
 export default function Admin() {
-  const [users, setUsers] = useState<User[]>([])
+  const [profiles, setProfiles] = useState<Profile[]>([])
   const [stats, setStats] = useState<UserStats>({ total: 0, trial: 0, active: 0, expired: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,73 +34,66 @@ export default function Admin() {
         setError('Accès refusé ❌')
         return
       }
-      loadUsers()
+      loadProfiles()
     }
 
     checkAdminAccess()
   }, [])
 
-  const loadUsers = async () => {
+  const loadProfiles = async () => {
     try {
       setLoading(true)
-      const { data: { users }, error } = await supabase.auth.admin.listUsers()
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
       
       if (error) throw error
       
-      const formattedUsers = users.map(user => ({
-        id: user.id,
-        email: user.email || '',
-        created_at: user.created_at,
-        user_metadata: user.user_metadata || {}
-      }))
-
-      setUsers(formattedUsers)
-      calculateStats(formattedUsers)
+      setProfiles(profiles || [])
+      calculateStats(profiles || [])
     } catch (err) {
-      setError('Erreur lors du chargement des utilisateurs')
-      console.error('Error loading users:', err)
+      setError('Erreur lors du chargement des profils')
+      console.error('Error loading profiles:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const calculateStats = (userList: User[]) => {
+  const calculateStats = (profilesList: Profile[]) => {
     const now = new Date()
-    const stats = userList.reduce((acc, user) => {
-      acc.total++
-      
-      const trialEnd = user.user_metadata.trial_end
-      const status = user.user_metadata.status
-      
-      if (status === 'suspended') {
-        // Suspended users counted separately
-      } else if (trialEnd) {
-        const trialDate = new Date(trialEnd)
-        if (trialDate > now) {
-          acc.trial++
-        } else {
-          acc.expired++
-        }
-      } else {
-        acc.active++
-      }
-      
-      return acc
-    }, { total: 0, trial: 0, active: 0, expired: 0 })
+    
+    const total = profilesList?.length || 0
+    
+    const enEssai = profilesList?.filter(p => {
+      return p.status === 'trial' && 
+        new Date(p.trial_end) > now
+    }).length || 0
+    
+    const actifs = profilesList?.filter(p => 
+      p.status === 'active'
+    ).length || 0
+    
+    const expires = profilesList?.filter(p => {
+      return p.status === 'expired' || 
+        (p.status === 'trial' && 
+        new Date(p.trial_end) < now)
+    }).length || 0
 
-    setStats(stats)
+    setStats({ total, trial: enEssai, active: actifs, expired: expires })
   }
 
-  const getStatus = (user: User) => {
-    const trialEnd = user.user_metadata.trial_end
-    const status = user.user_metadata.status
+  const getStatus = (profile: Profile) => {
+    const trialEnd = new Date(profile.trial_end)
+    const now = new Date()
     
-    if (status === 'suspended') return 'Suspendu'
-    if (trialEnd) {
-      const trialDate = new Date(trialEnd)
-      return trialDate > new Date() ? 'Essai' : 'Expiré'
+    if (profile.status === 'suspended') return 'Suspendu'
+    if (profile.status === 'active') return 'Actif'
+    if (profile.status === 'expired') return 'Expiré'
+    if (profile.status === 'trial') {
+      return trialEnd > now ? 'Essai' : 'Expiré'
     }
-    return 'Actif'
+    return 'Inconnu'
   }
 
   const getStatusColor = (status: string) => {
@@ -110,13 +108,12 @@ export default function Admin() {
 
   const getExpiringTrials = () => {
     const now = new Date()
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
     
-    return users.filter(user => {
-      const trialEnd = user.user_metadata.trial_end
-      if (!trialEnd) return false
-      const trialDate = new Date(trialEnd)
-      return trialDate >= now && trialDate <= tomorrow
+    return profiles.filter(profile => {
+      if (profile.status !== 'trial') return false
+      const trialDate = new Date(profile.trial_end)
+      return trialDate >= now && trialDate <= twoDaysFromNow
     })
   }
 
@@ -125,65 +122,52 @@ export default function Admin() {
     window.location.reload()
   }
 
-  const handleExtendTrial = async (userId: string) => {
+  const handleExtendTrial = async (profileId: string) => {
     try {
-      const user = users.find(u => u.id === userId)
-      if (!user) return
+      const profile = profiles.find(p => p.id === profileId)
+      if (!profile) return
 
-      const currentEnd = user.user_metadata.trial_end ? new Date(user.user_metadata.trial_end) : new Date()
+      const currentEnd = new Date(profile.trial_end)
       const newEnd = new Date(currentEnd.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        user_metadata: {
-          ...user.user_metadata,
-          trial_end: newEnd.toISOString()
-        }
-      })
+      const { error } = await supabase
+        .from('profiles')
+        .update({ trial_end: newEnd.toISOString() })
+        .eq('id', profileId)
 
       if (error) throw error
       
-      loadUsers() // Refresh data
+      loadProfiles() // Refresh data
     } catch (err) {
       console.error('Error extending trial:', err)
     }
   }
 
-  const handleSuspendUser = async (userId: string) => {
+  const handleSuspendUser = async (profileId: string) => {
     try {
-      const user = users.find(u => u.id === userId)
-      if (!user) return
-
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        user_metadata: {
-          ...user.user_metadata,
-          status: 'suspended'
-        }
-      })
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'suspended' })
+        .eq('id', profileId)
 
       if (error) throw error
       
-      loadUsers() // Refresh data
+      loadProfiles() // Refresh data
     } catch (err) {
       console.error('Error suspending user:', err)
     }
   }
 
-  const handleReactivateUser = async (userId: string) => {
+  const handleReactivateUser = async (profileId: string) => {
     try {
-      const user = users.find(u => u.id === userId)
-      if (!user) return
-
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        user_metadata: {
-          ...user.user_metadata,
-          status: 'active',
-          trial_end: null
-        }
-      })
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'trial' })
+        .eq('id', profileId)
 
       if (error) throw error
       
-      loadUsers() // Refresh data
+      loadProfiles() // Refresh data
     } catch (err) {
       console.error('Error reactivating user:', err)
     }
@@ -232,7 +216,7 @@ export default function Admin() {
         {/* Alert Banner */}
         {expiringTrials.length > 0 && (
           <div className="mb-6 bg-orange-100 border border-orange-300 text-orange-800 px-4 py-3 rounded-lg">
-            <p className="font-medium">⚠️ {expiringTrials.length} essai(s) expire(nt) aujourd'hui ou demain</p>
+            <p className="font-medium">⚠️ {expiringTrials.length} compte(s) expirent dans moins de 2 jours</p>
           </div>
         )}
 
@@ -277,25 +261,33 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => {
-                  const status = getStatus(user)
+                {profiles.map((profile) => {
+                  const status = getStatus(profile)
                   return (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={profile.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.user_metadata.hotel_name || '-'}
+                        {profile.hotel_name || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.email}
+                        {profile.email || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.user_metadata.country || '-'}
+                        {profile.country || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(user.created_at).toLocaleDateString('fr-FR')}
+                        {new Date(profile.created_at).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.user_metadata.trial_end 
-                          ? new Date(user.user_metadata.trial_end).toLocaleDateString('fr-FR')
+                        {profile.trial_end 
+                          ? new Date(profile.trial_end).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })
                           : '-'
                         }
                       </td>
@@ -305,21 +297,21 @@ export default function Admin() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.user_metadata.scan_count || 0}
+                        {profile.total_scans || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button className="text-blue-600 hover:text-blue-900 text-xs">👁 Voir</button>
                         {status === 'Essai' && (
                           <button 
-                            onClick={() => handleExtendTrial(user.id)}
+                            onClick={() => handleExtendTrial(profile.id)}
                             className="text-green-600 hover:text-green-900 text-xs"
                           >
-                            ⏱ Prolonger (+7j)
+                            ⏱ +7j
                           </button>
                         )}
                         {(status === 'Actif' || status === 'Essai') && (
                           <button 
-                            onClick={() => handleSuspendUser(user.id)}
+                            onClick={() => handleSuspendUser(profile.id)}
                             className="text-red-600 hover:text-red-900 text-xs"
                           >
                             🚫 Suspendre
@@ -327,7 +319,7 @@ export default function Admin() {
                         )}
                         {(status === 'Suspendu' || status === 'Expiré') && (
                           <button 
-                            onClick={() => handleReactivateUser(user.id)}
+                            onClick={() => handleReactivateUser(profile.id)}
                             className="text-green-600 hover:text-green-900 text-xs"
                           >
                             ✅ Réactiver
