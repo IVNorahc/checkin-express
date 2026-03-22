@@ -1,0 +1,18 @@
+name: Daily Trial Notifications
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Chaque jour à 8h UTC
+  workflow_dispatch:      # Déclenchement manuel possible
+
+jobs:
+  send-notifications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send trial notifications
+        run: |
+          curl -X POST \
+            'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/send-notifications' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{}'
