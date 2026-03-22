@@ -72,10 +72,10 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
         {/* Cartes de tarification */}
         <div className="flex flex-col lg:flex-row gap-6 mb-12">
           
-          {/* CARTE 1 - STARTER */}
+          {/* Plan 1 - STARTER */}
           <div className="flex-1 bg-white border-2 border-[#e2e8f0] rounded-2xl p-6 shadow-md">
             <div className="text-center">
-              <h3 className="text-xl font-bold text-[#1e3a8a] mb-2">Starter</h3>
+              <h3 className="text-xl font-bold text-[#1e3a8a] mb-2">STARTER</h3>
               <p className="text-[#64748b] mb-6">Idéal pour les petits hôtels</p>
               
               <div className="text-3xl font-bold text-[#1e3a8a] mb-6">
@@ -86,31 +86,27 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
               <ul className="text-left space-y-3 mb-6">
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>200 scans inclus/mois</span>
+                  <span>200 scans inclus</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>Fiches de police PDF</span>
+                  <span>Fiches PDF</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>Signature électronique</span>
+                  <span>Signature</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>Historique clients</span>
+                  <span>Historique</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
                   <span>Support email</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-red-500 mr-2">❌</span>
-                  <span>Scans supplémentaires</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-red-500 mr-2">❌</span>
-                  <span>Support prioritaire</span>
+                  <span className="text-[#64748b] mr-2">•</span>
+                  <span>0,25€/scan supplémentaire</span>
                 </li>
               </ul>
               
@@ -125,17 +121,13 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                     <span>Redirection vers le paiement sécurisé...</span>
                   </>
                 ) : (
-                  'Choisir Starter'
+                  'Choisir STARTER'
                 )}
               </button>
-              
-              <p className="text-sm text-[#64748b] mt-4 text-center">
-                0,25€/scan au-delà
-              </p>
             </div>
           </div>
 
-          {/* CARTE 2 - BUSINESS */}
+          {/* Plan 2 - BUSINESS (mis en avant) */}
           <div className="flex-1 bg-[#1e3a8a] border-2 border-[#1e3a8a] rounded-2xl p-6 shadow-xl transform lg:scale-105">
             <div className="text-center">
               {/* Badge */}
@@ -143,7 +135,7 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                 ⭐ Plus populaire
               </div>
               
-              <h3 className="text-xl font-bold text-white mb-2">Business</h3>
+              <h3 className="text-xl font-bold text-white mb-2">BUSINESS</h3>
               <p className="text-blue-200 mb-6">Pour les hôtels actifs</p>
               
               <div className="text-3xl font-bold text-white mb-6">
@@ -154,19 +146,11 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
               <ul className="text-left space-y-3 mb-6 text-blue-100">
                 <li className="flex items-center">
                   <span className="text-yellow-400 mr-2">✅</span>
-                  <span>500 scans inclus/mois</span>
+                  <span>500 scans inclus</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-yellow-400 mr-2">✅</span>
-                  <span>Fiches de police PDF</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-yellow-400 mr-2">✅</span>
-                  <span>Signature électronique</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-yellow-400 mr-2">✅</span>
-                  <span>Historique clients</span>
+                  <span>Tout Starter +</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-yellow-400 mr-2">✅</span>
@@ -174,11 +158,11 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                 </li>
                 <li className="flex items-center">
                   <span className="text-yellow-400 mr-2">✅</span>
-                  <span>0,25€/scan supplémentaire</span>
+                  <span>Dashboard statistiques</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-yellow-400 mr-2">✅</span>
-                  <span>Dashboard statistiques avancé</span>
+                  <span className="text-blue-200 mr-2">•</span>
+                  <span>0,25€/scan supplémentaire</span>
                 </li>
               </ul>
               
@@ -193,17 +177,13 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                     <span>Redirection vers le paiement sécurisé...</span>
                   </>
                 ) : (
-                  'Choisir Business'
+                  'Choisir BUSINESS'
                 )}
               </button>
-              
-              <p className="text-sm text-blue-200 mt-4 text-center">
-                0,25€/scan au-delà
-              </p>
             </div>
           </div>
 
-          {/* CARTE 3 - ENTERPRISE */}
+          {/* Plan 3 - ENTERPRISE */}
           <div className="flex-1 bg-white border-2 border-[#e2e8f0] rounded-2xl p-6 shadow-md">
             <div className="text-center">
               {/* Badge */}
@@ -211,7 +191,7 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                 🏆 Tout illimité
               </div>
               
-              <h3 className="text-xl font-bold text-[#1e3a8a] mb-2">Enterprise</h3>
+              <h3 className="text-xl font-bold text-[#1e3a8a] mb-2">ENTERPRISE</h3>
               <p className="text-[#64748b] mb-6">Pour les grandes structures</p>
               
               <div className="text-3xl font-bold text-[#1e3a8a] mb-6">
@@ -222,27 +202,15 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
               <ul className="text-left space-y-3 mb-6">
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span className="font-bold">Scans ILLIMITÉS</span>
+                  <span>Scans illimités</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>Fiches de police PDF</span>
+                  <span>Tout Business +</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>Signature électronique</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-600 mr-2">✅</span>
-                  <span>Historique clients illimité</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-600 mr-2">✅</span>
-                  <span>Support 24/7 prioritaire</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-600 mr-2">✅</span>
-                  <span>Onboarding personnalisé</span>
+                  <span>Support 24/7</span>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
@@ -250,7 +218,7 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
-                  <span>API accès</span>
+                  <span>Onboarding personnalisé</span>
                 </li>
               </ul>
               
@@ -265,107 +233,9 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
                     <span>Redirection vers le paiement sécurisé...</span>
                   </>
                 ) : (
-                  'Choisir Enterprise'
+                  'Choisir ENTERPRISE'
                 )}
               </button>
-              
-              <p className="text-sm text-[#64748b] mt-4 text-center">
-                Aucun frais supplémentaire
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Section comparaison */}
-        <div className="bg-white rounded-xl p-6 mb-8 shadow-md">
-          <h3 className="text-xl font-bold text-[#1e3a8a] mb-4">Comparaison des formules</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 px-4">Fonctionnalité</th>
-                  <th className="text-center py-2 px-4">Starter</th>
-                  <th className="text-center py-2 px-4">Business</th>
-                  <th className="text-center py-2 px-4">Enterprise</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-2 px-4">Scans inclus</td>
-                  <td className="text-center py-2 px-4">200</td>
-                  <td className="text-center py-2 px-4">500</td>
-                  <td className="text-center py-2 px-4 font-bold">Illimité</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 px-4">Scans supp.</td>
-                  <td className="text-center py-2 px-4">0,25€</td>
-                  <td className="text-center py-2 px-4">0,25€</td>
-                  <td className="text-center py-2 px-4 font-bold">Inclus</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 px-4">Fiches PDF</td>
-                  <td className="text-center py-2 px-4">✅</td>
-                  <td className="text-center py-2 px-4">✅</td>
-                  <td className="text-center py-2 px-4">✅</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 px-4">Support</td>
-                  <td className="text-center py-2 px-4">Email</td>
-                  <td className="text-center py-2 px-4">Prioritaire</td>
-                  <td className="text-center py-2 px-4 font-bold">24/7</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 px-4">Multi-users</td>
-                  <td className="text-center py-2 px-4">❌</td>
-                  <td className="text-center py-2 px-4">❌</td>
-                  <td className="text-center py-2 px-4">✅</td>
-                </tr>
-                <tr>
-                  <td className="py-2 px-4 font-bold">Prix/mois</td>
-                  <td className="text-center py-2 px-4 font-bold">49,99€</td>
-                  <td className="text-center py-2 px-4 font-bold">89,99€</td>
-                  <td className="text-center py-2 px-4 font-bold">149,99€</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Section FAQ */}
-        <div className="bg-white rounded-xl p-6 mb-8 shadow-md">
-          <h3 className="text-xl font-bold text-[#1e3a8a] mb-4">Questions fréquentes</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="font-semibold text-[#1e3a8a] mb-2">
-                Q: Puis-je changer de plan ?
-              </p>
-              <p className="text-[#64748b]">
-                R: Oui, à tout moment depuis votre dashboard.
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold text-[#1e3a8a] mb-2">
-                Q: Que se passe-t-il après les scans inclus ?
-              </p>
-              <p className="text-[#64748b]">
-                R: 0,25€ par scan supplémentaire, automatiquement facturé.
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold text-[#1e3a8a] mb-2">
-                Q: Y a-t-il un engagement ?
-              </p>
-              <p className="text-[#64748b]">
-                R: Non, annulation possible à tout moment.
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold text-[#1e3a8a] mb-2">
-                Q: Les données sont-elles sécurisées ?
-              </p>
-              <p className="text-[#64748b]">
-                R: Oui, conformité RGPD totale. Les données clients restent sur votre appareil.
-              </p>
             </div>
           </div>
         </div>
@@ -376,54 +246,37 @@ export default function Subscribe({ onSubscribeSuccess }: SubscribeProps) {
             <p className="text-[#1e3a8a] font-medium mb-3">
               ✅ Une fois votre paiement effectué, cliquez sur 'Actualiser mon accès'
             </p>
-              </li>
-              <li className="flex items-center">
-                <span className="text-yellow-400 mr-2">✓</span>
-                Export avancé des données
-              </li>
-            </ul>
             <button
-              onClick={() => handleSubscribe('annual')}
+              onClick={handleRefreshAccess}
               disabled={isLoading}
-              className="w-full bg-white text-[#1e3a8a] py-3 px-4 sm:py-3 sm:px-6 rounded-xl font-bold hover:bg-blue-50 transition-colors text-base sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="bg-[#1e3a8a] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#1e40af] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
             >
               {isLoading ? (
                 <>
-                  <FaSpinner className="animate-spin" />
-                  <span>Redirection vers le paiement sécurisé...</span>
+                  <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <span>Vérification...</span>
                 </>
               ) : (
-                '🏆 Choisir l\'annuel'
+                '✅ Actualiser mon accès'
               )}
             </button>
           </div>
-        <div className="mt-8 sm:mt-12 text-center text-[#64748b] text-xs sm:text-sm">
-          <p className="mb-2">🔒 Paiement 100% sécurisé via Lemon Squeezy • Annulation à tout moment</p>
+        )}
+
+        {/* Footer */}
+        <div className="text-center text-sm text-[#64748b] space-y-2">
+          <p>🔒 Paiement sécurisé via Lemon Squeezy</p>
+          <p>Annulation à tout moment • Sans engagement</p>
+          <p>Des questions ? <a href="mailto:contact@percepta.io" className="text-[#1e3a8a] hover:underline">contact@percepta.io</a></p>
         </div>
 
-        {/* Payment message */}
-        <div className="mt-4 sm:mt-6 text-center text-[#64748b] text-xs sm:text-sm">
-          <p className="mb-2">
-            Une fois votre paiement effectué, revenez sur cette page et 
-            actualisez pour accéder à votre compte.
-          </p>
-        </div>
-
-        {/* Free trial link */}
-        <div className="mt-6 text-center">
+        {/* Lien d'essai gratuit */}
+        <div className="text-center mt-6">
           <button
-            onClick={handleRefreshAccess}
-            disabled={isLoading}
-            className="text-[#1e3a8a] hover:text-[#1e40af] font-medium transition-colors text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            onClick={onSubscribeSuccess}
+            className="text-[#1e3a8a] hover:text-[#1e40af] font-medium transition-colors"
           >
-            {isLoading ? (
-              <>
-                <span className="inline-block h-4 w-4 rounded-full border-2 border-[#1e3a8a] border-t-transparent animate-spin" />
-                <span>Vérification...</span>
-              </>
-            ) : (
-              '✅ J\'ai payé, actualiser mon accès'
-            )}
+            Essayer gratuitement 7 jours →
           </button>
         </div>
       </div>
