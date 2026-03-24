@@ -118,7 +118,8 @@ export default function App() {
   if (currentPage === 'subscribe') {
     return (
       <Subscribe 
-        onSubscribeSuccess={() => setCurrentPage('dashboard')} 
+        onBack={() => setCurrentPage('dashboard')} 
+        showWelcome={true}
       />
     )
   }
