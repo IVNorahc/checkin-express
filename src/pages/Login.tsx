@@ -35,100 +35,192 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-md mx-4 sm:mx-auto bg-white shadow-md rounded-xl p-6 sm:p-8 border border-[#e2e8f0]">
-        <h1 className="text-center text-[#1e3a8a] font-bold text-2xl sm:text-3xl">
-          🏨 Check-in Express
-        </h1>
-        <p className="mt-1 text-center text-[#64748b] text-sm sm:text-base">by Percepta</p>
-
-        <form
-          className="mt-6 space-y-4"
-          onSubmit={handleSubmit}
-        >
-          <div>
-            <label className="sr-only" htmlFor="email">
-              Email de l'hôtel
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Email de l'hôtel"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b] placeholder-[#94a3b8]"
-            />
+    <div className="bg-hotel" style={{minHeight:"100vh"}}>
+      <div className="bg-overlay" style={{minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center"}}>
+        
+        <div style={{
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(10px)",
+          borderRadius: "20px",
+          padding: "48px 40px",
+          width: "100%",
+          maxWidth: "420px",
+          boxShadow: "0 20px 60px rgba(30,58,138,0.15)",
+          border: "1px solid rgba(191,219,254,0.5)"
+        }}>
+          
+          {/* Logo centré */}
+          <div style={{textAlign:"center", marginBottom:"32px"}}>
+            <div style={{
+              width:"72px", height:"72px",
+              background:"linear-gradient(135deg, #1e3a8a, #4a90d9)",
+              borderRadius:"20px",
+              display:"flex", alignItems:"center",
+              justifyContent:"center",
+              margin:"0 auto 16px",
+              fontSize:"32px",
+              boxShadow:"0 8px 24px rgba(30,58,138,0.3)"
+            }}>🏨</div>
+            <h1 style={{color:"#1e3a8a", fontSize:"26px", fontWeight:"800", margin:"0 0 4px"}}>
+              Check-in Express
+            </h1>
+            <p style={{color:"#4a90d9", fontSize:"14px", margin:0, fontWeight:"500"}}>
+              by Percepta
+            </p>
           </div>
 
-          <div>
-            <label className="sr-only" htmlFor="password">
-              Mot de passe
+          <form onSubmit={handleSubmit}>
+            <div style={{marginBottom:"16px"}}>
+              <input
+                type="email"
+                placeholder="Email de l'hôtel"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  background: "rgba(232,244,253,0.5)",
+                  border: "1.5px solid #bfdbfe",
+                  borderRadius: "10px",
+                  padding: "12px 16px",
+                  fontSize: "15px",
+                  color: "#1e293b",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  outline: "none"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#1e3a8a"
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#bfdbfe"
+                }}
+              />
+            </div>
+
+            <div style={{marginBottom:"16px"}}>
+              <input
+                type="password"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  background: "rgba(232,244,253,0.5)",
+                  border: "1.5px solid #bfdbfe",
+                  borderRadius: "10px",
+                  padding: "12px 16px",
+                  fontSize: "15px",
+                  color: "#1e293b",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  outline: "none"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#1e3a8a"
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#bfdbfe"
+                }}
+              />
+            </div>
+
+            <label style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              color: "#64748b",
+              cursor: "pointer",
+              marginBottom: "24px"
+            }}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "4px",
+                  border: "1px solid #bfdbfe",
+                  backgroundColor: "white"
+                }}
+              />
+              Se souvenir de moi
             </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base sm:text-sm bg-white
-                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] min-h-[48px] text-[#1e293b] placeholder-[#94a3b8]"
-            />
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+                color: "white",
+                borderRadius: "10px",
+                padding: "14px",
+                fontWeight: "700",
+                boxShadow: "0 4px 16px rgba(30,58,138,0.3)",
+                width: "100%",
+                border: "none",
+                fontSize: "15px",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+            >
+              {isLoading ? (
+                <span style={{display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"}}>
+                  <span style={{
+                    display: "inline-block",
+                    width: "16px",
+                    height: "16px",
+                    border: "2px solid white",
+                    borderTop: "2px solid transparent",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite"
+                  }}></span>
+                  Connexion...
+                </span>
+              ) : (
+                'Se connecter'
+              )}
+            </button>
+          </form>
+
+          {feedback && (
+            <p
+              style={{
+                marginTop: "16px",
+                fontSize: "14px",
+                textAlign: "center",
+                color: feedback.type === 'success' ? '#16a34a' : '#dc2626'
+              }}
+            >
+              {feedback.text}
+            </p>
+          )}
+
+          <div style={{textAlign: "center", marginTop: "16px"}}>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                onRegisterClick()
+              }}
+              style={{
+                color: "#4a90d9",
+                fontWeight: "600",
+                fontSize: "14px",
+                textDecoration: "none"
+              }}
+            >
+              Pas encore de compte ? S'inscrire
+            </a>
           </div>
-
-          <label className="flex items-center gap-2 text-sm sm:text-base text-[#64748b] cursor-pointer">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-[#1e3a8a]
-                focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a]"
-            />
-            Se souvenir de moi
-          </label>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 sm:h-12 bg-[#1e3a8a] text-white rounded-lg
-              hover:bg-[#1e40af] transition-colors disabled:opacity-60 disabled:cursor-not-allowed
-              flex items-center justify-center gap-2 text-base sm:text-sm font-semibold"
-          >
-            {isLoading ? (
-              <>
-                <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                Connexion...
-              </>
-            ) : (
-              'Se connecter'
-            )}
-          </button>
-        </form>
-
-        {feedback && (
-          <p
-            className={`mt-4 text-sm sm:text-base text-center ${
-              feedback.type === 'success' ? 'text-green-600' : 'text-red-600'
-            }`}
-          >
-            {feedback.text}
-          </p>
-        )}
-
-        <div className="mt-4 text-center">
-          <a
-            href="#"
-            className="text-sm sm:text-base font-medium text-[#1e3a8a] hover:text-[#1e40af]"
-            onClick={(e) => {
-              e.preventDefault()
-              onRegisterClick()
-            }}
-          >
-            Pas encore de compte ? S&apos;inscrire
-          </a>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
-

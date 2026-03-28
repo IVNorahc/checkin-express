@@ -95,7 +95,6 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const [formData, setFormData] = useState<FormData>(effectiveFormData)
   const [roomNumber, setRoomNumber] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [hotelName, setHotelName] = useState('Hotel inconnu')
   const [isGenerating, setIsGenerating] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [signatureEmpty, setSignatureEmpty] = useState(true)
@@ -109,16 +108,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
     setFormData((prev) => ({ ...prev, [key]: e.target.value }))
   }
 
-  useEffect(() => {
-    const loadHotelName = async () => {
-      const { data } = await supabase.auth.getSession()
-      const name = data.session?.user.user_metadata?.hotel_name as string | undefined
-      setHotelName(name || 'Hotel inconnu')
-    }
-
-    void loadHotelName()
-  }, [])
-
+  
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return

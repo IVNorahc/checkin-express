@@ -105,7 +105,6 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
   const email = session?.user.email ?? ''
   const hotelName = (session?.user.user_metadata?.hotel_name as string | undefined) || email || 'Mon hôtel'
-  const createdAt = session?.user.created_at
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
   const daysRemaining = useMemo(() => {
@@ -275,30 +274,78 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9]">
-      <header className="fixed top-0 left-0 right-0 h-16 bg-[#1e3a8a] z-20 shadow-md">
-        <div className="max-w-5xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between text-white flex-wrap gap-2">
-          <p className="font-bold text-base sm:text-lg truncate flex-1 min-w-0">🏨 Check-in Express</p>
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+    <div style={{minHeight: "100vh", background: "#e8f4fd"}}>
+      <header style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "64px",
+        background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+        zIndex: 20,
+        boxShadow: "0 4px 16px rgba(30,58,138,0.2)"
+      }}>
+        <div style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          height: "100%",
+          padding: "0 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          color: "white",
+          flexWrap: "wrap",
+          gap: "8px"
+        }}>
+          <p style={{fontWeight: "bold", fontSize: "18px", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+            🏨 Check-in Express
+          </p>
+          <div style={{display: "flex", alignItems: "center", gap: "12px", flexShrink: 0}}>
             {isAdmin && onAdminClick && (
               <button
                 type="button"
                 onClick={onAdminClick}
-                className="px-4 py-2 rounded-lg bg-white text-[#1e3a8a] text-xs sm:text-sm font-semibold hover:bg-[#dbeafe] transition-colors"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  background: "white",
+                  color: "#1e3a8a",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  border: "none",
+                  cursor: "pointer"
+                }}
               >
                 ⚙️ Admin
               </button>
             )}
             {profile?.status === 'active' && (
-              <span className="px-2 py-1 rounded-full bg-[#dcfce7] text-[#166534] text-xs sm:text-sm font-medium">
+              <span style={{
+                padding: "4px 8px",
+                borderRadius: "12px",
+                background: "#dcfce7",
+                color: "#166534",
+                fontSize: "12px",
+                fontWeight: "500"
+              }}>
                 ✅ Abonné
               </span>
             )}
-            <span className="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{hotelName}</span>
+            <span style={{fontSize: "14px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+              {hotelName}
+            </span>
             <button
               type="button"
               onClick={handleSignOut}
-              className="px-2 py-1 sm:px-3 sm:py-1 rounded-lg border border-white text-white text-xs sm:text-sm hover:bg-white/10 transition-colors"
+              style={{
+                padding: "6px 12px",
+                borderRadius: "8px",
+                border: "1px solid white",
+                color: "white",
+                fontSize: "14px",
+                background: "transparent",
+                cursor: "pointer"
+              }}
             >
               Déconnexion
             </button>
@@ -306,60 +353,162 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-10">
+      <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 24px 40px"}}>
+        {/* Hero Section */}
+        <div style={{
+          height: "200px",
+          backgroundImage: "url('/hotel-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          borderRadius: "16px",
+          position: "relative",
+          marginBottom: "32px",
+          overflow: "hidden"
+        }}>
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(30,58,138,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <h1 style={{
+              color: "white",
+              fontSize: "36px",
+              fontWeight: "800",
+              textAlign: "center",
+              margin: 0,
+              textShadow: "0 2px 4px rgba(0,0,0,0.3)"
+            }}>
+              {hotelName}
+            </h1>
+          </div>
+        </div>
+
         {trialBanner && (
-        <div className={`rounded-md px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base font-medium border ${
-          trialBanner.className === 'bg-[#fef3c7] text-[#92400e]' 
-            ? 'bg-[#fef3c7] text-[#92400e] border border-yellow-200'
+        <div style={{
+          borderRadius: "8px",
+          padding: "12px 16px",
+          fontSize: "14px",
+          fontWeight: "500",
+          border: "1px solid",
+          marginBottom: "16px",
+          textAlign: "center",
+          ...(trialBanner.className === 'bg-[#fef3c7] text-[#92400e]' 
+            ? {background: "#fef3c7", color: "#92400e", borderColor: "#f59e0b"}
             : trialBanner.className === 'bg-[#dcfce7] text-[#166534]'
-            ? 'bg-[#dcfce7] text-[#166534] border border-green-200'
-            : 'bg-[#fee2e2] text-[#991b1b] border border-red-200'
-        }`}>
+            ? {background: "#dcfce7", color: "#166534", borderColor: "#22c55e"}
+            : {background: "#fee2e2", color: "#991b1b", borderColor: "#ef4444"})
+        }}>
           {trialBanner.text}
         </div>
       )}
 
-        <div className="mt-4 text-sm sm:text-base font-medium text-green-600">
+        <div style={{fontSize: "14px", fontWeight: "500", color: "#16a34a", textAlign: "center", marginBottom: "24px"}}>
           {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
         </div>
 
-        <section className="mt-6 sm:mt-8 flex justify-center">
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "32px"}}>
           <button
             type="button"
             onClick={onScanComplete}
-            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-14 sm:h-16 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-[18px] font-bold shadow-lg hover:bg-[#1e40af] transition-colors"
+            style={{
+              background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+              borderRadius: "16px",
+              padding: "18px 40px",
+              fontSize: "18px",
+              fontWeight: "800",
+              boxShadow: "0 8px 24px rgba(30,58,138,0.35)",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              minWidth: "300px"
+            }}
           >
             📸 SCANNER UN DOCUMENT
           </button>
         </section>
 
-        <section className="mt-4 sm:mt-6 flex justify-center">
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "32px"}}>
           <button
             type="button"
             onClick={handleSubscribeClick}
-            className="w-full max-w-sm mx-4 sm:mx-auto sm:w-[300px] h-12 rounded-xl border-2 border-[#1e3a8a] text-[#1e3a8a] text-sm sm:text-[16px] font-semibold hover:bg-[#1e3a8a] hover:text-white transition-colors"
+            style={{
+              background: "transparent",
+              borderRadius: "16px",
+              padding: "14px 24px",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#1e3a8a",
+              border: "2px solid #1e3a8a",
+              cursor: "pointer",
+              minWidth: "300px"
+            }}
           >
             💳 Passer à l'abonnement
           </button>
         </section>
 
-        <section className="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-4">
-          <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-5 text-center">
-            <div className="text-[#1e3a8a] font-bold text-2xl sm:text-3xl mb-2">{scansToday}</div>
-            <div className="text-[#64748b] text-xs sm:text-sm">Scans aujourd&apos;hui</div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "16px",
+          marginBottom: "32px"
+        }}>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(191,219,254,0.5)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
+            padding: "20px",
+            textAlign: "center"
+          }}>
+            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
+              {scansToday}
+            </div>
+            <div style={{color: "#64748b", fontSize: "14px"}}>
+              Scans aujourd'hui
+            </div>
           </div>
-          <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-5 text-center">
-            <div className="text-[#1e3a8a] font-bold text-2xl sm:text-3xl mb-2">{scansThisMonth}</div>
-            <div className="text-[#64748b] text-xs sm:text-sm">Scans ce mois</div>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(191,219,254,0.5)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
+            padding: "20px",
+            textAlign: "center"
+          }}>
+            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
+              {scansThisMonth}
+            </div>
+            <div style={{color: "#64748b", fontSize: "14px"}}>
+              Scans ce mois
+            </div>
           </div>
-        </section>
+        </div>
 
-        <section className="mt-6 sm:mt-8 bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-          <h2 className="text-base sm:text-lg font-bold text-[#1e3a8a]">Derniers clients scannés</h2>
+        <section style={{
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(191,219,254,0.5)",
+          borderRadius: "16px",
+          padding: "24px"
+        }}>
+          <h2 style={{fontSize: "18px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "16px"}}>
+            Derniers clients scannés
+          </h2>
           {lastClients.length === 0 ? (
-            <p className="mt-4 sm:mt-6 text-center text-gray-500 text-sm sm:text-base">Aucun scan pour le moment</p>
+            <p style={{marginTop: "24px", textAlign: "center", color: "#64748b", fontSize: "14px"}}>
+              Aucun scan pour le moment
+            </p>
           ) : (
-            <div className="mt-4 sm:mt-6 space-y-3">
+            <div style={{marginTop: "24px"}}>
               {lastClients.map((client) => {
                 const d = new Date(client.scanDate)
                 const dd = String(d.getDate()).padStart(2, '0')

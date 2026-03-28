@@ -4,7 +4,19 @@
 
 @layer base {
   body {
-    background-color: #f1f5f9;
+    background-color: #e8f4fd;
     color: #1e293b;
   }
+}
+
+.bg-hotel {
+  background-image: url('/hotel-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-overlay {
+  background: rgba(232, 244, 253, 0.85);
+  backdrop-filter: blur(2px);
 }

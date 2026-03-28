@@ -198,18 +198,40 @@ export default function Admin() {
   const expiringTrials = getExpiringTrials()
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9]">
+    <div style={{minHeight: "100vh", background: "#e8f4fd"}}>
       {/* Header */}
-      <header className="bg-[#1e3a8a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="flex items-center justify-between">
+      <header style={{
+        background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+        boxShadow: "0 4px 16px rgba(30,58,138,0.2)"
+      }}>
+        <div style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "16px 24px"
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white">⚙️ Admin — Check-in Express</h1>
-              <p className="text-white text-sm sm:text-base mt-1">Gestion des utilisateurs et KPIs</p>
+              <h1 style={{fontSize: "24px", fontWeight: "bold", color: "white", margin: "0 0 4px"}}>
+                ⚙️ Admin — Check-in Express
+              </h1>
+              <p style={{color: "white", fontSize: "14px", margin: 0}}>
+                Gestion des utilisateurs et KPIs
+              </p>
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-md bg-transparent text-white border border-white hover:bg-white/10 transition-colors"
+              style={{
+                padding: "8px 16px",
+                borderRadius: "8px",
+                background: "transparent",
+                color: "white",
+                border: "1px solid white",
+                cursor: "pointer"
+              }}
             >
               Déconnexion
             </button>
@@ -217,36 +239,104 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="p-4 sm:p-6">
+      <main style={{padding: "24px"}}>
         {/* Alert Banner */}
         {expiringTrials.length > 0 && (
-          <div className="mb-6 bg-[#fee2e2] border border-red-200 text-[#991b1b] px-4 py-3 rounded-lg">
-            <p className="font-medium">⚠️ {expiringTrials.length} compte(s) expirent dans moins de 2 jours</p>
+          <div style={{
+            marginBottom: "24px",
+            background: "rgba(254,226,226,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(239,68,68,0.5)",
+            borderRadius: "12px",
+            padding: "12px 16px"
+          }}>
+            <p style={{color: "#991b1b", fontWeight: "500", margin: 0}}>
+              ⚠️ {expiringTrials.length} compte(s) expirent dans moins de 2 jours
+            </p>
           </div>
         )}
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.total}</div>
-            <div className="text-[#64748b] text-xs sm:text-sm">Total inscrits</div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "16px",
+          marginBottom: "32px"
+        }} className="lg:grid-cols-4 lg:gap-24">
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(191,219,254,0.5)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
+            padding: "24px",
+            textAlign: "center"
+          }}>
+            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
+              {stats.total}
+            </div>
+            <div style={{color: "#64748b", fontSize: "14px"}}>
+              Total inscrits
+            </div>
           </div>
-          <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.trial}</div>
-            <div className="text-[#64748b] text-xs sm:text-sm">En essai (live)</div>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(191,219,254,0.5)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
+            padding: "24px",
+            textAlign: "center"
+          }}>
+            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
+              {stats.trial}
+            </div>
+            <div style={{color: "#64748b", fontSize: "14px"}}>
+              En essai (live)
+            </div>
           </div>
-          <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.active}</div>
-            <div className="text-[#64748b] text-xs sm:text-sm">Actifs (payants)</div>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(191,219,254,0.5)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
+            padding: "24px",
+            textAlign: "center"
+          }}>
+            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
+              {stats.active}
+            </div>
+            <div style={{color: "#64748b", fontSize: "14px"}}>
+              Actifs (payants)
+            </div>
           </div>
-          <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl p-4 sm:p-6">
-            <div className="text-[#1e3a8a] font-bold text-3xl mb-2">{stats.expired}</div>
-            <div className="text-[#64748b] text-xs sm:text-sm">Expirés</div>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(191,219,254,0.5)",
+            borderRadius: "16px",
+            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
+            padding: "24px",
+            textAlign: "center"
+          }}>
+            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
+              {stats.expired}
+            </div>
+            <div style={{color: "#64748b", fontSize: "14px"}}>
+              Expirés
+            </div>
           </div>
         </div>
 
         {/* Users Table */}
-        <div className="bg-white border border-[#e2e8f0] shadow-sm rounded-xl overflow-hidden">
+        <div style={{
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(191,219,254,0.5)",
+          borderRadius: "16px",
+          overflow: "hidden"
+        }}>
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#e2e8f0]">
             <h2 className="text-base sm:text-lg font-bold text-[#1e3a8a]">Utilisateurs</h2>
           </div>

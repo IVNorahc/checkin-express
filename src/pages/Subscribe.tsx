@@ -1,11 +1,431 @@
-import { useState } from "react";
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 
-export default function Subscribe({ onBack }: { onBack?: () => void }) {
+interface SubscribeProps {
+  onBack?: () => void;
+  showWelcome?: boolean;
+}
+
+export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [showRefresh, setShowRefresh] = useState(false);
+
+  const LEMON_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02";
+
+  const handlePlan = (plan: string) => {
+    setLoading(plan);
+    setTimeout(() => {
+      window.open(LEMON_URL, "_blank");
+      setLoading(null);
+      setShowRefresh(true);
+    }, 1000);
+  };
+
+  const handleRefresh = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("id", data.session.user.id)
+        .single();
+      if (profile?.status === "active" && onBack) {
+        onBack();
+      } else {
+        alert("Paiement non détecté. Réessayez dans quelques secondes.");
+      }
+    }
+  };
+
   return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-      <h1 style={{ color: "#1e3a8a" }}>Nos formules</h1>
-      <p>Starter 49,99€ | Business 89,99€ | Enterprise 149,99€</p>
-      {onBack && <button onClick={onBack}>Retour</button>}
+    <div style={{
+      minHeight: "100vh",
+      background: "#e8f4fd",
+      backgroundImage: "url('/hotel-bg.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundAttachment: "fixed"
+    }}>
+      <div style={{
+        minHeight: "100vh",
+        background: "rgba(232,244,253,0.92)",
+        backdropFilter: "blur(4px)",
+        padding: "40px 16px"
+      }}>
+        <div style={{maxWidth: "1200px", margin: "0 auto"}}>
+          {/* En-tête */}
+          <div style={{textAlign: "center", marginBottom: "48px"}}>
+            <div style={{
+              width: "64px", height: "64px",
+              background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+              borderRadius: "20px",
+              display: "flex", alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px",
+              fontSize: "28px",
+              boxShadow: "0 8px 24px rgba(30,58,138,0.3)"
+            }}>🏨</div>
+            <h1 style={{color: "#1e3a8a", fontSize: "32px", fontWeight: "800", margin: "0 0 16px"}}>
+              Choisissez votre formule
+            </h1>
+            <p style={{color: "#64748b", fontSize: "16px", margin: 0}}>
+              Sans engagement • Annulation à tout moment
+            </p>
+          </div>
+
+          {/* Bannière de bienvenue */}
+          {showWelcome && (
+            <div style={{
+              marginBottom: "32px",
+              background: "rgba(220,252,231,0.9)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(134,239,172,0.5)",
+              borderRadius: "12px",
+              padding: "16px",
+              textAlign: "center",
+              maxWidth: "600px",
+              margin: "0 auto 32px"
+            }}>
+              <p style={{color: "#166534", fontWeight: "600", margin: 0}}>
+                ✅ Votre compte a été créé avec succès ! Complétez votre inscription.
+              </p>
+            </div>
+          )}
+
+          {/* Message de paiement */}
+          {showRefresh && (
+            <div style={{
+              marginBottom: "32px",
+              background: "rgba(219,234,254,0.9)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(147,197,253,0.5)",
+              borderRadius: "12px",
+              padding: "16px",
+              textAlign: "center",
+              maxWidth: "600px",
+              margin: "0 auto 32px"
+            }}>
+              <p style={{color: "#1e3a8a", fontWeight: "600", marginBottom: "16px"}}>
+                ✅ Une fois votre paiement effectué, cliquez ci-dessous.
+              </p>
+              <button
+                onClick={handleRefresh}
+                style={{
+                  background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+                  color: "white",
+                  borderRadius: "10px",
+                  padding: "12px 24px",
+                  fontWeight: "600",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                ✅ Actualiser mon accès
+              </button>
+            </div>
+          )}
+
+          {/* Cartes de tarification */}
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "24px",
+            marginBottom: "48px"
+          }} className="lg:flex-row lg:justify-center lg:items-stretch">
+            
+            {/* STARTER */}
+            <div style={{
+              background: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(10px)",
+              border: "2px solid rgba(191,219,254,0.5)",
+              borderRadius: "20px",
+              boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
+              padding: "32px",
+              flex: 1,
+              maxWidth: "350px",
+              display: "flex",
+              flexDirection: "column"
+            }}>
+              <div style={{textAlign: "center", flex: 1}}>
+                <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
+                  Starter
+                </h3>
+                <p style={{color: "#64748b", marginBottom: "24px"}}>
+                  Idéal pour les petits hôtels
+                </p>
+                
+                <div style={{fontSize: "36px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "24px"}}>
+                  49,99€
+                  <span style={{fontSize: "16px", fontWeight: "normal"}}>/mois</span>
+                </div>
+                
+                <ul style={{listStyle: "none", padding: 0, margin: "0 0 24px", textAlign: "left"}}>
+                  {[
+                    "200 scans inclus/mois",
+                    "Fiches de police PDF", 
+                    "Signature électronique",
+                    "Historique clients",
+                    "Support email"
+                  ].map((feature) => (
+                    <li key={feature} style={{
+                      color: "#1e293b", 
+                      fontSize: "14px", 
+                      padding: "8px 0",
+                      borderBottom: "1px solid rgba(191,219,254,0.3)",
+                      display: "flex",
+                      alignItems: "center"
+                    }}>
+                      <span style={{color: "#16a34a", marginRight: "8px", fontSize: "16px"}}>✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                
+                <button
+                  onClick={() => handlePlan("starter")}
+                  disabled={loading === "starter"}
+                  style={{
+                    background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+                    color: "white",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    fontWeight: "700",
+                    boxShadow: "0 4px 16px rgba(30,58,138,0.3)",
+                    border: "none",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    width: "100%",
+                    opacity: loading === "starter" ? 0.7 : 1
+                  }}
+                >
+                  {loading === "starter" ? "Redirection..." : "Choisir Starter"}
+                </button>
+                
+                <p style={{fontSize: "12px", color: "#94a3b8", marginTop: "12px", textAlign: "center"}}>
+                  0,25€/scan au-delà de 200
+                </p>
+              </div>
+            </div>
+
+            {/* BUSINESS */}
+            <div style={{
+              background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+              border: "2px solid #4a90d9",
+              borderRadius: "20px",
+              boxShadow: "0 16px 48px rgba(30,58,138,0.4)",
+              padding: "32px",
+              flex: 1,
+              maxWidth: "350px",
+              display: "flex",
+              flexDirection: "column",
+              transform: "scale(1.05)",
+              position: "relative"
+            }}>
+              <div style={{
+                position: "absolute",
+                top: "-14px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "#facc15",
+                color: "#1e3a8a",
+                padding: "6px 20px",
+                borderRadius: "20px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                whiteSpace: "nowrap"
+              }}>
+                ⭐ Plus populaire
+              </div>
+              
+              <div style={{textAlign: "center", flex: 1}}>
+                <h3 style={{color: "white", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
+                  Business
+                </h3>
+                <p style={{color: "#bfdbfe", marginBottom: "24px"}}>
+                  Pour les hôtels actifs
+                </p>
+                
+                <div style={{fontSize: "36px", fontWeight: "bold", color: "white", marginBottom: "24px"}}>
+                  89,99€
+                  <span style={{fontSize: "16px", fontWeight: "normal"}}>/mois</span>
+                </div>
+                
+                <ul style={{listStyle: "none", padding: 0, margin: "0 0 24px", textAlign: "left"}}>
+                  {[
+                    "500 scans inclus/mois",
+                    "Fiches de police PDF", 
+                    "Signature électronique",
+                    "Historique clients",
+                    "Support prioritaire",
+                    "0,25€/scan supplémentaire",
+                    "Dashboard statistiques"
+                  ].map((feature) => (
+                    <li key={feature} style={{
+                      color: "#bfdbfe", 
+                      fontSize: "14px", 
+                      padding: "8px 0",
+                      borderBottom: "1px solid rgba(255,255,255,0.1)",
+                      display: "flex",
+                      alignItems: "center"
+                    }}>
+                      <span style={{color: "#facc15", marginRight: "8px", fontSize: "16px"}}>✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                
+                <button
+                  onClick={() => handlePlan("business")}
+                  disabled={loading === "business"}
+                  style={{
+                    background: "white",
+                    color: "#1e3a8a",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    fontWeight: "700",
+                    border: "none",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    width: "100%",
+                    opacity: loading === "business" ? 0.7 : 1
+                  }}
+                >
+                  {loading === "business" ? "Redirection..." : "Choisir Business"}
+                </button>
+                
+                <p style={{fontSize: "12px", color: "#bfdbfe", marginTop: "12px", textAlign: "center"}}>
+                  0,25€/scan au-delà de 500
+                </p>
+              </div>
+            </div>
+
+            {/* ENTERPRISE */}
+            <div style={{
+              background: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(10px)",
+              border: "2px solid #818cf8",
+              borderRadius: "20px",
+              boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
+              padding: "32px",
+              flex: 1,
+              maxWidth: "350px",
+              display: "flex",
+              flexDirection: "column",
+              position: "relative"
+            }}>
+              <div style={{
+                position: "absolute",
+                top: "-14px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "#ede9fe",
+                color: "#7c3aed",
+                padding: "6px 20px",
+                borderRadius: "20px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                whiteSpace: "nowrap"
+              }}>
+                🏆 Tout illimité
+              </div>
+              
+              <div style={{textAlign: "center", flex: 1}}>
+                <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
+                  Enterprise
+                </h3>
+                <p style={{color: "#64748b", marginBottom: "24px"}}>
+                  Pour les grandes structures
+                </p>
+                
+                <div style={{fontSize: "36px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "24px"}}>
+                  149,99€
+                  <span style={{fontSize: "16px", fontWeight: "normal"}}>/mois</span>
+                </div>
+                
+                <ul style={{listStyle: "none", padding: 0, margin: "0 0 24px", textAlign: "left"}}>
+                  {[
+                    "Scans ILLIMITÉS",
+                    "Fiches de police PDF", 
+                    "Signature électronique",
+                    "Historique illimité",
+                    "Support 24/7 prioritaire",
+                    "Onboarding personnalisé",
+                    "Multi-utilisateurs",
+                    "Accès API"
+                  ].map((feature) => (
+                    <li key={feature} style={{
+                      color: "#1e293b", 
+                      fontSize: "14px", 
+                      padding: "8px 0",
+                      borderBottom: "1px solid rgba(191,219,254,0.3)",
+                      display: "flex",
+                      alignItems: "center"
+                    }}>
+                      <span style={{color: "#16a34a", marginRight: "8px", fontSize: "16px"}}>✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                
+                <button
+                  onClick={() => handlePlan("enterprise")}
+                  disabled={loading === "enterprise"}
+                  style={{
+                    background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+                    color: "white",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    fontWeight: "700",
+                    boxShadow: "0 4px 16px rgba(30,58,138,0.3)",
+                    border: "none",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    width: "100%",
+                    opacity: loading === "enterprise" ? 0.7 : 1
+                  }}
+                >
+                  {loading === "enterprise" ? "Redirection..." : "Choisir Enterprise"}
+                </button>
+                
+                <p style={{fontSize: "12px", color: "#94a3b8", marginTop: "12px", textAlign: "center"}}>
+                  Aucun frais supplémentaire
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{textAlign: "center", fontSize: "14px", color: "#64748b", lineHeight: "1.6"}}>
+            <p>🔒 Paiement sécurisé via Lemon Squeezy</p>
+            <p>Annulation à tout moment • Sans engagement</p>
+            <p>
+              Des questions ?{" "}
+              <a href="mailto:contact@percepta.io" style={{color: "#4a90d9", textDecoration: "none"}}>
+                contact@percepta.io
+              </a>
+            </p>
+            {onBack && (
+              <button
+                onClick={onBack}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#4a90d9",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  marginTop: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600"
+                }}
+              >
+                Essayer gratuitement 7 jours →
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -119,7 +119,6 @@ export default function App() {
     return (
       <Subscribe 
         onBack={() => setCurrentPage('dashboard')} 
-        showWelcome={true}
       />
     )
   }
