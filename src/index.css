@@ -20,3 +20,8 @@
   background: rgba(232, 244, 253, 0.60);
   backdrop-filter: blur(1px);
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

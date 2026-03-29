@@ -9,7 +9,7 @@ import Admin from './pages/Admin'
 import Subscribe from './pages/Subscribe'
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard')
+  const [currentPage, setCurrentPage] = useState('loading')
   const [ocrData, setOcrData] = useState<{
     documentType: string | null
     issuingCountry: string | null
@@ -26,14 +26,32 @@ export default function App() {
   } | null>(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
 
+  // Timeout de sécurité
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (currentPage === 'loading') {
+        setCurrentPage('login')
+      }
+    }, 3000)
+    return () => clearTimeout(timeout)
+  }, [currentPage])
+
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (data.session) {
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        
+        if (error || !data.session) {
+          setCurrentPage('login')
+          setIsCheckingSession(false)
+          return
+        }
+        
         const isAdmin = data.session.user?.user_metadata?.is_admin === true
         
         if (isAdmin) {
           setCurrentPage('admin')
+          setIsCheckingSession(false)
           return  // STOP - ne pas vérifier le profil
         }
         
@@ -54,9 +72,10 @@ export default function App() {
             setCurrentPage('subscribe')
           }
         } else {
-          setCurrentPage('subscribe')
+          setCurrentPage('login')
         }
-      } else {
+      } catch (error) {
+        console.error('Session error:', error)
         setCurrentPage('login')
       }
       setIsCheckingSession(false)
@@ -67,34 +86,39 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        const isAdmin = session.user?.user_metadata?.is_admin === true
-        
-        if (isAdmin) {
-          setCurrentPage('admin')
-          return  // STOP - ne pas vérifier le profil
-        }
-        
-        // Seulement si pas admin, vérifier le profil
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status, trial_end')
-          .eq('id', session.user.id)
-          .single()
-        
-        if (profile?.status === 'active') {
-          setCurrentPage('dashboard')
-        } else if (profile?.status === 'trial') {
-          const trialEnd = new Date(profile.trial_end)
-          if (trialEnd > new Date()) {
+      try {
+        if (session) {
+          const isAdmin = session.user?.user_metadata?.is_admin === true
+          
+          if (isAdmin) {
+            setCurrentPage('admin')
+            return  // STOP - ne pas vérifier le profil
+          }
+          
+          // Seulement si pas admin, vérifier le profil
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('status, trial_end')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (profile?.status === 'active') {
             setCurrentPage('dashboard')
+          } else if (profile?.status === 'trial') {
+            const trialEnd = new Date(profile.trial_end)
+            if (trialEnd > new Date()) {
+              setCurrentPage('dashboard')
+            } else {
+              setCurrentPage('subscribe')
+            }
           } else {
-            setCurrentPage('subscribe')
+            setCurrentPage('login')
           }
         } else {
-          setCurrentPage('subscribe')
+          setCurrentPage('login')
         }
-      } else {
+      } catch (error) {
+        console.error('Auth state change error:', error)
         setCurrentPage('login')
       }
     })
@@ -104,10 +128,48 @@ export default function App() {
     }
   }, [])
 
-  if (isCheckingSession) {
+  if (currentPage === 'loading') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center font-sans text-[#1e3a8a]">
-        Chargement...
+      <div style={{
+        minHeight: "100vh",
+        background: "#e8f4fd",
+        backgroundImage: "url('/hotel-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}>
+        <div style={{
+          background: "rgba(255,255,255,0.95)",
+          borderRadius: "20px",
+          padding: "48px",
+          textAlign: "center",
+          boxShadow: "0 20px 60px rgba(30,58,138,0.15)"
+        }}>
+          <div style={{
+            fontSize: "48px",
+            marginBottom: "16px"
+          }}>🏨</div>
+          <h2 style={{
+            color: "#1e3a8a",
+            fontWeight: "800",
+            margin: "0 0 8px"
+          }}>Check-in Express</h2>
+          <p style={{
+            color: "#64748b",
+            margin: "0 0 24px"
+          }}>by Percepta</p>
+          <div style={{
+            width: "40px",
+            height: "40px",
+            border: "4px solid #bfdbfe",
+            borderTop: "4px solid #1e3a8a",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+            margin: "0 auto"
+          }}></div>
+        </div>
       </div>
     )
   }
