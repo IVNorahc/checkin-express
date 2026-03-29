@@ -183,7 +183,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             onClick={handleSubscribeClick}
             className="w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            🚀 Souscrire maintenant — 89,99€/mois
+            💳 Passer à l'abonnement
           </button>
           
           <button
@@ -252,7 +252,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             onClick={handleSubscribeClick}
             className="w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            🚀 Souscrire maintenant — 89,99€/mois
+            💳 Passer à l'abonnement
           </button>
           
           <button

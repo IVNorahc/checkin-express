@@ -129,11 +129,14 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           {/* Cartes de tarification */}
           <div style={{
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "24px",
-            marginBottom: "48px"
-          }} className="lg:flex-row lg:justify-center lg:items-stretch">
+            flexDirection: "row",
+            flexWrap: "nowrap",
+            gap: "32px",
+            justifyContent: "center",
+            alignItems: "stretch",
+            maxWidth: "900px",
+            margin: "0 auto 40px"
+          }}>
             
             {/* STARTER */}
             <div style={{
@@ -143,7 +146,8 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               borderRadius: "20px",
               boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
               padding: "32px",
-              flex: 1,
+              flex: "1",
+              minWidth: "280px",
               maxWidth: "400px",
               display: "flex",
               flexDirection: "column"
