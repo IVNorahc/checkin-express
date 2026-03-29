@@ -29,7 +29,35 @@ export default function App() {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
-      setCurrentPage(data.session ? 'dashboard' : 'login')
+      if (data.session) {
+        const isAdmin = data.session.user?.user_metadata?.is_admin === true
+        
+        if (isAdmin) {
+          setCurrentPage('admin')
+        } else {
+          // Check profile status for regular users
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('status, trial_end')
+            .eq('id', data.session.user.id)
+            .single()
+          
+          if (profile?.status === 'active') {
+            setCurrentPage('dashboard')
+          } else if (profile?.status === 'trial') {
+            const trialEnd = new Date(profile.trial_end)
+            if (trialEnd > new Date()) {
+              setCurrentPage('dashboard')
+            } else {
+              setCurrentPage('subscribe')
+            }
+          } else {
+            setCurrentPage('subscribe')
+          }
+        }
+      } else {
+        setCurrentPage('login')
+      }
       setIsCheckingSession(false)
     }
 
@@ -37,8 +65,36 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentPage(session ? 'dashboard' : 'login')
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        const isAdmin = session.user?.user_metadata?.is_admin === true
+        
+        if (isAdmin) {
+          setCurrentPage('admin')
+        } else {
+          // Check profile status for regular users
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('status, trial_end')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (profile?.status === 'active') {
+            setCurrentPage('dashboard')
+          } else if (profile?.status === 'trial') {
+            const trialEnd = new Date(profile.trial_end)
+            if (trialEnd > new Date()) {
+              setCurrentPage('dashboard')
+            } else {
+              setCurrentPage('subscribe')
+            }
+          } else {
+            setCurrentPage('subscribe')
+          }
+        }
+      } else {
+        setCurrentPage('login')
+      }
     })
 
     return () => {
@@ -58,7 +114,7 @@ export default function App() {
     return (
       <Login
         onRegisterClick={() => setCurrentPage('register')}
-        onLoginSuccess={() => setCurrentPage('dashboard')}
+        onLoginSuccess={(isAdmin) => setCurrentPage(isAdmin ? 'admin' : 'dashboard')}
       />
     )
   }

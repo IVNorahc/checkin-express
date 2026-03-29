@@ -119,7 +119,7 @@ export default function Admin() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    window.location.reload()
+    window.location.href = '/'
   }
 
   const handleExtendTrial = async (profileId: string) => {
@@ -208,11 +208,13 @@ export default function Admin() {
           maxWidth: "1280px",
           margin: "0 auto",
           padding: "16px 24px"
-        }}>
+        }} className="sm:px-6">
           <div style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between"
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "8px"
           }}>
             <div>
               <h1 style={{fontSize: "24px", fontWeight: "bold", color: "white", margin: "0 0 4px"}}>

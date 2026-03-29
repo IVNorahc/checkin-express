@@ -289,18 +289,18 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           maxWidth: "1280px",
           margin: "0 auto",
           height: "100%",
-          padding: "0 24px",
+          padding: "0 16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           color: "white",
           flexWrap: "wrap",
           gap: "8px"
-        }}>
-          <p style={{fontWeight: "bold", fontSize: "18px", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+        }} className="sm:px-6 sm:gap-3">
+          <p style={{fontWeight: "bold", fontSize: "16px", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}} className="sm:text-lg">
             🏨 Check-in Express
           </p>
-          <div style={{display: "flex", alignItems: "center", gap: "12px", flexShrink: 0}}>
+          <div style={{display: "flex", alignItems: "center", gap: "8px", flexShrink: 0}} className="sm:gap-3">
             {isAdmin && onAdminClick && (
               <button
                 type="button"
@@ -356,15 +356,15 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 24px 40px"}}>
         {/* Hero Section */}
         <div style={{
-          height: "200px",
+          height: "150px",
           backgroundImage: "url('/hotel-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
           borderRadius: "16px",
           position: "relative",
-          marginBottom: "32px",
+          marginBottom: "24px",
           overflow: "hidden"
-        }}>
+        }} className="sm:h-48 sm:mb-8">
           <div style={{
             position: "absolute",
             top: 0,
@@ -412,7 +412,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
         </div>
 
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "32px"}}>
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
           <button
             type="button"
             onClick={onScanComplete}
@@ -426,14 +426,14 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               color: "white",
               border: "none",
               cursor: "pointer",
-              minWidth: "300px"
-            }}
+              minWidth: "280px"
+            }} className="w-full sm:max-w-sm"
           >
             📸 SCANNER UN DOCUMENT
           </button>
         </section>
 
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "32px"}}>
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
           <button
             type="button"
             onClick={handleSubscribeClick}
@@ -446,8 +446,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               color: "#1e3a8a",
               border: "2px solid #1e3a8a",
               cursor: "pointer",
-              minWidth: "300px"
-            }}
+              minWidth: "280px"
+            }} className="w-full sm:max-w-sm"
           >
             💳 Passer à l'abonnement
           </button>
@@ -455,10 +455,10 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "1fr",
           gap: "16px",
-          marginBottom: "32px"
-        }}>
+          marginBottom: "24px"
+        }} className="sm:grid-cols-2 sm:mb-8">
           <div style={{
             background: "rgba(232,244,253,0.60)",
             backdropFilter: "blur(1px)",

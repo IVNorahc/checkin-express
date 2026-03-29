@@ -63,12 +63,13 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
           background: "rgba(255,255,255,0.95)",
           backdropFilter: "blur(1px)",
           borderRadius: "20px",
-          padding: "48px 40px",
+          padding: "24px",
           width: "100%",
+          margin: "16px",
           maxWidth: "420px",
           boxShadow: "0 20px 60px rgba(30,58,138,0.15)",
           border: "1px solid rgba(191,219,254,0.5)"
-        }}>
+        }} className="sm:p-8 sm:mx-auto sm:max-w-md">
           
           {/* Logo centré */}
           <div style={{textAlign:"center", marginBottom:"32px"}}>
