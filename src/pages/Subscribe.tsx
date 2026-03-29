@@ -48,8 +48,8 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
     }}>
       <div style={{
         minHeight: "100vh",
-        background: "rgba(232,244,253,0.92)",
-        backdropFilter: "blur(4px)",
+        background: "rgba(232,244,253,0.60)",
+        backdropFilter: "blur(1px)",
         padding: "40px 16px"
       }}>
         <div style={{maxWidth: "1200px", margin: "0 auto"}}>
@@ -77,8 +77,8 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           {showWelcome && (
             <div style={{
               marginBottom: "32px",
-              background: "rgba(220,252,231,0.9)",
-              backdropFilter: "blur(10px)",
+              background: "rgba(30,58,138,0.15)",
+              backdropFilter: "blur(1px)",
               border: "1px solid rgba(134,239,172,0.5)",
               borderRadius: "12px",
               padding: "16px",
@@ -97,7 +97,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
             <div style={{
               marginBottom: "32px",
               background: "rgba(219,234,254,0.9)",
-              backdropFilter: "blur(10px)",
+              backdropFilter: "blur(1px)",
               border: "1px solid rgba(147,197,253,0.5)",
               borderRadius: "12px",
               padding: "16px",
@@ -138,13 +138,13 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
             {/* STARTER */}
             <div style={{
               background: "rgba(255,255,255,0.95)",
-              backdropFilter: "blur(10px)",
+              backdropFilter: "blur(1px)",
               border: "2px solid rgba(191,219,254,0.5)",
               borderRadius: "20px",
               boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
               padding: "32px",
               flex: 1,
-              maxWidth: "350px",
+              maxWidth: "400px",
               display: "flex",
               flexDirection: "column"
             }}>
@@ -217,7 +217,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               boxShadow: "0 16px 48px rgba(30,58,138,0.4)",
               padding: "32px",
               flex: 1,
-              maxWidth: "350px",
+              maxWidth: "400px",
               display: "flex",
               flexDirection: "column",
               transform: "scale(1.05)",
@@ -297,100 +297,6 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 
                 <p style={{fontSize: "12px", color: "#bfdbfe", marginTop: "12px", textAlign: "center"}}>
                   0,25€/scan au-delà de 500
-                </p>
-              </div>
-            </div>
-
-            {/* ENTERPRISE */}
-            <div style={{
-              background: "rgba(255,255,255,0.95)",
-              backdropFilter: "blur(10px)",
-              border: "2px solid #818cf8",
-              borderRadius: "20px",
-              boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
-              padding: "32px",
-              flex: 1,
-              maxWidth: "350px",
-              display: "flex",
-              flexDirection: "column",
-              position: "relative"
-            }}>
-              <div style={{
-                position: "absolute",
-                top: "-14px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "#ede9fe",
-                color: "#7c3aed",
-                padding: "6px 20px",
-                borderRadius: "20px",
-                fontSize: "14px",
-                fontWeight: "bold",
-                whiteSpace: "nowrap"
-              }}>
-                🏆 Tout illimité
-              </div>
-              
-              <div style={{textAlign: "center", flex: 1}}>
-                <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
-                  Enterprise
-                </h3>
-                <p style={{color: "#64748b", marginBottom: "24px"}}>
-                  Pour les grandes structures
-                </p>
-                
-                <div style={{fontSize: "36px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "24px"}}>
-                  149,99€
-                  <span style={{fontSize: "16px", fontWeight: "normal"}}>/mois</span>
-                </div>
-                
-                <ul style={{listStyle: "none", padding: 0, margin: "0 0 24px", textAlign: "left"}}>
-                  {[
-                    "Scans ILLIMITÉS",
-                    "Fiches de police PDF", 
-                    "Signature électronique",
-                    "Historique illimité",
-                    "Support 24/7 prioritaire",
-                    "Onboarding personnalisé",
-                    "Multi-utilisateurs",
-                    "Accès API"
-                  ].map((feature) => (
-                    <li key={feature} style={{
-                      color: "#1e293b", 
-                      fontSize: "14px", 
-                      padding: "8px 0",
-                      borderBottom: "1px solid rgba(191,219,254,0.3)",
-                      display: "flex",
-                      alignItems: "center"
-                    }}>
-                      <span style={{color: "#16a34a", marginRight: "8px", fontSize: "16px"}}>✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                
-                <button
-                  onClick={() => handlePlan("enterprise")}
-                  disabled={loading === "enterprise"}
-                  style={{
-                    background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
-                    color: "white",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 16px rgba(30,58,138,0.3)",
-                    border: "none",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    width: "100%",
-                    opacity: loading === "enterprise" ? 0.7 : 1
-                  }}
-                >
-                  {loading === "enterprise" ? "Redirection..." : "Choisir Enterprise"}
-                </button>
-                
-                <p style={{fontSize: "12px", color: "#94a3b8", marginTop: "12px", textAlign: "center"}}>
-                  Aucun frais supplémentaire
                 </p>
               </div>
             </div>

@@ -371,7 +371,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             left: 0,
             right: 0,
             bottom: 0,
-            background: "rgba(30,58,138,0.4)",
+            background: "rgba(30,58,138,0.15)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center"
@@ -460,8 +460,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           marginBottom: "32px"
         }}>
           <div style={{
-            background: "rgba(255,255,255,0.9)",
-            backdropFilter: "blur(10px)",
+            background: "rgba(232,244,253,0.60)",
+            backdropFilter: "blur(1px)",
             border: "1px solid rgba(191,219,254,0.5)",
             borderRadius: "16px",
             boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
@@ -476,8 +476,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             </div>
           </div>
           <div style={{
-            background: "rgba(255,255,255,0.9)",
-            backdropFilter: "blur(10px)",
+            background: "rgba(232,244,253,0.60)",
+            backdropFilter: "blur(1px)",
             border: "1px solid rgba(191,219,254,0.5)",
             borderRadius: "16px",
             boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
@@ -494,8 +494,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </div>
 
         <section style={{
-          background: "rgba(255,255,255,0.9)",
-          backdropFilter: "blur(10px)",
+          background: "rgba(232,244,253,0.60)",
+          backdropFilter: "blur(1px)",
           border: "1px solid rgba(191,219,254,0.5)",
           borderRadius: "16px",
           padding: "24px"

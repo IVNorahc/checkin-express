@@ -40,7 +40,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
         
         <div style={{
           background: "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(10px)",
+          backdropFilter: "blur(1px)",
           borderRadius: "20px",
           padding: "48px 40px",
           width: "100%",
@@ -77,7 +77,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
-                  background: "rgba(232,244,253,0.5)",
+                  background: "rgba(232,244,253,0.60)",
                   border: "1.5px solid #bfdbfe",
                   borderRadius: "10px",
                   padding: "12px 16px",
@@ -103,7 +103,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{
-                  background: "rgba(232,244,253,0.5)",
+                  background: "rgba(232,244,253,0.60)",
                   border: "1.5px solid #bfdbfe",
                   borderRadius: "10px",
                   padding: "12px 16px",

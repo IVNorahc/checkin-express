@@ -17,6 +17,6 @@
 }
 
 .bg-overlay {
-  background: rgba(232, 244, 253, 0.85);
-  backdrop-filter: blur(2px);
+  background: rgba(232, 244, 253, 0.60);
+  backdrop-filter: blur(1px);
 }
