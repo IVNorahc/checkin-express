@@ -34,26 +34,27 @@ export default function App() {
         
         if (isAdmin) {
           setCurrentPage('admin')
-        } else {
-          // Check profile status for regular users
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('status, trial_end')
-            .eq('id', data.session.user.id)
-            .single()
-          
-          if (profile?.status === 'active') {
+          return  // STOP - ne pas vérifier le profil
+        }
+        
+        // Seulement si pas admin, vérifier le profil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status, trial_end')
+          .eq('id', data.session.user.id)
+          .single()
+        
+        if (profile?.status === 'active') {
+          setCurrentPage('dashboard')
+        } else if (profile?.status === 'trial') {
+          const trialEnd = new Date(profile.trial_end)
+          if (trialEnd > new Date()) {
             setCurrentPage('dashboard')
-          } else if (profile?.status === 'trial') {
-            const trialEnd = new Date(profile.trial_end)
-            if (trialEnd > new Date()) {
-              setCurrentPage('dashboard')
-            } else {
-              setCurrentPage('subscribe')
-            }
           } else {
             setCurrentPage('subscribe')
           }
+        } else {
+          setCurrentPage('subscribe')
         }
       } else {
         setCurrentPage('login')
@@ -71,26 +72,27 @@ export default function App() {
         
         if (isAdmin) {
           setCurrentPage('admin')
-        } else {
-          // Check profile status for regular users
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('status, trial_end')
-            .eq('id', session.user.id)
-            .single()
-          
-          if (profile?.status === 'active') {
+          return  // STOP - ne pas vérifier le profil
+        }
+        
+        // Seulement si pas admin, vérifier le profil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status, trial_end')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (profile?.status === 'active') {
+          setCurrentPage('dashboard')
+        } else if (profile?.status === 'trial') {
+          const trialEnd = new Date(profile.trial_end)
+          if (trialEnd > new Date()) {
             setCurrentPage('dashboard')
-          } else if (profile?.status === 'trial') {
-            const trialEnd = new Date(profile.trial_end)
-            if (trialEnd > new Date()) {
-              setCurrentPage('dashboard')
-            } else {
-              setCurrentPage('subscribe')
-            }
           } else {
             setCurrentPage('subscribe')
           }
+        } else {
+          setCurrentPage('subscribe')
         }
       } else {
         setCurrentPage('login')
@@ -114,7 +116,13 @@ export default function App() {
     return (
       <Login
         onRegisterClick={() => setCurrentPage('register')}
-        onLoginSuccess={(isAdmin) => setCurrentPage(isAdmin ? 'admin' : 'dashboard')}
+        onLoginSuccess={(isAdmin) => {
+  if (isAdmin) {
+    setCurrentPage('admin')
+    return  // STOP immédiatement
+  }
+  setCurrentPage('dashboard')
+}}
       />
     )
   }

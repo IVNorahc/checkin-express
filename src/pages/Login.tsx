@@ -30,11 +30,15 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
       return
     }
 
-    // Check if user is admin
+    // Check if user is admin FIRST
     const isAdmin = data.user?.user_metadata?.is_admin === true
+    if (isAdmin) {
+      onLoginSuccess?.(true)
+      return  // NE PAS continuer vers Subscribe
+    }
     
     setFeedback({ type: 'success', text: 'Connexion réussie !' })
-    onLoginSuccess(isAdmin)
+    onLoginSuccess?.(false)
   }
 
   return (

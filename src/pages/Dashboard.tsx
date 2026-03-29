@@ -28,6 +28,14 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         onRequireLogin()
         return
       }
+      
+      // Check if user is admin FIRST
+      const isAdmin = data.session.user?.user_metadata?.is_admin === true
+      if (isAdmin) {
+        onAdminClick?.()
+        return
+      }
+      
       setSession(data.session)
 
       // Initialiser la DB avec l'ID utilisateur Supabase
