@@ -60,14 +60,9 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
           {/* Logo centré */}
           <div className="flex flex-col items-center mb-6">
             <img 
-              src="/images/percepta-logo.png" 
+              src="/apple-touch-icon.png" 
               alt="Check-in Express by Percepta" 
-              style={{
-                height: "64px",
-                width: "auto",
-                objectFit: "contain",
-                marginBottom: "8px"
-              }}
+              className="h-12 w-auto object-contain mb-2"
             />
           </div>
           

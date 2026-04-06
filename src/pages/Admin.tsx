@@ -231,13 +231,9 @@ export default function Admin() {
                   alignItems: "center"
                 }}>
                   <img 
-                    src="/images/percepta-logo.png" 
-                    alt="Percepta" 
-                    style={{
-                      height: "24px",
-                      width: "auto",
-                      objectFit: "contain"
-                    }}
+                    src="/apple-touch-icon.png" 
+                    alt="Check-in Express by Percepta" 
+                    className="h-8 w-auto object-contain"
                   />
                 </div>
                 <h1 style={{fontSize: "24px", fontWeight: "bold", color: "white", margin: 0}}>

@@ -321,13 +321,9 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               alignItems: "center"
             }}>
               <img 
-                src="/images/percepta-logo.png" 
-                alt="Percepta" 
-                style={{
-                  height: "32px",
-                  width: "auto",
-                  objectFit: "contain"
-                }}
+                src="/apple-touch-icon.png" 
+                alt="Check-in Express by Percepta" 
+                className="h-8 w-auto object-contain"
               />
             </div>
             <p style={{
