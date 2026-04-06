@@ -305,9 +305,42 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           flexWrap: "wrap",
           gap: "8px"
         }} className="sm:px-6 sm:gap-3">
-          <p style={{fontWeight: "bold", fontSize: "16px", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}} className="sm:text-lg">
-            🏨 Check-in Express
-          </p>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            flex: 1,
+            minWidth: 0,
+            overflow: "hidden"
+          }} className="sm:text-lg">
+            <div style={{
+              background: "rgba(255,255,255,0.95)",
+              borderRadius: "8px",
+              padding: "4px 8px",
+              display: "flex",
+              alignItems: "center"
+            }}>
+              <img 
+                src="/images/percepta-logo.png" 
+                alt="Percepta" 
+                style={{
+                  height: "32px",
+                  width: "auto",
+                  objectFit: "contain"
+                }}
+              />
+            </div>
+            <p style={{
+              fontWeight: "bold", 
+              fontSize: "16px", 
+              margin: 0,
+              overflow: "hidden", 
+              textOverflow: "ellipsis", 
+              whiteSpace: "nowrap"
+            }}>
+              Check-in Express
+            </p>
+          </div>
           <div style={{display: "flex", alignItems: "center", gap: "8px", flexShrink: 0}} className="sm:gap-3">
             {isAdmin && onAdminClick && (
               <button

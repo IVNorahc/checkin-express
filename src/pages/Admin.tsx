@@ -217,9 +217,33 @@ export default function Admin() {
             gap: "8px"
           }}>
             <div>
-              <h1 style={{fontSize: "24px", fontWeight: "bold", color: "white", margin: "0 0 4px"}}>
-                ⚙️ Admin — Check-in Express
-              </h1>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "4px"
+              }}>
+                <div style={{
+                  background: "rgba(255,255,255,0.95)",
+                  borderRadius: "8px",
+                  padding: "4px 8px",
+                  display: "flex",
+                  alignItems: "center"
+                }}>
+                  <img 
+                    src="/images/percepta-logo.png" 
+                    alt="Percepta" 
+                    style={{
+                      height: "24px",
+                      width: "auto",
+                      objectFit: "contain"
+                    }}
+                  />
+                </div>
+                <h1 style={{fontSize: "24px", fontWeight: "bold", color: "white", margin: 0}}>
+                  Admin — Check-in Express
+                </h1>
+              </div>
               <p style={{color: "white", fontSize: "14px", margin: 0}}>
                 Gestion des utilisateurs et KPIs
               </p>
