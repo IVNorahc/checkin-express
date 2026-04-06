@@ -126,6 +126,68 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
             </div>
           )}
 
+          {/* Social Proof */}
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "32px",
+            marginBottom: "32px",
+            flexWrap: "wrap"
+          }}>
+            <div style={{textAlign: "center"}}>
+              <p style={{
+                color: "#1e3a8a",
+                fontSize: "28px",
+                fontWeight: "800",
+                margin: "0 0 4px"
+              }}>30s</p>
+              <p style={{
+                color: "#64748b",
+                fontSize: "13px",
+                margin: 0
+              }}>Temps de check-in</p>
+            </div>
+            <div style={{textAlign: "center"}}>
+              <p style={{
+                color: "#1e3a8a",
+                fontSize: "28px",
+                fontWeight: "800",
+                margin: "0 0 4px"
+              }}>100%</p>
+              <p style={{
+                color: "#64748b",
+                fontSize: "13px",
+                margin: 0
+              }}>Conforme RGPD</p>
+            </div>
+            <div style={{textAlign: "center"}}>
+              <p style={{
+                color: "#1e3a8a",
+                fontSize: "28px",
+                fontWeight: "800",
+                margin: "0 0 4px"
+              }}>7j</p>
+              <p style={{
+                color: "#64748b",
+                fontSize: "13px",
+                margin: 0
+              }}>Essai gratuit</p>
+            </div>
+            <div style={{textAlign: "center"}}>
+              <p style={{
+                color: "#1e3a8a",
+                fontSize: "28px",
+                fontWeight: "800",
+                margin: "0 0 4px"
+              }}>0€</p>
+              <p style={{
+                color: "#64748b",
+                fontSize: "13px",
+                margin: 0
+              }}>Sans engagement</p>
+            </div>
+          </div>
+
           {/* Cartes de tarification */}
           <div style={{
             display: "flex",

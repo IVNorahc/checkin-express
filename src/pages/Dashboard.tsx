@@ -480,7 +480,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               {scansToday}
             </div>
             <div style={{color: "#64748b", fontSize: "14px"}}>
-              Scans aujourd'hui
+              📅 Scans aujourd'hui
             </div>
           </div>
           <div style={{
@@ -496,7 +496,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               {scansThisMonth}
             </div>
             <div style={{color: "#64748b", fontSize: "14px"}}>
-              Scans ce mois
+              📊 Scans ce mois
             </div>
           </div>
         </div>
@@ -512,9 +512,44 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             Derniers clients scannés
           </h2>
           {lastClients.length === 0 ? (
-            <p style={{marginTop: "24px", textAlign: "center", color: "#64748b", fontSize: "14px"}}>
-              Aucun scan pour le moment
-            </p>
+            <div style={{
+              textAlign: "center",
+              padding: "40px 20px"
+            }}>
+              <div style={{fontSize: "48px", marginBottom: "12px"}}>
+                📋
+              </div>
+              <h3 style={{
+                color: "#1e3a8a",
+                fontWeight: "700",
+                margin: "0 0 8px"
+              }}>
+                Prêt pour votre premier check-in !
+              </h3>
+              <p style={{
+                color: "#64748b",
+                fontSize: "14px",
+                margin: "0 0 20px"
+              }}>
+                Scannez votre première pièce d'identité 
+                pour commencer
+              </p>
+              <button
+                onClick={onScanComplete}
+                style={{
+                  background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 24px",
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                📸 Démarrer mon premier scan
+              </button>
+            </div>
           ) : (
             <div style={{marginTop: "24px"}}>
               {lastClients.map((client) => {

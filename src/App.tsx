@@ -176,76 +176,92 @@ export default function App() {
 
   if (currentPage === 'login') {
     return (
-      <Login
-        onRegisterClick={() => setCurrentPage('register')}
-        onLoginSuccess={(isAdmin) => {
-  if (isAdmin) {
-    setCurrentPage('admin')
-    return  // STOP immédiatement
-  }
-  setCurrentPage('dashboard')
-}}
-      />
+      <div className="page-transition">
+        <Login
+          onRegisterClick={() => setCurrentPage('register')}
+          onLoginSuccess={(isAdmin) => {
+            if (isAdmin) {
+              setCurrentPage('admin')
+              return  // STOP immédiatement
+            }
+            setCurrentPage('dashboard')
+          }}
+        />
+      </div>
     )
   }
 
   if (currentPage === 'register') {
     return (
-      <Register 
-        onLoginClick={() => setCurrentPage('login')} 
-        onSubscribe={() => setCurrentPage('subscribe')} 
-      />
+      <div className="page-transition">
+        <Register 
+          onLoginClick={() => setCurrentPage('login')} 
+          onSubscribe={() => setCurrentPage('subscribe')} 
+        />
+      </div>
     )
   }
 
   if (currentPage === 'dashboard') {
     return (
-      <Dashboard
-        onRequireLogin={() => setCurrentPage('login')}
-        onScanComplete={() => {
-          setOcrData(null)
-          setCurrentPage('scan')
-        }}
-        onAdminClick={() => setCurrentPage('admin')}
-        onSubscribeClick={() => setCurrentPage('subscribe')}
-      />
+      <div className="page-transition">
+        <Dashboard
+          onRequireLogin={() => setCurrentPage('login')}
+          onScanComplete={() => {
+            setOcrData(null)
+            setCurrentPage('scan')
+          }}
+          onAdminClick={() => setCurrentPage('admin')}
+          onSubscribeClick={() => setCurrentPage('subscribe')}
+        />
+      </div>
     )
   }
 
   if (currentPage === 'scan') {
     return (
-      <Scan
-        onBack={() => setCurrentPage('dashboard')}
-        onCapture={(data) => {
-          setOcrData(data)
-          setCurrentPage('confirm')
-        }}
-      />
+      <div className="page-transition">
+        <Scan
+          onBack={() => setCurrentPage('dashboard')}
+          onCapture={(data) => {
+            setOcrData(data)
+            setCurrentPage('confirm')
+          }}
+        />
+      </div>
     )
   }
 
   if (currentPage === 'confirm') {
     return (
-      <Confirm
-        data={ocrData}
-        onRestart={() => {
-          setOcrData(null)
-          setCurrentPage('scan')
-        }}
-        onConfirm={() => setCurrentPage('dashboard')}
-      />
+      <div className="page-transition">
+        <Confirm
+          data={ocrData}
+          onRestart={() => {
+            setOcrData(null)
+            setCurrentPage('scan')
+          }}
+          onConfirm={() => setCurrentPage('dashboard')}
+        />
+      </div>
     )
   }
 
   if (currentPage === 'admin') {
-    return <Admin />
+    return (
+      <div className="page-transition">
+        <Admin />
+      </div>
+    )
   }
 
   if (currentPage === 'subscribe') {
     return (
-      <Subscribe 
-        onBack={() => setCurrentPage('dashboard')} 
-      />
+      <div className="page-transition">
+        <Subscribe 
+          onBack={() => setCurrentPage('dashboard')} 
+        />
+      </div>
     )
   }
 

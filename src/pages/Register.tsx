@@ -89,6 +89,13 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
             <p style={{color:"#4a90d9", fontSize:"14px", margin:0, fontWeight:"500"}}>
               Créer votre compte hôtel
             </p>
+            <p style={{
+              color: "#64748b",
+              fontSize: "13px",
+              margin: "8px 0 0"
+            }}>
+              Essai gratuit 7 jours • Sans carte bancaire
+            </p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -280,6 +287,25 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
               {feedback.text}
             </p>
           )}
+
+          <div style={{
+            background: "rgba(22,163,74,0.08)",
+            border: "1px solid rgba(22,163,74,0.2)",
+            borderRadius: "10px",
+            padding: "10px 16px",
+            marginTop: "16px",
+            textAlign: "center"
+          }}>
+            <p style={{
+              color: "#166534",
+              fontSize: "12px",
+              margin: 0
+            }}>
+              ✅ 7 jours d'essai gratuit
+              ✅ Aucune carte requise
+              ✅ Annulation à tout moment
+            </p>
+          </div>
 
           <div style={{textAlign: "center", marginTop: "16px"}}>
             <a

@@ -75,6 +75,17 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
             <p style={{color:"#4a90d9", fontSize:"14px", margin:0, fontWeight:"500"}}>
               by Percepta
             </p>
+            <p style={{
+              color: "#64748b",
+              fontSize: "13px",
+              margin: "8px 0 0",
+              padding: "8px 16px",
+              background: "rgba(30,58,138,0.06)",
+              borderRadius: "20px",
+              display: "inline-block"
+            }}>
+              ⚡ Check-in en 30 secondes chrono
+            </p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -202,6 +213,25 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
               {feedback.text}
             </p>
           )}
+
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "16px",
+            marginTop: "16px",
+            paddingTop: "16px",
+            borderTop: "1px solid #e2e8f0"
+          }}>
+            <span style={{color:"#64748b", fontSize:"12px"}}>
+              🔒 Sécurisé
+            </span>
+            <span style={{color:"#64748b", fontSize:"12px"}}>
+              🇪🇺 RGPD
+            </span>
+            <span style={{color:"#64748b", fontSize:"12px"}}>
+              ⚡ Rapide
+            </span>
+          </div>
 
           <div style={{textAlign: "center", marginTop: "16px"}}>
             <a

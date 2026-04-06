@@ -284,7 +284,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
           </div>
         ) : (
           <>
-            <div className="w-full max-w-xl aspect-[3/4] relative rounded-xl overflow-hidden h-[60vh] max-h-[500px]">
+            <div className="w-full max-w-xl aspect-[3/4] relative rounded-xl overflow-hidden h-[60vh] max-h-[500px]" style={{animation: "pulse-border 2s infinite"}}>
               <Webcam
                 ref={webcamRef}
                 audio={false}
@@ -300,6 +300,15 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 }
                 className="w-full h-full object-cover"
               />
+
+              <div style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: "2px",
+                background: "linear-gradient(90deg, transparent, #4a90d9, transparent)",
+                animation: "scan-line 2s linear infinite"
+              }}></div>
 
               {isAnalyzing && (
                 <div className="absolute inset-0 z-10 bg-black/50 flex flex-col items-center justify-center gap-3">
