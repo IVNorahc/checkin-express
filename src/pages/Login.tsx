@@ -62,7 +62,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
             <img 
               src="/percepta-logo.png" 
               alt="Check-in Express by Percepta" 
-              className="h-20 w-auto object-contain mx-auto mb-2"
+              className="h-28 w-auto object-contain mx-auto mb-4"
             />
           </div>
           
