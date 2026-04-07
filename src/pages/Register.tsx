@@ -76,7 +76,7 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
             <img
               src="/percepta-logo.png"
               alt="Check-in Express by Percepta"
-              className="h-28 w-auto object-contain mx-auto"
+              className="h-20 w-auto object-contain mx-auto mb-2"
             />
           </div>
 
