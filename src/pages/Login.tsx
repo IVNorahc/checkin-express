@@ -58,11 +58,11 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
         }} className="sm:p-8 sm:mx-auto sm:max-w-md">
           
           {/* Logo centré */}
-          <div className="flex flex-col items-center mb-6">
+          <div className="flex flex-col items-center mb-4">
             <img 
               src="/percepta-logo.png" 
               alt="Check-in Express by Percepta" 
-              className="h-24 w-auto object-contain mx-auto mb-4"
+              className="h-28 w-auto object-contain mx-auto mb-4"
             />
           </div>
           

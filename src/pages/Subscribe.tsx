@@ -55,21 +55,18 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
         <div style={{maxWidth: "1200px", margin: "0 auto"}}>
           {/* En-tête */}
           <div style={{textAlign: "center", marginBottom: "48px"}}>
-            <div style={{
-              width: "64px", height: "64px",
-              background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
-              borderRadius: "20px",
-              display: "flex", alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 16px",
-              fontSize: "28px",
-              boxShadow: "0 8px 24px rgba(30,58,138,0.3)"
-            }}>🏨</div>
+            <div className="flex flex-col items-center mb-4">
+              <img
+                src="/percepta-logo.png"
+                alt="Check-in Express by Percepta"
+                className="h-28 w-auto object-contain mx-auto"
+              />
+            </div>
             <h1 style={{color: "#1e3a8a", fontSize: "32px", fontWeight: "800", margin: "0 0 16px"}}>
               Choisissez votre formule
             </h1>
             <p style={{color: "#64748b", fontSize: "16px", margin: 0}}>
-              Sans engagement • Annulation à tout moment
+              Sans engagement - Annulation à tout moment
             </p>
           </div>
 

@@ -72,17 +72,15 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
         }} className="sm:p-8 sm:mx-auto sm:max-w-md">
           
           {/* Logo centré */}
+          <div className="flex flex-col items-center mb-4">
+            <img
+              src="/percepta-logo.png"
+              alt="Check-in Express by Percepta"
+              className="h-28 w-auto object-contain mx-auto"
+            />
+          </div>
+
           <div style={{textAlign:"center", marginBottom:"32px"}}>
-            <div style={{
-              width:"72px", height:"72px",
-              background:"linear-gradient(135deg, #1e3a8a, #4a90d9)",
-              borderRadius:"20px",
-              display:"flex", alignItems:"center",
-              justifyContent:"center",
-              margin:"0 auto 16px",
-              fontSize:"32px",
-              boxShadow:"0 8px 24px rgba(30,58,138,0.3)"
-            }}>🏨</div>
             <h1 style={{color:"#1e3a8a", fontSize:"26px", fontWeight:"800", margin:"0 0 4px"}}>
               Check-in Express
             </h1>
@@ -94,7 +92,7 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
               fontSize: "13px",
               margin: "8px 0 0"
             }}>
-              Essai gratuit 7 jours • Sans carte bancaire
+              Essai gratuit 7 jours - Sans carte bancaire
             </p>
           </div>
 
