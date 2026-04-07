@@ -233,7 +233,7 @@ export default function Admin() {
                   <img 
                     src="/percepta-logo.png" 
                     alt="Check-in Express by Percepta" 
-                    className="h-8 w-auto object-contain"
+                    className="h-24 w-auto object-contain"
                   />
                 </div>
                 <h1 style={{fontSize: "24px", fontWeight: "bold", color: "white", margin: 0}}>

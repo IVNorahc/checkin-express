@@ -59,7 +59,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               <img
                 src="/percepta-logo.png"
                 alt="Check-in Express by Percepta"
-                className="h-28 w-auto object-contain mx-auto"
+                className="h-24 w-auto object-contain mx-auto mb-2"
               />
             </div>
             <h1 style={{color: "#1e3a8a", fontSize: "32px", fontWeight: "800", margin: "0 0 16px"}}>

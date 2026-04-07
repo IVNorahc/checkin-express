@@ -323,7 +323,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               <img 
                 src="/percepta-logo.png" 
                 alt="Check-in Express by Percepta" 
-                className="h-8 w-auto object-contain"
+                className="h-24 w-auto object-contain"
               />
             </div>
             <p style={{
