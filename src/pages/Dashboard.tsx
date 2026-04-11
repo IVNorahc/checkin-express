@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
+import { generateFicheControle } from '../utils/generateFicheControle'
 
 type DashboardProps = {
   onRequireLogin: () => void
@@ -113,7 +114,12 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
   const email = session?.user.email ?? ''
   const hotelName = (session?.user.user_metadata?.hotel_name as string | undefined) || email || 'Mon hôtel'
+  const hotelPhone = (session?.user.user_metadata?.phone as string | undefined) || '+221 33 000 00 00'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
+
+  const handleGenerateFiche = () => {
+    generateFicheControle(hotelName, hotelPhone)
+  }
 
   const daysRemaining = useMemo(() => {
     if (!profile?.trial_end) return 0
@@ -486,7 +492,28 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               minWidth: "280px"
             }} className="w-full sm:max-w-sm"
           >
-            💳 Passer à l'abonnement
+            {profile?.status === 'active' ? 'Gérer mon abonnement' : 'Passer à l\'abonnement'}
+          </button>
+        </section>
+
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
+          <button
+            type="button"
+            onClick={handleGenerateFiche}
+            style={{
+              background: "linear-gradient(135deg, #16a34a, #22c55e)",
+              borderRadius: "16px",
+              padding: "14px 24px",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              minWidth: "280px",
+              boxShadow: "0 4px 16px rgba(22,163,74,0.3)"
+            }} className="w-full sm:max-w-sm"
+          >
+            ? Fiche de contrôle
           </button>
         </section>
 
