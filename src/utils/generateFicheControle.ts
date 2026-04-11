@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
+import { supabase } from '../lib/supabase'
 
-export function generateFicheControle(hotelName: string, hotelPhone: string): void {
+export async function generateFicheControle(hotelName: string, hotelPhone: string, guestName: string): Promise<Blob> {
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -199,7 +200,52 @@ export function generateFicheControle(hotelName: string, hotelPhone: string): vo
   y = addField('Chambre N° :', '', y)
   y = addField('?? :', '', y)
 
+  // Return blob instead of downloading
+  return new Blob([pdf.output('blob')], { type: 'application/pdf' })
+}
+
+export async function saveFicheToSupabase(blob: Blob, guestName: string, userId: string): Promise<string> {
   // Generate filename
-  const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
-  pdf.save(`fiche-controle-${hotelName}-${today}.pdf`)
+  const timestamp = Date.now()
+  const fileName = `fiche_${guestName.replace(/[^a-zA-Z0-9]/g, '_')}_${timestamp}.pdf`
+  const filePath = `${userId}/${fileName}`
+  
+  // Upload to Supabase Storage
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from('fiches-controle')
+    .upload(filePath, blob, {
+      contentType: 'application/pdf',
+      upsert: false
+    })
+  
+  if (uploadError) {
+    throw new Error(`Erreur upload: ${uploadError.message}`)
+  }
+  
+  // Insert into database
+  const { data: insertData, error: insertError } = await supabase
+    .from('fiches_controle')
+    .insert({
+      hotel_id: userId,
+      guest_name: guestName,
+      file_path: filePath,
+      file_url: uploadData.path
+    })
+    .select()
+    .single()
+  
+  if (insertError) {
+    throw new Error(`Erreur base de données: ${insertError.message}`)
+  }
+  
+  // Generate signed URL (valid for 1 hour)
+  const { data: urlData, error: urlError } = await supabase.storage
+    .from('fiches-controle')
+    .createSignedUrl(filePath, 3600) // 1 hour
+  
+  if (urlError) {
+    throw new Error(`Erreur URL signée: ${urlError.message}`)
+  }
+  
+  return urlData.signedUrl
 }

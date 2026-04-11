@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
-import { generateFicheControle } from '../utils/generateFicheControle'
+import { generateFicheControle, saveFicheToSupabase } from '../utils/generateFicheControle'
+import FichesControle from './FichesControle'
 
 type DashboardProps = {
   onRequireLogin: () => void
@@ -21,6 +22,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const [lastClients, setLastClients] = useState<Client[]>([])
   const [scansToday, setScansToday] = useState(0)
   const [scansThisMonth, setScansThisMonth] = useState(0)
+  const [showFiches, setShowFiches] = useState(false)
 
   useEffect(() => {
     const loadSession = async () => {
@@ -117,8 +119,22 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const hotelPhone = (session?.user.user_metadata?.phone as string | undefined) || '+221 33 000 00 00'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
-  const handleGenerateFiche = () => {
-    generateFicheControle(hotelName, hotelPhone)
+  const handleGenerateFiche = async () => {
+    const guestName = prompt('Entrez le nom du client:')
+    if (!guestName?.trim()) return
+    
+    try {
+      // Generate PDF blob
+      const blob = await generateFicheControle(hotelName, hotelPhone, guestName.trim())
+
+      // Save to Supabase
+      const signedUrl = await saveFicheToSupabase(blob, guestName.trim(), session!.user.id)
+
+      alert('Fiche de contrôle générée et sauvegardée!')
+    } catch (error) {
+      console.error('Erreur génération fiche:', error)
+      alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    }
   }
 
   const daysRemaining = useMemo(() => {
@@ -288,7 +304,15 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }
 
   return (
-    <div style={{minHeight: "100vh", background: "#e8f4fd"}}>
+    <>
+      {showFiches && session && (
+        <FichesControle 
+          session={session} 
+          onBack={() => setShowFiches(false)} 
+        />
+      )}
+      {!showFiches && (
+        <div style={{minHeight: "100vh", background: "#e8f4fd"}}>
       <header style={{
         position: "fixed",
         top: 0,
@@ -644,12 +668,20 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           )}
         </section>
 
-        <div className="mt-4 sm:mt-6 text-center">
+        <div className="mt-4 sm:mt-6 text-center space-y-2">
+          <button
+            onClick={() => setShowFiches(true)}
+            className="text-[#1e3a8a] font-medium hover:text-[#1e40af] text-sm sm:text-base"
+          >
+            📋 Fiches de contrôle
+          </button>
           <a href="#" className="text-[#1e3a8a] font-medium hover:text-[#1e40af] text-sm sm:text-base">
             Voir l&apos;historique complet
           </a>
         </div>
       </main>
     </div>
+      )}
+    </>
   )
 }
