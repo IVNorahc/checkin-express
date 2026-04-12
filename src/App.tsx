@@ -11,6 +11,7 @@ import Subscribe from './pages/Subscribe'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
+  const [session, setSession] = useState<any>(null)
   const [ocrData, setOcrData] = useState<{
     documentType: string | null
     issuingCountry: string | null
@@ -36,6 +37,21 @@ export default function App() {
     }, 3000)
     return () => clearTimeout(timeout)
   }, [currentPage])
+
+  // Charger la session
+  useEffect(() => {
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      setSession(data.session)
+    }
+    loadSession()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     const checkSession = async () => {
@@ -223,6 +239,7 @@ export default function App() {
     return (
       <div className="page-transition">
         <ScanDocument
+          userId={session?.user?.id || ''}
           onBack={() => setCurrentPage('dashboard')}
           onScanComplete={(data) => {
             // Convert OCRResult to existing format

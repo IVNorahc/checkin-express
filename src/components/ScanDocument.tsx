@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { scanDocument, type OCRResult, getDocumentTypeInfo } from '../utils/ocrService'
+import { canUseOCR } from '../utils/ocrLimitService'
 
 type ScanDocumentProps = {
   onScanComplete: (result: OCRResult) => void
   onBack: () => void
+  userId: string
 }
 
 type ScanStep = 'recto' | 'verso' | 'form'
 
-export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentProps) {
+export default function ScanDocument({ onScanComplete, onBack, userId }: ScanDocumentProps) {
   const [step, setStep] = useState<ScanStep>('recto')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -17,14 +19,37 @@ export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentPro
   const [finalData, setFinalData] = useState<OCRResult | null>(null)
   
   // Form fields
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nom: string
+    prenoms: string
+    dateNaissance: string
+    lieuNaissance: string
+    nationalite: string
+    documentType: 'CNI' | 'PASSEPORT' | 'TITRE_SEJOUR' | 'AUTRE'
+    numeroDocument: string
+    dateDelivrance: string
+    dateExpiration: string
+    
+    departement: string
+    profession: string
+    domicile: string
+    dateArrivee: string
+    venantDe: string
+    allantA: string
+    objetVoyage: string
+    enfants: string
+    immatriculation: string
+    chambre: string
+    inscriptionRegistre: string
+    telephone: string
+  }>({
     // Auto-filled fields
     nom: '',
     prenoms: '',
     dateNaissance: '',
     lieuNaissance: '',
     nationalite: '',
-    documentType: 'AUTRE' as const,
+    documentType: 'AUTRE',
     numeroDocument: '',
     dateDelivrance: '',
     dateExpiration: '',
@@ -112,6 +137,13 @@ export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentPro
 
   const processImage = async () => {
     if (!imageFile) return
+    
+    // Check OCR limits first
+    const ocrCheck = await canUseOCR(userId)
+    if (!ocrCheck.canUse) {
+      setError(ocrCheck.reason || 'Accès OCR non autorisé')
+      return
+    }
     
     setLoading(true)
     setError(null)
@@ -240,7 +272,7 @@ export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentPro
     if (!finalData) return
     
     // Here you would integrate with the existing check-in flow
-    // For now, just log the complete data
+    // For now, just log complete data
     console.log('Complete check-in data:', {
       ocrData: finalData,
       manualData: formData,
@@ -305,20 +337,10 @@ export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentPro
           </div>
         </div>
 
-        {/* Confidence warning */}
-        {finalData && finalData.confidence < 0.85 && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center">
-              <span className="text-2xl mr-3">⚠️</span>
-              <div>
-                <h3 className="font-semibold text-yellow-800 mb-1">
-                  Certains champs ont été détectés avec une faible confiance
-                </h3>
-                <p className="text-yellow-700 text-sm">
-                  Veuillez vérifier les informations avant de valider.
-                </p>
-              </div>
-            </div>
+        {/* Error display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800">{error}</p>
           </div>
         )}
 
@@ -393,12 +415,6 @@ export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentPro
                   >
                     {loading ? '🔄 Analyse en cours...' : '🔍 Analyser le document'}
                   </button>
-                </div>
-              )}
-              
-              {error && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800">{error}</p>
                 </div>
               )}
             </div>
@@ -777,7 +793,8 @@ export default function ScanDocument({ onScanComplete, onBack }: ScanDocumentPro
                         const rect = canvas.getBoundingClientRect()
                         context.moveTo(e.clientX - rect.left, e.clientY - rect.top)
                       }
-                    }}
+                    }
+                  }}
                   onMouseMove={handleSignatureDraw}
                   onMouseUp={validateSignature}
                   onMouseLeave={validateSignature}

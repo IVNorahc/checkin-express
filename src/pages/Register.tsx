@@ -47,11 +47,11 @@ export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
       return
     }
 
-    setFeedback({ type: 'success', text: 'Compte créé avec succès ! 🎉\nRedirection vers les abonnements...' })
+    setFeedback({ type: 'success', text: 'Compte créé avec succès ! 🎉\nRedirection vers votre tableau de bord...' })
     
-    // Rediriger vers Subscribe après 2 secondes
+    // Rediriger vers Dashboard après 2 secondes
     setTimeout(() => {
-      onSubscribe()
+      onLoginClick() // Simule une connexion réussie
     }, 2000)
   }
 
