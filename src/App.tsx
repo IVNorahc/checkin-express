@@ -214,7 +214,7 @@ export default function App() {
       <div className="page-transition">
         <Register 
           onLoginClick={() => setCurrentPage('login')} 
-          _onSubscribe={() => setCurrentPage('subscribe')} 
+          onSubscribe={() => setCurrentPage('subscribe')} 
         />
       </div>
     )

@@ -3,11 +3,10 @@ import { supabase } from '../lib/supabase'
 
 type RegisterProps = {
   onLoginClick: () => void
-  __onSubscribe?: () => void
+  onSubscribe?: () => void
 }
 
-export default function Register(props: RegisterProps) {
-  const { onLoginClick } = props
+export default function Register({ onLoginClick, onSubscribe: _onSubscribe }: RegisterProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [hotelName, setHotelName] = useState('')
   const [email, setEmail] = useState('')
