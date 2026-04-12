@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { supabase } from '../lib/supabase'
 
-export async function generateFicheControle(hotelName: string, hotelPhone: string, guestName: string): Promise<Blob> {
+export async function generateFicheControle(hotelName: string, hotelPhone: string, _guestName: string): Promise<Blob> {
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -110,7 +110,7 @@ export async function generateFicheControle(hotelName: string, hotelPhone: strin
   pdf.text('CLIENT :', margin, y)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6)
-  pdf.text(guestName, margin + pdf.getTextWidth('CLIENT :') + 2, y)
+  pdf.text(_guestName, margin + pdf.getTextWidth('CLIENT :') + 2, y)
   y += 8
   
   y = addField('NOM :', 'Name in capital letters / (écrire en majuscule)', y)
