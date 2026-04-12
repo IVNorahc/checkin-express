@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
+import type { Session } from '@supabase/supabase-js'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -11,7 +12,7 @@ import Subscribe from './pages/Subscribe'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [ocrData, setOcrData] = useState<{
     documentType: string | null
     issuingCountry: string | null

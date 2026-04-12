@@ -210,8 +210,13 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }, [profile, daysRemaining])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    onRequireLogin()
+    try {
+      await supabase.auth.signOut()
+      onRequireLogin()
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error)
+      onRequireLogin() // Rediriger même en cas d'erreur
+    }
   }
 
   const handleSubscribe = () => {
@@ -378,12 +383,13 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               borderRadius: "8px",
               padding: "4px 8px",
               display: "flex",
-              alignItems: "center"
+              alignItems: "center",
+              overflow: "hidden"
             }}>
               <img 
                 src="/percepta-logo.png" 
                 alt="Check-in Express by Percepta" 
-                className="h-24 w-auto object-contain"
+                className="h-10 w-auto object-contain max-w-[150px]"
               />
             </div>
             <p style={{
@@ -539,63 +545,32 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         return null
       })()}
 
-      <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 24px 40px"}}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Hero Section */}
-        <div style={{
-          height: "150px",
-          backgroundImage: "url('/hotel-bg.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center top",
-          borderRadius: "16px",
-          position: "relative",
-          marginBottom: "24px",
-          overflow: "hidden"
-        }} className="sm:h-48 sm:mb-8">
-          <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(30,58,138,0.15)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <h1 style={{
-              color: "white",
-              fontSize: "36px",
-              fontWeight: "800",
-              textAlign: "center",
-              margin: 0,
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)"
-            }}>
-              {hotelName}
-            </h1>
+        <div className="relative h-32 sm:h-40 lg:h-48 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl overflow-hidden mb-6 sm:mb-8">
+          <div className="absolute inset-0 bg-black opacity-20"></div>
+          <div className="relative h-full flex items-center justify-center text-white">
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                {session?.user?.user_metadata?.hotel_name || 'Mon Hôtel'}
+              </h2>
+              <p className="text-sm sm:text-base lg:text-lg opacity-90">
+                Gérez vos check-ins en toute simplicité
+              </p>
+            </div>
           </div>
         </div>
 
-        {trialBanner && (
-        <div style={{
-          borderRadius: "8px",
-          padding: "12px 16px",
-          fontSize: "14px",
-          fontWeight: "500",
-          border: "1px solid",
-          marginBottom: "16px",
-          textAlign: "center",
-          ...(trialBanner.className === 'bg-[#fef3c7] text-[#92400e]' 
-            ? {background: "#fef3c7", color: "#92400e", borderColor: "#f59e0b"}
-            : trialBanner.className === 'bg-[#dcfce7] text-[#166534]'
-            ? {background: "#dcfce7", color: "#166534", borderColor: "#22c55e"}
-            : {background: "#fee2e2", color: "#991b1b", borderColor: "#ef4444"})
-        }}>
-          {trialBanner.text}
-        </div>
-      )}
+        {/* Stats Section */}
 
-        <div style={{fontSize: "14px", fontWeight: "500", color: "#16a34a", textAlign: "center", marginBottom: "24px"}}>
-          {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
+        {/* Online Status */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex items-center px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
+            <span className={`w-2 h-2 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            <span className="text-sm font-medium text-gray-700">
+              {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
+            </span>
+          </div>
         </div>
 
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
