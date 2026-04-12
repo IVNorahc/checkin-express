@@ -19,24 +19,16 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
     setIsLoading(true)
 
     try {
-      // Timeout de 10 secondes pour éviter le blocage indéfini
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Délai de connexion dépassé')), 10000)
-      )
-
-      const { data, error } = await Promise.race([
-        supabase.auth.signInWithPassword({
-          email,
-          password,
-        }),
-        timeoutPromise
-      ]) as any
-
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      })
+      
       if (error) {
-        setFeedback({ type: 'error', text: 'Connexion échouée : ' + error.message })
+        setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
         return
       }
-
+      
       if (!data.session) {
         setFeedback({ type: 'error', text: 'Aucune session créée' })
         return
@@ -55,8 +47,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
       
     } catch (error) {
       console.error('Erreur de connexion:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Erreur de connexion inconnue'
-      setFeedback({ type: 'error', text: 'Connexion échouée : ' + errorMessage })
+      setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
     } finally {
       setIsLoading(false)
     }
