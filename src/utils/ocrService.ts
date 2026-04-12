@@ -25,11 +25,12 @@ export async function scanDocument(imageBase64: string): Promise<OCRResult> {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-3-opus-20240229',
-        max_tokens: 1000,
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
         messages: [
           {
             role: 'user',
