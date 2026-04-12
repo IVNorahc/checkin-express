@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { supabase } from '../lib/supabase'
 
-export async function generateFicheControle(hotelName: string, hotelPhone: string, guestName: string): Promise<Blob> {
+export async function generateFicheControle(hotelName: string, hotelPhone: string, _guestName: string): Promise<Blob> {
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',

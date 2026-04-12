@@ -39,15 +39,15 @@ export default function App() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession()
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
         
-        if (error || !data.session) {
+        if (sessionError || !sessionData.session) {
           setCurrentPage('login')
           setIsCheckingSession(false)
           return
         }
         
-        const isAdmin = data.session.user?.user_metadata?.is_admin === true
+        const isAdmin = sessionData.session.user?.user_metadata?.is_admin === true
         
         if (isAdmin) {
           setCurrentPage('admin')
@@ -56,11 +56,19 @@ export default function App() {
         }
         
         // Seulement si pas admin, vérifier le profil
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('status, trial_end')
-          .eq('id', data.session.user.id)
+          .eq('id', sessionData.session.user.id)
           .single()
+        
+        // Gérer l'erreur PGRST116 (not found) et autres erreurs
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Erreur récupération profil:', profileError)
+          setCurrentPage('login')
+          setIsCheckingSession(false)
+          return
+        }
         
         if (profile?.status === 'active') {
           setCurrentPage('dashboard')
@@ -96,11 +104,18 @@ export default function App() {
           }
           
           // Seulement si pas admin, vérifier le profil
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('status, trial_end')
             .eq('id', session.user.id)
             .single()
+          
+          // Gérer l'erreur PGRST116 (not found) et autres erreurs
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.error('Erreur récupération profil:', profileError)
+            setCurrentPage('login')
+            return
+          }
           
           if (profile?.status === 'active') {
             setCurrentPage('dashboard')

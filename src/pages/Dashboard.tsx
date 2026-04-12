@@ -45,11 +45,16 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       initDB(data.session.user.id)
       
       // Récupérer le profil depuis Supabase
-      const { data: profileData } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('status, trial_end, subscription_id')
         .eq('id', data.session.user.id)
         .single()
+      
+      // Gérer l'erreur PGRST116 (not found) et autres erreurs
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erreur récupération profil:', error)
+      }
       
       if (profileData) {
         setProfile(profileData)
