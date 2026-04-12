@@ -3,11 +3,10 @@ import { supabase } from '../lib/supabase'
 
 type RegisterProps = {
   onLoginClick: () => void
-  onSubscribe?: () => void
+  onSubscribe: () => void
 }
 
-export default function Register({ onLoginClick, onSubscribe: _onSubscribe }: RegisterProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
   const [hotelName, setHotelName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,11 +47,11 @@ export default function Register({ onLoginClick, onSubscribe: _onSubscribe }: Re
       return
     }
 
-    setFeedback({ type: 'success', text: 'Compte créé avec succès ! 🎉\nRedirection vers votre tableau de bord...' })
+    setFeedback({ type: 'success', text: 'Compte créé avec succès ! 🎉\nRedirection vers les abonnements...' })
     
-    // Rediriger vers Dashboard après 2 secondes
+    // Rediriger vers Subscribe après 2 secondes
     setTimeout(() => {
-      onLoginClick() // Simule une connexion réussie
+      onSubscribe()
     }, 2000)
   }
 

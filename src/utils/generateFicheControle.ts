@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { supabase } from '../lib/supabase'
 
-export async function generateFicheControle(hotelName: string, hotelPhone: string, __guestName: string): Promise<Blob> {
+export async function generateFicheControle(hotelName: string, hotelPhone: string, guestName: string): Promise<Blob> {
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -103,16 +103,6 @@ export async function generateFicheControle(hotelName: string, hotelPhone: strin
   
   // Fields
   let y = margin + 20
-  
-  // Add guest name field at the top
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(7)
-  pdf.text('CLIENT :', margin, y)
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(6)
-  pdf.text(__guestName, margin + pdf.getTextWidth('CLIENT :') + 2, y)
-  y += 8
-  
   y = addField('NOM :', 'Name in capital letters / (écrire en majuscule)', y)
   y = addField('Prénoms :', 'Christian name', y)
   y = addField('Né(e) le :', 'Date and place of birth', y)
@@ -214,10 +204,10 @@ export async function generateFicheControle(hotelName: string, hotelPhone: strin
   return new Blob([pdf.output('blob')], { type: 'application/pdf' })
 }
 
-export async function saveFicheToSupabase(blob: Blob, _guestName: string, userId: string): Promise<string> {
+export async function saveFicheToSupabase(blob: Blob, guestName: string, userId: string): Promise<string> {
   // Generate filename
   const timestamp = Date.now()
-  const fileName = `fiche_${_guestName.replace(/[^a-zA-Z0-9]/g, '_')}_${timestamp}.pdf`
+  const fileName = `fiche_${guestName.replace(/[^a-zA-Z0-9]/g, '_')}_${timestamp}.pdf`
   const filePath = `${userId}/${fileName}`
   
   // Upload to Supabase Storage
@@ -237,7 +227,7 @@ export async function saveFicheToSupabase(blob: Blob, _guestName: string, userId
     .from('fiches_controle')
     .insert({
       hotel_id: userId,
-      guest_name: _guestName,
+      guest_name: guestName,
       file_path: filePath,
       file_url: uploadData.path
     })

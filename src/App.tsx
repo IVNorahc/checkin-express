@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
-import type { Session } from '@supabase/supabase-js'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
-import ScanDocument from './components/ScanDocument'
 import Confirm from './pages/Confirm'
 import Admin from './pages/Admin'
 import Subscribe from './pages/Subscribe'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
-  const [session, setSession] = useState<Session | null>(null)
   const [ocrData, setOcrData] = useState<{
     documentType: string | null
     issuingCountry: string | null
@@ -38,21 +35,6 @@ export default function App() {
     }, 3000)
     return () => clearTimeout(timeout)
   }, [currentPage])
-
-  // Charger la session
-  useEffect(() => {
-    const loadSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      setSession(data.session)
-    }
-    loadSession()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
 
   useEffect(() => {
     const checkSession = async () => {
@@ -239,26 +221,10 @@ export default function App() {
   if (currentPage === 'scan') {
     return (
       <div className="page-transition">
-        <ScanDocument
-          userId={session?.user?.id || ''}
+        <Scan
           onBack={() => setCurrentPage('dashboard')}
-          onScanComplete={(data) => {
-            // Convert OCRResult to existing format
-            const convertedData = {
-              documentType: data.documentType,
-              issuingCountry: null,
-              surname: data.nom,
-              givenNames: data.prenoms,
-              dateOfBirth: data.dateNaissance,
-              documentNumber: data.numeroDocument,
-              nationality: data.nationalite,
-              sex: null,
-              expiryDate: data.dateExpiration,
-              address: null,
-              needsBackSide: data.needsVerso,
-              confidence: data.confidence
-            }
-            setOcrData(convertedData)
+          onCapture={(data) => {
+            setOcrData(data)
             setCurrentPage('confirm')
           }}
         />

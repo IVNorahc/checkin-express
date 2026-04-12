@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
 import { generateFicheControle, saveFicheToSupabase } from '../utils/generateFicheControle'
 import FichesControle from './FichesControle'
-import { getHotelProfile, getTrialInfo, canUseOCR, incrementOCRScans } from '../utils/ocrLimitService'
 
 type DashboardProps = {
   onRequireLogin: () => void
@@ -18,7 +17,6 @@ const DAY_MS = 24 * 60 * 60 * 1000
 export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick, onSubscribeClick }: DashboardProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<{ status: string; trial_end: string | null; subscription_id: string | null } | null>(null)
-  const [hotelProfile, setHotelProfile] = useState<any>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [now, setNow] = useState(Date.now())
   const [lastClients, setLastClients] = useState<Client[]>([])
@@ -56,10 +54,6 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       if (profileData) {
         setProfile(profileData)
       }
-
-      // Récupérer le profil hôtel pour les scans OCR
-      const hotelData = await getHotelProfile(data.session.user.id)
-      setHotelProfile(hotelData)
     }
 
     void loadSession()
@@ -143,30 +137,6 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
     }
   }
 
-  const handleScanWithLimit = async () => {
-    if (!session) return
-    
-    const ocrCheck = await canUseOCR(session.user.id)
-    
-    if (!ocrCheck.canUse) {
-      alert(ocrCheck.reason || 'Accès OCR non autorisé')
-      if (ocrCheck.reason?.includes('souscrivez')) {
-        onSubscribeClick?.()
-      }
-      return
-    }
-    
-    // Incrémenter le compteur de scans
-    await incrementOCRScans(session.user.id)
-    
-    // Recharger le profil pour mettre à jour l'affichage
-    const updatedProfile = await getHotelProfile(session.user.id)
-    setHotelProfile(updatedProfile)
-    
-    // Continuer vers le scan
-    onScanComplete()
-  }
-
   const daysRemaining = useMemo(() => {
     if (!profile?.trial_end) return 0
     const trialEnd = new Date(profile.trial_end).getTime()
@@ -210,13 +180,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }, [profile, daysRemaining])
 
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut()
-      onRequireLogin()
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error)
-      onRequireLogin() // Rediriger même en cas d'erreur
-    }
+    await supabase.auth.signOut()
+    onRequireLogin()
   }
 
   const handleSubscribe = () => {
@@ -383,13 +348,12 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               borderRadius: "8px",
               padding: "4px 8px",
               display: "flex",
-              alignItems: "center",
-              overflow: "hidden"
+              alignItems: "center"
             }}>
               <img 
                 src="/percepta-logo.png" 
                 alt="Check-in Express by Percepta" 
-                className="h-10 w-auto object-contain max-w-[150px]"
+                className="h-24 w-auto object-contain"
               />
             </div>
             <p style={{
@@ -456,127 +420,69 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </div>
       </header>
 
-      {/* Trial Banner */}
-      {hotelProfile && (() => {
-        const trialInfo = getTrialInfo(hotelProfile)
-        if (trialInfo.isActive) {
-          return (
-            <div style={{
-              background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
-              color: "#78350f",
-              padding: "12px 24px",
-              margin: "16px 24px 0",
-              borderRadius: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              boxShadow: "0 4px 12px rgba(251,191,36,0.3)"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "20px" }}>🎁</span>
-                <div>
-                  <div style={{ fontWeight: "600", fontSize: "14px" }}>
-                    Essai gratuit — {trialInfo.daysRemaining} jours restants
-                  </div>
-                  <div style={{ fontSize: "12px", opacity: 0.9 }}>
-                    Scans OCR : {trialInfo.scansUsed}/{trialInfo.scansLimit} utilisés
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={onSubscribeClick}
-                style={{
-                  background: "rgba(255,255,255,0.2)",
-                  border: "1px solid rgba(255,255,255,0.3)",
-                  color: "#78350f",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  cursor: "pointer"
-                }}
-              >
-                Mettre à niveau
-              </button>
-            </div>
-          )
-        } else if (!hotelProfile.subscription_status || hotelProfile.subscription_status !== 'active') {
-          return (
-            <div style={{
-              background: "linear-gradient(135deg, #ef4444, #dc2626)",
-              color: "white",
-              padding: "12px 24px",
-              margin: "16px 24px 0",
-              borderRadius: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              boxShadow: "0 4px 12px rgba(239,68,68,0.3)"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "20px" }}>⏰</span>
-                <div>
-                  <div style={{ fontWeight: "600", fontSize: "14px" }}>
-                    Votre essai gratuit est terminé
-                  </div>
-                  <div style={{ fontSize: "12px", opacity: 0.9 }}>
-                    Souscrivez pour continuer
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={onSubscribeClick}
-                style={{
-                  background: "rgba(255,255,255,0.2)",
-                  border: "1px solid rgba(255,255,255,0.3)",
-                  color: "white",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  cursor: "pointer"
-                }}
-              >
-                Choisir un forfait
-              </button>
-            </div>
-          )
-        }
-        return null
-      })()}
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+      <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 24px 40px"}}>
         {/* Hero Section */}
-        <div className="relative h-32 sm:h-40 lg:h-48 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl overflow-hidden mb-6 sm:mb-8">
-          <div className="absolute inset-0 bg-black opacity-20"></div>
-          <div className="relative h-full flex items-center justify-center text-white">
-            <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
-                {session?.user?.user_metadata?.hotel_name || 'Mon Hôtel'}
-              </h2>
-              <p className="text-sm sm:text-base lg:text-lg opacity-90">
-                Gérez vos check-ins en toute simplicité
-              </p>
-            </div>
+        <div style={{
+          height: "150px",
+          backgroundImage: "url('/hotel-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          borderRadius: "16px",
+          position: "relative",
+          marginBottom: "24px",
+          overflow: "hidden"
+        }} className="sm:h-48 sm:mb-8">
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(30,58,138,0.15)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <h1 style={{
+              color: "white",
+              fontSize: "36px",
+              fontWeight: "800",
+              textAlign: "center",
+              margin: 0,
+              textShadow: "0 2px 4px rgba(0,0,0,0.3)"
+            }}>
+              {hotelName}
+            </h1>
           </div>
         </div>
 
-        {/* Stats Section */}
+        {trialBanner && (
+        <div style={{
+          borderRadius: "8px",
+          padding: "12px 16px",
+          fontSize: "14px",
+          fontWeight: "500",
+          border: "1px solid",
+          marginBottom: "16px",
+          textAlign: "center",
+          ...(trialBanner.className === 'bg-[#fef3c7] text-[#92400e]' 
+            ? {background: "#fef3c7", color: "#92400e", borderColor: "#f59e0b"}
+            : trialBanner.className === 'bg-[#dcfce7] text-[#166534]'
+            ? {background: "#dcfce7", color: "#166534", borderColor: "#22c55e"}
+            : {background: "#fee2e2", color: "#991b1b", borderColor: "#ef4444"})
+        }}>
+          {trialBanner.text}
+        </div>
+      )}
 
-        {/* Online Status */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex items-center px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
-            <span className={`w-2 h-2 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
-            <span className="text-sm font-medium text-gray-700">
-              {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
-            </span>
-          </div>
+        <div style={{fontSize: "14px", fontWeight: "500", color: "#16a34a", textAlign: "center", marginBottom: "24px"}}>
+          {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
         </div>
 
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
           <button
             type="button"
-            onClick={handleScanWithLimit}
+            onClick={onScanComplete}
             style={{
               background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
               borderRadius: "16px",
@@ -709,7 +615,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                 pour commencer
               </p>
               <button
-                onClick={handleScanWithLimit}
+                onClick={onScanComplete}
                 style={{
                   background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
                   color: "white",
