@@ -3,10 +3,10 @@ import { supabase } from '../lib/supabase'
 
 type RegisterProps = {
   onLoginClick: () => void
-  onSubscribe: () => void
+  onSubscribe?: () => void
 }
 
-export default function Register({ onLoginClick, onSubscribe }: RegisterProps) {
+export default function Register({ onLoginClick, onSubscribe: _onSubscribe }: RegisterProps) {
   const [hotelName, setHotelName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

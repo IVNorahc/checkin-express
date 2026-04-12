@@ -103,6 +103,16 @@ export async function generateFicheControle(hotelName: string, hotelPhone: strin
   
   // Fields
   let y = margin + 20
+  
+  // Add guest name field at the top
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(7)
+  pdf.text('CLIENT :', margin, y)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(6)
+  pdf.text(guestName, margin + pdf.getTextWidth('CLIENT :') + 2, y)
+  y += 8
+  
   y = addField('NOM :', 'Name in capital letters / (écrire en majuscule)', y)
   y = addField('Prénoms :', 'Christian name', y)
   y = addField('Né(e) le :', 'Date and place of birth', y)
