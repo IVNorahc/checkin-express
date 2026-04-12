@@ -1,55 +1,35 @@
-import { useState, type FormEvent } from 'react'
+import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 type LoginProps = {
   onRegisterClick: () => void
-  onLoginSuccess: (isAdmin?: boolean) => void
 }
 
-export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
+export default function Login({ onRegisterClick }: LoginProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setFeedback(null)
     setIsLoading(true)
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      })
-      
-      if (error) {
-        setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
-        return
-      }
-      
-      if (!data.session) {
-        setFeedback({ type: 'error', text: 'Aucune session créée' })
-        return
-      }
-
-      // Check if user is admin FIRST
-      const isAdmin = data.user?.user_metadata?.is_admin === true
-      if (isAdmin) {
-        setFeedback({ type: 'success', text: 'Connexion admin réussie !' })
-        onLoginSuccess?.(true)
-        return  // NE PAS continuer vers dashboard
-      }
-      
-      setFeedback({ type: 'success', text: 'Connexion réussie !' })
-      onLoginSuccess?.(false)
-      
-    } catch (error) {
-      console.error('Erreur de connexion:', error)
+    setFeedback(null)
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+    
+    if (error) {
       setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
-    } finally {
       setIsLoading(false)
+      return
+    }
+    
+    if (data.session) {
+      window.location.href = '/dashboard'
     }
   }
 
@@ -98,7 +78,7 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleLogin}>
             <div style={{marginBottom:"16px"}}>
               <input
                 type="email"

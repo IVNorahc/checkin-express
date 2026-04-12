@@ -194,13 +194,6 @@ export default function App() {
       <div className="page-transition">
         <Login
           onRegisterClick={() => setCurrentPage('register')}
-          onLoginSuccess={(isAdmin) => {
-            if (isAdmin) {
-              setCurrentPage('admin')
-              return  // STOP immédiatement
-            }
-            setCurrentPage('dashboard')
-          }}
         />
       </div>
     )
