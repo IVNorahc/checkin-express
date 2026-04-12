@@ -18,27 +18,48 @@ export default function Login({ onRegisterClick, onLoginSuccess }: LoginProps) {
     setFeedback(null)
     setIsLoading(true)
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      // Timeout de 10 secondes pour éviter le blocage indéfini
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Délai de connexion dépassé')), 10000)
+      )
 
-    setIsLoading(false)
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        timeoutPromise
+      ]) as any
 
-    if (error) {
-      setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
-      return
+      if (error) {
+        setFeedback({ type: 'error', text: 'Connexion échouée : ' + error.message })
+        return
+      }
+
+      if (!data.session) {
+        setFeedback({ type: 'error', text: 'Aucune session créée' })
+        return
+      }
+
+      // Check if user is admin FIRST
+      const isAdmin = data.user?.user_metadata?.is_admin === true
+      if (isAdmin) {
+        setFeedback({ type: 'success', text: 'Connexion admin réussie !' })
+        onLoginSuccess?.(true)
+        return  // NE PAS continuer vers dashboard
+      }
+      
+      setFeedback({ type: 'success', text: 'Connexion réussie !' })
+      onLoginSuccess?.(false)
+      
+    } catch (error) {
+      console.error('Erreur de connexion:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Erreur de connexion inconnue'
+      setFeedback({ type: 'error', text: 'Connexion échouée : ' + errorMessage })
+    } finally {
+      setIsLoading(false)
     }
-
-    // Check if user is admin FIRST
-    const isAdmin = data.user?.user_metadata?.is_admin === true
-    if (isAdmin) {
-      onLoginSuccess?.(true)
-      return  // NE PAS continuer vers Subscribe
-    }
-    
-    setFeedback({ type: 'success', text: 'Connexion réussie !' })
-    onLoginSuccess?.(false)
   }
 
   return (
