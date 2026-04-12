@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 
 type RegisterProps = {
   onLoginClick: () => void
-  _onSubscribe?: () => void
+  __onSubscribe?: () => void
 }
 
 export default function Register(props: RegisterProps) {
