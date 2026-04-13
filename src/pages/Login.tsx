@@ -21,21 +21,20 @@ export default function Login({ onRegisterClick }: LoginProps) {
       email,
       password
     })
-    
+
     if (error) {
-      // Vérifier si l'erreur est due à une email non confirmé
-      if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login')) {
-        setFeedback({ type: 'error', text: 'Veuillez confirmer votre email avant de vous connecter.' })
-      } else {
-        setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
-      }
+      setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
       setIsLoading(false)
       return
     }
-    
+
+    // Rediriger immédiatement sans attendre le profil hôtel
     if (data.session) {
-      window.location.href = '/dashboard'
+      window.location.replace(window.location.origin + '/dashboard')
+      return
     }
+
+    setIsLoading(false)
   }
 
   return (
