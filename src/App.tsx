@@ -77,7 +77,7 @@ export default function App() {
           if (trialEnd > new Date()) {
             setCurrentPage('dashboard')
           } else {
-            setCurrentPage('subscribe')
+            setCurrentPage('pricing')
           }
         } else {
           setCurrentPage('login')
@@ -124,7 +124,7 @@ export default function App() {
             if (trialEnd > new Date()) {
               setCurrentPage('dashboard')
             } else {
-              setCurrentPage('subscribe')
+              setCurrentPage('pricing')
             }
           } else {
             setCurrentPage('login')
@@ -204,7 +204,6 @@ export default function App() {
       <div className="page-transition">
         <Register 
           onLoginClick={() => setCurrentPage('login')} 
-          onSubscribe={() => setCurrentPage('subscribe')} 
         />
       </div>
     )
@@ -264,6 +263,16 @@ export default function App() {
   }
 
   if (currentPage === 'subscribe') {
+    return (
+      <div className="page-transition">
+        <Subscribe 
+          onBack={() => setCurrentPage('dashboard')} 
+        />
+      </div>
+    )
+  }
+
+  if (currentPage === 'pricing') {
     return (
       <div className="page-transition">
         <Subscribe 
