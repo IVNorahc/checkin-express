@@ -23,7 +23,12 @@ export default function Login({ onRegisterClick }: LoginProps) {
     })
     
     if (error) {
-      setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
+      // Vérifier si l'erreur est due à une email non confirmé
+      if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login')) {
+        setFeedback({ type: 'error', text: 'Veuillez confirmer votre email avant de vous connecter.' })
+      } else {
+        setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
+      }
       setIsLoading(false)
       return
     }

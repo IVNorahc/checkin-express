@@ -46,12 +46,12 @@ export default function Register({ onLoginClick }: RegisterProps) {
       return
     }
 
-    setFeedback({ type: 'success', text: 'Compte créé avec succès ! 🎉\nRedirection vers votre tableau de bord...' })
+    setFeedback({ type: 'success', text: `📧 Un email de confirmation a été envoyé à ${email}.\nVeuillez valider votre compte avant de vous connecter.` })
     
-    // Rediriger vers Dashboard après 2 secondes
+    // Rediriger vers Login après 3 secondes
     setTimeout(() => {
       onLoginClick()
-    }, 2000)
+    }, 3000)
   }
 
   return (
