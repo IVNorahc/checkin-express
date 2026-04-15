@@ -7,6 +7,7 @@ import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
 import Admin from './pages/Admin'
 import Subscribe from './pages/Subscribe'
+import Layout from './components/Layout'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
@@ -147,94 +148,110 @@ export default function App() {
 
   if (currentPage === 'login') {
     return (
-      <div className="page-transition">
-        <Login
-          onRegisterClick={() => setCurrentPage('register')}
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Login
+            onRegisterClick={() => setCurrentPage('register')}
+          />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'register') {
     return (
-      <div className="page-transition">
-        <Register 
-          onLoginClick={() => setCurrentPage('login')} 
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Register 
+            onLoginClick={() => setCurrentPage('login')} 
+          />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'dashboard') {
     return (
-      <div className="page-transition">
-        <Dashboard
-          onRequireLogin={() => setCurrentPage('login')}
-          onScanComplete={() => {
-            setOcrData(null)
-            setCurrentPage('scan')
-          }}
-          onAdminClick={() => setCurrentPage('admin')}
-          onSubscribeClick={() => setCurrentPage('subscribe')}
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Dashboard
+            onRequireLogin={() => setCurrentPage('login')}
+            onScanComplete={() => {
+              setOcrData(null)
+              setCurrentPage('scan')
+            }}
+            onAdminClick={() => setCurrentPage('admin')}
+            onSubscribeClick={() => setCurrentPage('pricing')}
+          />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'scan') {
     return (
-      <div className="page-transition">
-        <Scan
-          onBack={() => setCurrentPage('dashboard')}
-          onCapture={(data) => {
-            setOcrData(data)
-            setCurrentPage('confirm')
-          }}
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Scan
+            onBack={() => setCurrentPage('dashboard')}
+            onCapture={(data) => {
+              setOcrData(data)
+              setCurrentPage('confirm')
+            }}
+          />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'confirm') {
     return (
-      <div className="page-transition">
-        <Confirm
-          data={ocrData}
-          onRestart={() => {
-            setOcrData(null)
-            setCurrentPage('scan')
-          }}
-          onConfirm={() => setCurrentPage('dashboard')}
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Confirm
+            data={ocrData}
+            onRestart={() => {
+              setOcrData(null)
+              setCurrentPage('scan')
+            }}
+            onConfirm={() => setCurrentPage('dashboard')}
+          />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'admin') {
     return (
-      <div className="page-transition">
-        <Admin />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Admin />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'subscribe') {
     return (
-      <div className="page-transition">
-        <Subscribe 
-          onBack={() => setCurrentPage('dashboard')} 
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Subscribe 
+            onBack={() => setCurrentPage('dashboard')} 
+          />
+        </div>
+      </Layout>
     )
   }
 
   if (currentPage === 'pricing') {
     return (
-      <div className="page-transition">
-        <Subscribe 
-          onBack={() => setCurrentPage('dashboard')} 
-        />
-      </div>
+      <Layout>
+        <div className="page-transition">
+          <Subscribe 
+            onBack={() => setCurrentPage('dashboard')} 
+          />
+        </div>
+      </Layout>
     )
   }
 

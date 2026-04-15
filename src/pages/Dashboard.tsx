@@ -354,6 +354,24 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             }
 
             try {
+              // Vérifier si le téléphone est déjà utilisé
+              const { data: existingHotel, error: checkError } = await supabase
+                .from('hotels')
+                .select('phone')
+                .eq('phone', phone)
+                .single()
+
+              if (checkError && checkError.code !== 'PGRST116') {
+                console.error('Erreur vérification téléphone:', checkError)
+                alert('Erreur lors de la vérification du téléphone')
+                return
+              }
+
+              if (existingHotel) {
+                alert('Ce numéro de téléphone est déjà associé à un compte.')
+                return
+              }
+
               // Enregistrer le profil hôtel
               const { error } = await supabase
                 .from('hotels')
@@ -446,87 +464,41 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           flexWrap: "wrap",
           gap: "8px"
         }} className="sm:px-6 sm:gap-3">
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            flex: 1,
-            minWidth: 0,
-            overflow: "hidden"
-          }} className="sm:text-lg">
-            <div style={{
-              background: "rgba(255,255,255,0.95)",
-              borderRadius: "8px",
-              padding: "4px 8px",
-              display: "flex",
-              alignItems: "center"
-            }}>
+          <div className="flex items-center justify-between px-4 py-2 bg-white shadow-sm w-full">
+            {/* Logo et nom à gauche */}
+            <div className="flex items-center gap-3">
               <img 
                 src="/percepta-logo.png" 
                 alt="Check-in Express by Percepta" 
-                className="h-24 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
+              <span className="font-bold text-lg text-gray-900">
+                Check-in Express
+              </span>
             </div>
-            <p style={{
-              fontWeight: "bold", 
-              fontSize: "16px", 
-              margin: 0,
-              overflow: "hidden", 
-              textOverflow: "ellipsis", 
-              whiteSpace: "nowrap"
-            }}>
-              Check-in Express
-            </p>
-          </div>
-          <div style={{display: "flex", alignItems: "center", gap: "8px", flexShrink: 0}} className="sm:gap-3">
-            {isAdmin && onAdminClick && (
+
+            {/* Navigation et déconnexion à droite */}
+            <div className="flex items-center gap-3">
+              {isAdmin && onAdminClick && (
+                <button
+                  type="button"
+                  onClick={onAdminClick}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Admin
+                </button>
+              )}
               <button
                 type="button"
-                onClick={onAdminClick}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  background: "white",
-                  color: "#1e3a8a",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  border: "none",
-                  cursor: "pointer"
+                onClick={() => {
+                  supabase.auth.signOut()
+                  window.location.replace(window.location.origin + '/login')
                 }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
               >
-                ⚙️ Admin
+                Déconnexion
               </button>
-            )}
-            {profile?.status === 'active' && (
-              <span style={{
-                padding: "4px 8px",
-                borderRadius: "12px",
-                background: "#dcfce7",
-                color: "#166534",
-                fontSize: "12px",
-                fontWeight: "500"
-              }}>
-                ✅ Abonné
-              </span>
-            )}
-            <span style={{fontSize: "14px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-              {hotelName}
-            </span>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "8px",
-                border: "1px solid white",
-                color: "white",
-                fontSize: "14px",
-                background: "transparent",
-                cursor: "pointer"
-              }}
-            >
-              Déconnexion
-            </button>
+            </div>
           </div>
         </div>
       </header>
