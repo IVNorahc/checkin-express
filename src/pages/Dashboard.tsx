@@ -17,6 +17,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick, onSubscribeClick }: DashboardProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<{ status: string; trial_end: string | null; subscription_id: string | null } | null>(null)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [now, setNow] = useState(Date.now())
   const [lastClients, setLastClients] = useState<Client[]>([])
@@ -47,17 +48,26 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       // Récupérer le profil depuis Supabase
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('status, trial_end, subscription_id')
+        .select('status, trial_end, subscription_id, hotel_name, phone')
         .eq('id', data.session.user.id)
         .single()
       
       // Gérer l'erreur PGRST116 (not found) et autres erreurs
       if (error && error.code !== 'PGRST116') {
         console.error('Erreur récupération profil:', error)
+        setNeedsOnboarding(true)
+        return
       }
       
       if (profileData) {
         setProfile(profileData)
+        // Vérifier si les informations de base sont manquantes
+        if (!profileData.hotel_name || !profileData.phone) {
+          setNeedsOnboarding(true)
+        }
+      } else {
+        // Profil non trouvé, besoin d'onboarding
+        setNeedsOnboarding(true)
       }
     }
 
@@ -303,6 +313,99 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               contact@percepta.io
             </a>
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si onboarding est nécessaire, afficher le formulaire
+  if (needsOnboarding && session) {
+    return (
+      <div className="min-h-screen bg-[#e8f4fd] flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <img 
+              src="/percepta-logo.png" 
+              alt="Check-in Express by Percepta" 
+              className="h-16 w-auto object-contain mx-auto mb-4"
+            />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Bienvenue dans Check-in Express ! 
+            </h1>
+            <p className="text-gray-600">
+              Complétez vos informations pour commencer
+            </p>
+          </div>
+
+          <form onSubmit={async (e) => {
+            e.preventDefault()
+            const formData = new FormData(e.currentTarget)
+            const hotelName = formData.get('hotelName') as string
+            const phone = formData.get('phone') as string
+
+            if (!hotelName || !phone) {
+              alert('Veuillez remplir tous les champs')
+              return
+            }
+
+            try {
+              // Mettre à jour le profil
+              const { error } = await supabase
+                .from('profiles')
+                .update({ 
+                  hotel_name: hotelName,
+                  phone: phone,
+                  status: 'trial',
+                  trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+                })
+                .eq('id', session.user.id)
+
+              if (error) {
+                console.error('Erreur mise à jour profil:', error)
+                alert('Erreur lors de la mise à jour')
+                return
+              }
+
+              // Recharger le profil
+              window.location.reload()
+            } catch (error) {
+              console.error('Erreur:', error)
+              alert('Erreur lors de la mise à jour')
+            }
+          }}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de l'hôtel *
+              </label>
+              <input
+                type="text"
+                name="hotelName"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: Hôtel de la Plage"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Téléphone *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: +221 33 123 45 67"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors"
+            >
+              Commencer avec Check-in Express
+            </button>
+          </form>
         </div>
       </div>
     )

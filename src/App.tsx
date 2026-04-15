@@ -55,33 +55,11 @@ export default function App() {
           return  // STOP - ne pas vérifier le profil
         }
         
-        // Seulement si pas admin, vérifier le profil
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('status, trial_end')
-          .eq('id', sessionData.session.user.id)
-          .single()
+        // Rediriger immédiatement vers dashboard sans attendre le profil
+        setCurrentPage('dashboard')
+        setIsCheckingSession(false)
         
-        // Gérer l'erreur PGRST116 (not found) et autres erreurs
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Erreur récupération profil:', profileError)
-          setCurrentPage('login')
-          setIsCheckingSession(false)
-          return
-        }
-        
-        if (profile?.status === 'active') {
-          setCurrentPage('dashboard')
-        } else if (profile?.status === 'trial') {
-          const trialEnd = new Date(profile.trial_end)
-          if (trialEnd > new Date()) {
-            setCurrentPage('dashboard')
-          } else {
-            setCurrentPage('pricing')
-          }
-        } else {
-          setCurrentPage('login')
-        }
+        // Le profil sera récupéré dans le composant Dashboard lui-même
       } catch (error) {
         console.error('Session error:', error)
         setCurrentPage('login')
@@ -103,32 +81,10 @@ export default function App() {
             return  // STOP - ne pas vérifier le profil
           }
           
-          // Seulement si pas admin, vérifier le profil
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('status, trial_end')
-            .eq('id', session.user.id)
-            .single()
+          // Rediriger immédiatement vers dashboard sans attendre le profil
+          setCurrentPage('dashboard')
           
-          // Gérer l'erreur PGRST116 (not found) et autres erreurs
-          if (profileError && profileError.code !== 'PGRST116') {
-            console.error('Erreur récupération profil:', profileError)
-            setCurrentPage('login')
-            return
-          }
-          
-          if (profile?.status === 'active') {
-            setCurrentPage('dashboard')
-          } else if (profile?.status === 'trial') {
-            const trialEnd = new Date(profile.trial_end)
-            if (trialEnd > new Date()) {
-              setCurrentPage('dashboard')
-            } else {
-              setCurrentPage('pricing')
-            }
-          } else {
-            setCurrentPage('login')
-          }
+          // Le profil sera récupéré dans le composant Dashboard lui-même
         } else {
           setCurrentPage('login')
         }
