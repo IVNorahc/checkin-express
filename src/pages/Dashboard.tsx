@@ -45,28 +45,33 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       // Initialiser la DB avec l'ID utilisateur Supabase
       initDB(data.session.user.id)
       
-      // Récupérer le profil depuis Supabase
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('status, trial_end, subscription_id, hotel_name, phone')
-        .eq('id', data.session.user.id)
+      // Récupérer le profil hôtel depuis Supabase
+      const { data: hotelData, error } = await supabase
+        .from('hotels')
+        .select('subscription_status, trial_end, hotel_name, phone')
+        .eq('user_id', data.session.user.id)
         .single()
       
       // Gérer l'erreur PGRST116 (not found) et autres erreurs
       if (error && error.code !== 'PGRST116') {
-        console.error('Erreur récupération profil:', error)
+        console.error('Erreur récupération hôtel:', error)
         setNeedsOnboarding(true)
         return
       }
       
-      if (profileData) {
-        setProfile(profileData)
+      if (hotelData) {
+        // Convertir les données pour compatibilité avec le reste du code
+        setProfile({
+          status: hotelData.subscription_status,
+          trial_end: hotelData.trial_end,
+          subscription_id: null
+        })
         // Vérifier si les informations de base sont manquantes
-        if (!profileData.hotel_name || !profileData.phone) {
+        if (!hotelData.hotel_name || !hotelData.phone) {
           setNeedsOnboarding(true)
         }
       } else {
-        // Profil non trouvé, besoin d'onboarding
+        // Hôtel non trouvé, besoin d'onboarding
         setNeedsOnboarding(true)
       }
     }
@@ -349,25 +354,23 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             }
 
             try {
-              // Mettre à jour le profil
+              // Enregistrer le profil hôtel
               const { error } = await supabase
-                .from('profiles')
-                .update({ 
+                .from('hotels')
+                .upsert({
+                  user_id: session.user.id,
                   hotel_name: hotelName,
-                  phone: phone,
-                  status: 'trial',
-                  trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-                })
-                .eq('id', session.user.id)
+                  phone: phone
+                }, { onConflict: 'user_id' })
 
               if (error) {
-                console.error('Erreur mise à jour profil:', error)
-                alert('Erreur lors de la mise à jour')
+                console.error('Erreur:', error)
+                alert('Erreur: ' + error.message)
                 return
               }
 
-              // Recharger le profil
-              window.location.reload()
+              // Rediriger vers le dashboard
+              window.location.replace(window.location.origin + '/dashboard')
             } catch (error) {
               console.error('Erreur:', error)
               alert('Erreur lors de la mise à jour')
