@@ -184,7 +184,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
     if (profile?.status === 'trial') {
       if (daysRemaining >= 3) {
         return {
-          className: 'bg-[#dcfce7] text-[#166534]',
+          className: 'bg-blue-50/90 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 text-center font-medium',
           text: `Il vous reste ${daysRemaining} jours d'essai`,
         }
       }
@@ -511,41 +511,17 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
             alignItems: "center",
             justifyContent: "center"
           }}>
-            <h1 style={{
-              color: "white",
-              fontSize: "36px",
-              fontWeight: "800",
-              textAlign: "center",
-              margin: 0,
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)"
-            }}>
+            <h1 className="text-3xl font-bold text-blue-900 drop-shadow-sm text-center">
               {hotelName}
             </h1>
           </div>
         </div>
 
         {trialBanner && (
-        <div style={{
-          borderRadius: "8px",
-          padding: "12px 16px",
-          fontSize: "14px",
-          fontWeight: "500",
-          border: "1px solid",
-          marginBottom: "16px",
-          textAlign: "center",
-          ...(trialBanner.className === 'bg-[#fef3c7] text-[#92400e]' 
-            ? {background: "#fef3c7", color: "#92400e", borderColor: "#f59e0b"}
-            : trialBanner.className === 'bg-[#dcfce7] text-[#166534]'
-            ? {background: "#dcfce7", color: "#166534", borderColor: "#22c55e"}
-            : {background: "#fee2e2", color: "#991b1b", borderColor: "#ef4444"})
-        }}>
+        <div className={trialBanner.className}>
           {trialBanner.text}
         </div>
       )}
-
-        <div style={{fontSize: "14px", fontWeight: "500", color: "#16a34a", textAlign: "center", marginBottom: "24px"}}>
-          {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
-        </div>
 
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
           <button
@@ -572,17 +548,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={handleSubscribeClick}
-            style={{
-              background: "transparent",
-              borderRadius: "16px",
-              padding: "14px 24px",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#1e3a8a",
-              border: "2px solid #1e3a8a",
-              cursor: "pointer",
-              minWidth: "280px"
-            }} className="w-full sm:max-w-sm"
+            className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white/80 py-3 px-6 rounded-lg font-semibold transition-colors sm:max-w-sm"
           >
             {profile?.status === 'active' ? 'Gérer mon abonnement' : 'Passer à l\'abonnement'}
           </button>
@@ -592,60 +558,20 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={handleGenerateFiche}
-            style={{
-              background: "linear-gradient(135deg, #16a34a, #22c55e)",
-              borderRadius: "16px",
-              padding: "14px 24px",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              minWidth: "280px",
-              boxShadow: "0 4px 16px rgba(22,163,74,0.3)"
-            }} className="w-full sm:max-w-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors sm:max-w-sm"
           >
             ? Fiche de contrôle
           </button>
         </section>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: "16px",
-          marginBottom: "24px"
-        }} className="sm:grid-cols-2 sm:mb-8">
-          <div style={{
-            background: "rgba(232,244,253,0.60)",
-            backdropFilter: "blur(1px)",
-            border: "1px solid rgba(191,219,254,0.5)",
-            borderRadius: "16px",
-            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
-            padding: "20px",
-            textAlign: "center"
-          }}>
-            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
-              {scansToday}
-            </div>
-            <div style={{color: "#64748b", fontSize: "14px"}}>
-              📅 Scans aujourd'hui
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="bg-white/80 rounded-xl px-6 py-4 text-center shadow-sm">
+            <p className="text-3xl font-bold text-blue-700">{scansToday}</p>
+            <p className="text-sm text-gray-500">Scans aujourd'hui</p>
           </div>
-          <div style={{
-            background: "rgba(232,244,253,0.60)",
-            backdropFilter: "blur(1px)",
-            border: "1px solid rgba(191,219,254,0.5)",
-            borderRadius: "16px",
-            boxShadow: "0 4px 16px rgba(30,58,138,0.08)",
-            padding: "20px",
-            textAlign: "center"
-          }}>
-            <div style={{color: "#1e3a8a", fontWeight: "800", fontSize: "36px", marginBottom: "8px"}}>
-              {scansThisMonth}
-            </div>
-            <div style={{color: "#64748b", fontSize: "14px"}}>
-              📊 Scans ce mois
-            </div>
+          <div className="bg-white/80 rounded-xl px-6 py-4 text-center shadow-sm">
+            <p className="text-3xl font-bold text-blue-700">{scansThisMonth}</p>
+            <p className="text-sm text-gray-500">Scans ce mois</p>
           </div>
         </div>
 
