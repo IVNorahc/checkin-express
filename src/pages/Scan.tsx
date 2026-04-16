@@ -1,6 +1,7 @@
   import { useEffect, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import { analyzeDocument } from '../lib/gemini'
+import { apiService } from '../services/apiService'
 
 type ScanProps = {
   onBack: () => void
@@ -45,12 +46,51 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const webcamRef = useRef<Webcam>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [capturedImageBase64, setCapturedImageBase64] = useState<string | null>(null)
-  const [capturedMimeType, setCapturedMimeType] = useState<string>('image/jpeg')
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [capturedMimeType, setCapturedMimeType] = useState<string | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [canRetry, setCanRetry] = useState(false)
-
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const isMountedRef = useRef(true)
+
+  // Fonction alternative avec API sécurisée
+  const analyzeWithSecureAPI = async (imageBase64: string, mimeType: string): Promise<OCRData | null> => {
+    if (!apiService.isApiKeyAvailable()) {
+      console.warn('API Key non disponible, utilisation de Gemini')
+      return null
+    }
+
+    try {
+      // Créer FormData pour l'envoi de l'image
+      const formData = new FormData()
+      
+      // Convertir base64 en Blob
+      const response = await fetch(`data:${mimeType};base64,${imageBase64}`)
+      const blob = await response.blob()
+      formData.append('image', blob, 'document.jpg')
+      
+      // Appel à l'API sécurisée
+      const result = await apiService.processDocument(formData)
+      
+      // Transformer le résultat au format OCRData
+      return {
+        documentType: result.documentType || null,
+        issuingCountry: result.issuingCountry || null,
+        surname: result.surname || null,
+        givenNames: result.givenNames || null,
+        dateOfBirth: result.dateOfBirth || null,
+        documentNumber: result.documentNumber || null,
+        nationality: result.nationality || null,
+        sex: result.sex || null,
+        expiryDate: result.expiryDate || null,
+        address: result.address || null,
+        needsBackSide: result.needsBackSide || false,
+        confidence: result.confidence || 0.8
+      }
+    } catch (error) {
+      console.error('Erreur avec l\'API sécurisée:', error)
+      return null
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -137,23 +177,34 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
 
     try {
-      const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
-      if (!isMountedRef.current) return
-      onCapture(data)
-      return
-    } catch (e1) {
-      if (!isMountedRef.current) return
-      setAnalysisError(extractGeminiErrorMessage(e1))
-      setCanRetry(true)
-
-      // Retry automatique une seule fois après 2 secondes
-      await waitMs(2000)
-
-      try {
+      // Essayer d'abord avec l'API sécurisée
+      const secureApiData = await analyzeWithSecureAPI(enhanced.imageBase64, enhanced.mimeType)
+      
+      if (secureApiData && isMountedRef.current) {
+        onCapture(secureApiData)
+        return
+      }
+      
+      // Fallback sur Gemini si l'API sécurisée n'est pas disponible
+      console.log('Fallback sur Gemini API')
+      if (enhanced.imageBase64 && enhanced.mimeType) {
         const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
         if (!isMountedRef.current) return
         onCapture(data)
         return
+      }
+    } catch (e1) {
+      if (!isMountedRef.current) return
+      
+      // Si l'API sécurisée échoue, essayer Gemini
+      try {
+        console.log('Fallback sur Gemini API après erreur')
+        if (enhanced.imageBase64 && enhanced.mimeType) {
+          const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
+          if (!isMountedRef.current) return
+          onCapture(data)
+          return
+        }
       } catch (e2) {
         if (!isMountedRef.current) return
         setAnalysisError(extractGeminiErrorMessage(e2))
@@ -181,20 +232,24 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     setCanRetry(false)
 
     try {
-      const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
-      if (!isMountedRef.current) return
-      onCapture(data)
-      return
+      if (capturedImageBase64 && capturedMimeType) {
+        const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
+        if (!isMountedRef.current) return
+        onCapture(data)
+        return
+      }
     } catch (e1) {
       if (!isMountedRef.current) return
       setAnalysisError(extractGeminiErrorMessage(e1))
       await waitMs(2000)
 
       try {
-        const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
-        if (!isMountedRef.current) return
-        onCapture(data)
-        return
+        if (capturedImageBase64 && capturedMimeType) {
+          const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
+          if (!isMountedRef.current) return
+          onCapture(data)
+          return
+        }
       } catch (e2) {
         if (!isMountedRef.current) return
         setAnalysisError(extractGeminiErrorMessage(e2))

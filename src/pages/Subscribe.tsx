@@ -40,7 +40,6 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#e8f4fd",
       backgroundImage: "url('/hotel-bg.png')",
       backgroundSize: "cover",
       backgroundPosition: "center",

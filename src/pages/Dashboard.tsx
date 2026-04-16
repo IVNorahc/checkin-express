@@ -25,6 +25,18 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const [scansThisMonth, setScansThisMonth] = useState(0)
   const [showFiches, setShowFiches] = useState(false)
 
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      await supabase.auth.signOut()
+      window.location.replace(window.location.origin + '/login')
+    } catch (error) {
+      console.error('Erreur déconnexion:', error)
+      window.location.replace(window.location.origin + '/login')
+    }
+  }
+
   useEffect(() => {
     const loadSession = async () => {
       const { data } = await supabase.auth.getSession()
@@ -198,11 +210,6 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
     
     return null
   }, [profile, daysRemaining])
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    onRequireLogin()
-  }
 
   const handleSubscribe = () => {
     window.open('https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02', '_blank')
@@ -441,43 +448,26 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         />
       )}
       {!showFiches && (
-        <div style={{minHeight: "100vh", background: "#e8f4fd"}}>
-      <header style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: "64px",
-        background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
-        zIndex: 20,
-        boxShadow: "0 4px 16px rgba(30,58,138,0.2)"
-      }}>
-        <div style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          height: "100%",
-          padding: "0 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          color: "white",
-          flexWrap: "wrap",
-          gap: "8px"
-        }} className="sm:px-6 sm:gap-3">
-          <div className="flex items-center justify-between px-4 py-2 bg-white shadow-sm w-full">
-            {/* Logo et nom à gauche */}
-            <div className="flex items-center gap-3">
+        <div style={{minHeight: "100vh"}}>
+      <header className="flex items-center justify-between px-4 py-3 w-full">
+            {/* Logo + titre sur fond blanc arrondi */}
+            <div className="flex items-center gap-2 bg-white/90 rounded-xl px-3 py-2 shadow-sm">
               <img 
                 src="/percepta-logo.png" 
                 alt="Check-in Express by Percepta" 
-                className="h-10 w-auto object-contain"
+                className="h-9 w-auto object-contain"
               />
-              <span className="font-bold text-lg text-gray-900">
+              <span className="font-bold text-blue-800 text-sm">
                 Check-in Express
               </span>
             </div>
 
-            {/* Navigation et déconnexion à droite */}
+            {/* Navigation au centre si nécessaire */}
+            <nav>
+              {/* Options de navigation peuvent être ajoutées ici */}
+            </nav>
+
+            {/* Bouton déconnexion sans fond blanc */}
             <div className="flex items-center gap-3">
               {isAdmin && onAdminClick && (
                 <button
@@ -489,19 +479,14 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                 </button>
               )}
               <button
+                onClick={handleSignOut}
                 type="button"
-                onClick={() => {
-                  supabase.auth.signOut()
-                  window.location.replace(window.location.origin + '/login')
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 Déconnexion
               </button>
             </div>
-          </div>
-        </div>
-      </header>
+          </header>
 
       <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 24px 40px"}}>
         {/* Hero Section */}

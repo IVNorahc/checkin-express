@@ -198,7 +198,7 @@ export default function Admin() {
   const expiringTrials = getExpiringTrials()
 
   return (
-    <div style={{minHeight: "100vh", background: "#e8f4fd"}}>
+    <div style={{minHeight: "100vh"}}>
       {/* Header */}
       <header style={{
         background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",

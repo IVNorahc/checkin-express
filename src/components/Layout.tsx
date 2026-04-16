@@ -7,16 +7,17 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <div 
-      className="min-h-screen w-full"
+      className="min-h-screen w-full relative"
       style={{
         backgroundImage: 'url(/hotel-bg.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* overlay semi-transparent pour lisibilité */}
-      <div className="min-h-screen w-full bg-white/80 backdrop-blur-sm">
+      {/* Overlay léger comme la page login */}
+      <div className="min-h-screen w-full bg-blue-50/40">
         {children}
       </div>
     </div>

@@ -597,7 +597,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] py-4 sm:py-8 px-4">
+    <div className="min-h-screen py-4 sm:py-8 px-4">
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded-xl p-4 sm:p-6 lg:p-8 border border-[#e2e8f0]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Confirmation des données</h1>
