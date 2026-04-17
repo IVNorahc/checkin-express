@@ -185,16 +185,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           </div>
 
           {/* Cartes de tarification */}
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            flexWrap: "nowrap",
-            gap: "24px",
-            justifyContent: "center",
-            alignItems: "stretch",
-            maxWidth: "900px",
-            margin: "0 auto 40px"
-          }} className="lg:flex-row lg:gap-8">
+          <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch max-w-4xl mx-auto px-4">
             
             {/* STARTER */}
             <div style={{
@@ -204,12 +195,9 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               borderRadius: "20px",
               boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
               padding: "32px",
-              flex: "1",
-              minWidth: "280px",
-              maxWidth: "400px",
               display: "flex",
               flexDirection: "column"
-            }} className="w-full lg:max-w-sm">
+            }} className="flex-1">
               <div style={{textAlign: "center", flex: 1}}>
                 <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
                   Starter
@@ -278,13 +266,11 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               borderRadius: "20px",
               boxShadow: "0 16px 48px rgba(30,58,138,0.4)",
               padding: "32px",
-              flex: 1,
-              maxWidth: "400px",
               display: "flex",
               flexDirection: "column",
               transform: "scale(1.05)",
               position: "relative"
-            }} className="w-full lg:max-w-sm">
+            }} className="flex-1">
               <div style={{
                 position: "absolute",
                 top: "-14px",
