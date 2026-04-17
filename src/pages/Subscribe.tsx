@@ -185,7 +185,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           </div>
 
           {/* Cartes de tarification */}
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch max-w-4xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-8 justify-center items-start max-w-5xl mx-auto px-4 w-full">
             
             {/* STARTER */}
             <div style={{
