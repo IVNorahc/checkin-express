@@ -1,6 +1,6 @@
   import { useEffect, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
-import { analyzeDocument } from '../lib/gemini'
+import { scanDocument } from '../utils/ocrService'
 import { apiService } from '../services/apiService'
 
 type ScanProps = {
@@ -188,7 +188,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       // Fallback sur Gemini si l'API sécurisée n'est pas disponible
       console.log('Fallback sur Gemini API')
       if (enhanced.imageBase64 && enhanced.mimeType) {
-        const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
+        const data = (await scanDocument(enhanced.imageBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
         onCapture(data)
         return
@@ -200,7 +200,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       try {
         console.log('Fallback sur Gemini API après erreur')
         if (enhanced.imageBase64 && enhanced.mimeType) {
-          const data = (await analyzeDocument(enhanced.imageBase64, enhanced.mimeType)) as OCRData
+          const data = (await scanDocument(enhanced.imageBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
           onCapture(data)
           return
@@ -233,7 +233,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
     try {
       if (capturedImageBase64 && capturedMimeType) {
-        const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
+        const data = (await scanDocument(capturedImageBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
         onCapture(data)
         return
@@ -245,7 +245,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
       try {
         if (capturedImageBase64 && capturedMimeType) {
-          const data = (await analyzeDocument(capturedImageBase64, capturedMimeType)) as OCRData
+          const data = (await scanDocument(capturedImageBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
           onCapture(data)
           return
