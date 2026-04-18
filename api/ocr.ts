@@ -69,9 +69,20 @@ Si tu ne peux pas lire un champ, laisse une chaîne vide.`
     const data = await anthropicRes.json()
 
     if (!anthropicRes.ok) {
-      console.error('Anthropic error:', data)
-      return res.status(anthropicRes.status).json({ 
-        error: data.error?.message || 'Erreur Anthropic' 
+      console.error('Anthropic error full:', JSON.stringify(data))
+      return res.status(200).json({ 
+        debugError: data,
+        documentType: 'AUTRE',
+        needsVerso: false,
+        nom: 'ERREUR: ' + JSON.stringify(data.error),
+        prenoms: '',
+        dateNaissance: '',
+        lieuNaissance: '',
+        nationalite: '',
+        numeroDocument: '',
+        dateDelivrance: '',
+        dateExpiration: '',
+        confidence: 0
       })
     }
 
