@@ -42,6 +42,35 @@ function normalizeScreenshot(screenshot: string, fallbackMimeType = 'image/jpeg'
   }
 }
 
+async function compressImage(base64: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      // Limiter à 1200px max
+      const maxSize = 1200
+      let width = img.width
+      let height = img.height
+      if (width > maxSize) {
+        height = (height * maxSize) / width
+        width = maxSize
+      }
+      if (height > maxSize) {
+        width = (width * maxSize) / height
+        height = maxSize
+      }
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, width, height)
+      // Qualité 0.8 = bon compromis qualité/taille
+      const compressed = canvas.toDataURL('image/jpeg', 0.8)
+      resolve(compressed.replace(/^data:image\/jpeg;base64,/, ''))
+    }
+    img.src = base64.startsWith('data:') ? base64 : `data:image/jpeg;base64,${base64}` 
+  })
+}
+
 export default function Scan({ onBack, onCapture }: ScanProps) {
   const webcamRef = useRef<Webcam>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -185,10 +214,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
         return
       }
       
-      // Fallback sur Gemini si l'API sécurisée n'est pas disponible
-      console.log('Fallback sur Gemini API')
+      // Fallback sur Anthropic OCR si l'API sécurisée n'est pas disponible
+      console.log('Fallback sur Anthropic OCR')
       if (enhanced.imageBase64 && enhanced.mimeType) {
-        const data = (await scanDocument(enhanced.imageBase64)) as unknown as OCRData
+        const compressedBase64 = await compressImage(enhanced.imageBase64)
+        const data = (await scanDocument(compressedBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
         onCapture(data)
         return
@@ -196,11 +226,12 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     } catch (e1) {
       if (!isMountedRef.current) return
       
-      // Si l'API sécurisée échoue, essayer Gemini
+      // Si l'API sécurisée échoue, essayer Anthropic OCR
       try {
-        console.log('Fallback sur Gemini API après erreur')
+        console.log('Fallback sur Anthropic OCR après erreur')
         if (enhanced.imageBase64 && enhanced.mimeType) {
-          const data = (await scanDocument(enhanced.imageBase64)) as unknown as OCRData
+          const compressedBase64 = await compressImage(enhanced.imageBase64)
+          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
           onCapture(data)
           return
@@ -233,7 +264,8 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
     try {
       if (capturedImageBase64 && capturedMimeType) {
-        const data = (await scanDocument(capturedImageBase64)) as unknown as OCRData
+        const compressedBase64 = await compressImage(capturedImageBase64)
+        const data = (await scanDocument(compressedBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
         onCapture(data)
         return
@@ -245,7 +277,8 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
       try {
         if (capturedImageBase64 && capturedMimeType) {
-          const data = (await scanDocument(capturedImageBase64)) as unknown as OCRData
+          const compressedBase64 = await compressImage(capturedImageBase64)
+          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
           onCapture(data)
           return
