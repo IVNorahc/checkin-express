@@ -13,16 +13,15 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
   const [ocrData, setOcrData] = useState<{
     documentType: string | null
-    issuingCountry: string | null
-    surname: string | null
-    givenNames: string | null
-    dateOfBirth: string | null
-    documentNumber: string | null
-    nationality: string | null
-    sex: string | null
-    expiryDate: string | null
-    address: string | null
-    needsBackSide: boolean | null
+    needsVerso: boolean | null
+    nom: string | null
+    prenoms: string | null
+    dateNaissance: string | null
+    lieuNaissance: string | null
+    nationalite: string | null
+    numeroDocument: string | null
+    dateDelivrance: string | null
+    dateExpiration: string | null
     confidence: number | null
   } | null>(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)

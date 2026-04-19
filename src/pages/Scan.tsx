@@ -10,16 +10,15 @@ type ScanProps = {
 
 type OCRData = {
   documentType: string | null
-  issuingCountry: string | null
-  surname: string | null
-  givenNames: string | null
-  dateOfBirth: string | null
-  documentNumber: string | null
-  nationality: string | null
-  sex: string | null
-  expiryDate: string | null
-  address: string | null
-  needsBackSide: boolean | null
+  needsVerso: boolean | null
+  nom: string | null
+  prenoms: string | null
+  dateNaissance: string | null
+  lieuNaissance: string | null
+  nationalite: string | null
+  numeroDocument: string | null
+  dateDelivrance: string | null
+  dateExpiration: string | null
   confidence: number | null
 }
 
@@ -103,17 +102,16 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       // Transformer le résultat au format OCRData
       return {
         documentType: result.documentType || null,
-        issuingCountry: result.issuingCountry || null,
-        surname: result.surname || null,
-        givenNames: result.givenNames || null,
-        dateOfBirth: result.dateOfBirth || null,
-        documentNumber: result.documentNumber || null,
-        nationality: result.nationality || null,
-        sex: result.sex || null,
-        expiryDate: result.expiryDate || null,
-        address: result.address || null,
-        needsBackSide: result.needsBackSide || false,
-        confidence: result.confidence || 0.8
+        needsVerso: result.needsVerso || false,
+        nom: result.nom || null,
+        prenoms: result.prenoms || null,
+        dateNaissance: result.dateNaissance || null,
+        lieuNaissance: result.lieuNaissance || null,
+        nationalite: result.nationalite || null,
+        numeroDocument: result.numeroDocument || null,
+        dateDelivrance: result.dateDelivrance || null,
+        dateExpiration: result.dateExpiration || null,
+        confidence: result.confidence || 0,
       }
     } catch (error) {
       console.error('Erreur avec l\'API sécurisée:', error)
@@ -296,17 +294,16 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const handleManualInput = () => {
     const manualData: OCRData = {
       documentType: "id_card",
-      issuingCountry: "",
-      surname: "",
-      givenNames: "",
-      dateOfBirth: "",
-      documentNumber: "",
-      nationality: "",
-      sex: "M",
-      expiryDate: "",
-      address: null,
-      needsBackSide: false,
-      confidence: 1.0
+      needsVerso: false,
+      nom: "",
+      prenoms: "",
+      dateNaissance: "",
+      lieuNaissance: "",
+      nationalite: "",
+      numeroDocument: "",
+      dateDelivrance: "",
+      dateExpiration: "",
+      confidence: 0,
     }
     onCapture(manualData)
   }

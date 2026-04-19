@@ -28,16 +28,15 @@ const mockData = {
 
 type OCRData = {
   documentType: string | null
-  issuingCountry: string | null
-  surname: string | null
-  givenNames: string | null
-  dateOfBirth: string | null
-  documentNumber: string | null
-  nationality: string | null
-  sex: string | null
-  expiryDate: string | null
-  address: string | null
-  needsBackSide: boolean | null
+  needsVerso: boolean | null
+  nom: string | null
+  prenoms: string | null
+  dateNaissance: string | null
+  lieuNaissance: string | null
+  nationalite: string | null
+  numeroDocument: string | null
+  dateDelivrance: string | null
+  dateExpiration: string | null
   confidence: number | null
 }
 
@@ -77,18 +76,22 @@ type ConfirmProps = {
   onConfirm: () => void
 }
 
-const buildFormDataFromOCR = (ocr: OCRData): FormData => ({
-  documentType: ocr.documentType ?? '',
-  issuingCountry: ocr.issuingCountry ?? '',
-  surname: ocr.surname ?? '',
-  givenNames: ocr.givenNames ?? '',
-  dateOfBirth: ocr.dateOfBirth ?? '',
-  documentNumber: ocr.documentNumber ?? '',
-  nationality: ocr.nationality ?? '',
-  sex: ocr.sex ?? '',
-  expiryDate: ocr.expiryDate ?? '',
-  address: ocr.address ?? '',
-})
+const buildFormDataFromOCR = (ocr: OCRData): FormData => {
+  console.log('OCR Result:', JSON.stringify(ocr))
+  
+  return {
+    documentType: ocr.documentType ?? '',
+    issuingCountry: ocr.nationalite ?? '', // nationalite -> issuingCountry
+    surname: ocr.nom ?? '', // nom -> surname
+    givenNames: ocr.prenoms ?? '', // prenoms -> givenNames
+    dateOfBirth: ocr.dateNaissance ?? '', // dateNaissance -> dateOfBirth
+    documentNumber: ocr.numeroDocument ?? '', // numeroDocument -> documentNumber
+    nationality: ocr.nationalite ?? '', // nationalite -> nationality
+    sex: '', // Champ non fourni par l'OCR
+    expiryDate: ocr.dateExpiration ?? '', // dateExpiration -> expiryDate
+    address: '', // Champ non fourni par l'OCR
+  }
+}
 
 export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const effectiveFormData = data ? buildFormDataFromOCR(data) : initialData
