@@ -20,6 +20,10 @@ type OCRData = {
   dateDelivrance: string | null
   dateExpiration: string | null
   confidence: number | null
+  adresse: string | null
+  profession: string | null
+  nomPere: string | null
+  nomMere: string | null
 }
 
 function normalizeScreenshot(screenshot: string, fallbackMimeType = 'image/jpeg') {
@@ -87,33 +91,139 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
 
     try {
-      // Créer FormData pour l'envoi de l'image
-      const formData = new FormData()
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiService['apiKey']!,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1024,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mimeType,
+                  data: imageBase64
+                }
+              },
+              {
+                type: 'text',
+                text: isVersoMode ? `Tu es un expert en lecture de CNI sénégalaise CEDEAO (verso).
+Sur le VERSO de cette CNI sénégalaise :
+- Le NIN (Numéro d'Identification National) commence par "NIN" suivi de chiffres
+- L'adresse domicile
+- La profession
+- Le nom du père
+- Le nom de la mère
+
+Réponds UNIQUEMENT avec ce JSON :
+{
+  "numeroDocument": "NIN...",
+  "adresse": "",
+  "profession": "",
+  "nomPere": "",
+  "nomMere": "",
+  "confidence": 0.95
+}` : `Tu es un expert en lecture de CNI sénégalaise CEDEAO (recto).
+Lis TRÈS attentivement chaque chiffre et lettre.
+
+Sur le RECTO de cette CNI sénégalaise :
+- Les PRÉNOMS sont écrits en premier (souvent 2 mots)
+- Le NOM DE FAMILLE est en dessous des prénoms (souvent 1 mot)
+- La DATE DE NAISSANCE est au format JJ/MM/AAAA - lis chaque chiffre séparément
+- Le LIEU DE NAISSANCE est une ville sénégalaise
+- La DATE DE DÉLIVRANCE est la date d'émission de la carte
+- La DATE D'EXPIRATION est 10 ans après la délivrance
+
+IMPORTANT : 
+- Le numéro NIN est au VERSO, pas ici - laisse numeroDocument vide
+- Lis la ligne MRZ en bas pour vérifier les dates si illisibles
+- La ligne MRZ format : I<SEN[numéro]<<[date_naissance]...[date_expiration]
+
+Réponds UNIQUEMENT avec ce JSON :
+{
+  "documentType": "CNI",
+  "needsVerso": true,
+  "nom": "NOM_FAMILLE",
+  "prenoms": "PRENOM(S)",
+  "dateNaissance": "JJ/MM/AAAA",
+  "lieuNaissance": "VILLE",
+  "nationalite": "SENEGALAISE",
+  "numeroDocument": "",
+  "dateDelivrance": "JJ/MM/AAAA",
+  "dateExpiration": "JJ/MM/AAAA",
+  "confidence": 0.95
+}`
+              }
+            ]
+          }]
+        })
+      })
+
+      if (!response.ok) {
+        console.error('API sécurisée error:', response.status, response.statusText)
+        return null
+      }
+
+      const data = await response.json()
+      const content = data.content[0]?.text || ''
       
-      // Convertir base64 en Blob
-      const response = await fetch(`data:${mimeType};base64,${imageBase64}`)
-      const blob = await response.blob()
-      formData.append('image', blob, 'document.jpg')
-      
-      // Appel à l'API sécurisée
-      const result = await apiService.processDocument(formData)
-      
-      // Transformer le résultat au format OCRData
-      return {
-        documentType: result.documentType || null,
-        needsVerso: result.needsVerso || false,
-        nom: result.nom || null,
-        prenoms: result.prenoms || null,
-        dateNaissance: result.dateNaissance || null,
-        lieuNaissance: result.lieuNaissance || null,
-        nationalite: result.nationalite || null,
-        numeroDocument: result.numeroDocument || null,
-        dateDelivrance: result.dateDelivrance || null,
-        dateExpiration: result.dateExpiration || null,
-        confidence: result.confidence || 0,
+      // Parser le JSON de la réponse
+      let parsedData
+      try {
+        parsedData = JSON.parse(content)
+      } catch (e) {
+        console.error('Erreur parsing JSON API sécurisée:', e)
+        return null
+      }
+
+      // Mapper les champs selon le mode
+      if (isVersoMode) {
+        return {
+          documentType: 'CNI',
+          needsVerso: false,
+          nom: '',
+          prenoms: '',
+          dateNaissance: '',
+          lieuNaissance: '',
+          nationalite: '',
+          numeroDocument: parsedData.numeroDocument || '',
+          dateDelivrance: '',
+          dateExpiration: '',
+          confidence: parsedData.confidence || 0.95,
+          adresse: parsedData.adresse || '',
+          profession: parsedData.profession || '',
+          nomPere: parsedData.nomPere || '',
+          nomMere: parsedData.nomMere || ''
+        }
+      } else {
+        return {
+          documentType: parsedData.documentType || 'CNI',
+          needsVerso: parsedData.needsVerso !== false,
+          nom: parsedData.nom || '',
+          prenoms: parsedData.prenoms || '',
+          dateNaissance: parsedData.dateNaissance || '',
+          lieuNaissance: parsedData.lieuNaissance || '',
+          nationalite: parsedData.nationalite || '',
+          numeroDocument: parsedData.numeroDocument || '',
+          dateDelivrance: parsedData.dateDelivrance || '',
+          dateExpiration: parsedData.dateExpiration || '',
+          confidence: parsedData.confidence || 0.95,
+          adresse: '',
+          profession: '',
+          nomPere: '',
+          nomMere: ''
+        }
       }
     } catch (error) {
-      console.error('Erreur avec l\'API sécurisée:', error)
+      console.error('Erreur API sécurisée:', error)
       return null
     }
   }
@@ -370,6 +480,10 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       dateDelivrance: "",
       dateExpiration: "",
       confidence: 0,
+      adresse: "",
+      profession: "",
+      nomPere: "",
+      nomMere: ""
     }
     onCapture(manualData)
   }

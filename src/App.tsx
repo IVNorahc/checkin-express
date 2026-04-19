@@ -23,6 +23,10 @@ export default function App() {
     dateDelivrance: string | null
     dateExpiration: string | null
     confidence: number | null
+    adresse: string | null
+    profession: string | null
+    nomPere: string | null
+    nomMere: string | null
   } | null>(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
 

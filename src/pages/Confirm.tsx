@@ -22,7 +22,10 @@ const mockData = {
   nationality: 'FRANÇAISE',
   sex: 'M',
   expiryDate: '2030-06-14',
-  address: null,
+  address: '123 Rue de la Paix, 75001 Paris',
+  profession: 'Ingénieur',
+  nomPere: 'PIERRE DUPONT',
+  nomMere: 'MARIE DURAND',
   confidence: 0.97,
 }
 
@@ -38,13 +41,17 @@ type OCRData = {
   dateDelivrance: string | null
   dateExpiration: string | null
   confidence: number | null
+  adresse: string | null
+  profession: string | null
+  nomPere: string | null
+  nomMere: string | null
 }
 
 type EditableKey = Exclude<keyof typeof mockData, 'confidence'>
 
 type FormData = Record<EditableKey, string>
 
-const fieldLabels: Record<EditableKey, string> = {
+const fieldLabels: Record<string, string> = {
   documentType: 'Type de document',
   issuingCountry: "Pays d'émission",
   surname: 'Nom',
@@ -55,6 +62,9 @@ const fieldLabels: Record<EditableKey, string> = {
   sex: 'Sexe',
   expiryDate: "Date d'expiration",
   address: 'Adresse',
+  profession: 'Profession',
+  nomPere: 'Nom du père',
+  nomMere: 'Nom de la mère',
 }
 
 const initialData: FormData = {
@@ -68,6 +78,9 @@ const initialData: FormData = {
   sex: mockData.sex,
   expiryDate: mockData.expiryDate,
   address: mockData.address ?? '',
+  profession: mockData.profession,
+  nomPere: mockData.nomPere,
+  nomMere: mockData.nomMere,
 }
 
 type ConfirmProps = {
@@ -89,7 +102,10 @@ const buildFormDataFromOCR = (ocr: OCRData): FormData => {
     nationality: ocr.nationalite ?? '', // nationalite -> nationality
     sex: '', // Champ non fourni par l'OCR
     expiryDate: ocr.dateExpiration ?? '', // dateExpiration -> expiryDate
-    address: '', // Champ non fourni par l'OCR
+    address: ocr.adresse ?? '', // adresse -> address
+    profession: ocr.profession ?? '', // profession -> profession
+    nomPere: ocr.nomPere ?? '', // nomPere -> nomPere
+    nomMere: ocr.nomMere ?? '', // nomMere -> nomMere
   }
 }
 
