@@ -41,37 +41,33 @@ function normalizeScreenshot(screenshot: string, fallbackMimeType = 'image/jpeg'
   }
 }
 
-async function compressImage(base64: string): Promise<string> {
+async function prepareForOCR(base64: string): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      // Limiter à 1200px max
-      const maxSize = 1200
-      let width = img.width
-      let height = img.height
+      const maxSize = 1600 // Plus grand pour meilleure lecture OCR
+      let { width, height } = img
       if (width > maxSize) {
         height = (height * maxSize) / width
         width = maxSize
-      }
-      if (height > maxSize) {
-        width = (width * maxSize) / height
-        height = maxSize
       }
       canvas.width = width
       canvas.height = height
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, 0, 0, width, height)
-      // Qualité 0.8 = bon compromis qualité/taille
-      const compressed = canvas.toDataURL('image/jpeg', 0.8)
-      resolve(compressed.replace(/^data:image\/jpeg;base64,/, ''))
+      resolve(canvas.toDataURL('image/jpeg', 0.92)
+        .replace(/^data:image\/jpeg;base64,/, ''))
     }
-    img.src = base64.startsWith('data:') ? base64 : `data:image/jpeg;base64,${base64}` 
+    img.src = base64.startsWith('data:') 
+      ? base64 
+      : `data:image/jpeg;base64,${base64}` 
   })
 }
 
 export default function Scan({ onBack, onCapture }: ScanProps) {
   const webcamRef = useRef<Webcam>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [capturedImageBase64, setCapturedImageBase64] = useState<string | null>(null)
   const [capturedMimeType, setCapturedMimeType] = useState<string | null>(null)
@@ -129,6 +125,25 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   }, [])
 
   const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+  const captureHighQuality = async (): Promise<string> => {
+    const video = videoRef.current
+    if (!video) {
+      // Fallback sur webcamRef si videoRef n'est pas disponible
+      const screenshot = webcamRef.current?.getScreenshot()
+      if (!screenshot) throw new Error('Impossible de capturer la caméra')
+      return screenshot
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth   // Pleine résolution native
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    // Qualité maximale pour l'OCR
+    return canvas.toDataURL('image/jpeg', 0.95)
+  }
 
   const handleScanResult = (result: OCRData) => {
     if (isVersoMode) {
@@ -203,7 +218,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     // Laisser l'autofocus se stabiliser
     await waitMs(500)
 
-    const screenshot = webcamRef.current?.getScreenshot()
+    const screenshot = await captureHighQuality()
     if (!screenshot) {
       if (isMountedRef.current) {
         setAnalysisError("Impossible de capturer la caméra")
@@ -266,7 +281,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       // Fallback sur Anthropic OCR si l'API sécurisée n'est pas disponible
       console.log('Fallback sur Anthropic OCR')
       if (enhanced.imageBase64 && enhanced.mimeType) {
-        const compressedBase64 = await compressImage(enhanced.imageBase64)
+        const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
         const data = (await scanDocument(compressedBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
         handleScanResult(data)
@@ -279,7 +294,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       try {
         console.log('Fallback sur Anthropic OCR après erreur')
         if (enhanced.imageBase64 && enhanced.mimeType) {
-          const compressedBase64 = await compressImage(enhanced.imageBase64)
+          const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
           const data = (await scanDocument(compressedBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
           handleScanResult(data)
@@ -313,7 +328,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
     try {
       if (capturedImageBase64 && capturedMimeType) {
-        const compressedBase64 = await compressImage(capturedImageBase64)
+        const compressedBase64 = await prepareForOCR(capturedImageBase64)
         const data = (await scanDocument(compressedBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
         handleScanResult(data)
@@ -326,7 +341,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
       try {
         if (capturedImageBase64 && capturedMimeType) {
-          const compressedBase64 = await compressImage(capturedImageBase64)
+          const compressedBase64 = await prepareForOCR(capturedImageBase64)
           const data = (await scanDocument(compressedBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
           handleScanResult(data)
@@ -493,12 +508,21 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 videoConstraints={
                   {
                     facingMode: 'environment',
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
+                    width: { ideal: 1920, min: 1280 },
+                    height: { ideal: 1080, min: 720 },
+                    aspectRatio: { ideal: 1.777 },
                     focusMode: 'continuous',
+                    zoom: 1.0
                   } as any
                 }
                 className="w-full h-full object-cover"
+                onUserMedia={() => {
+                  // Accéder à l'élément vidéo après l'initialisation
+                  const videoElement = webcamRef.current?.video
+                  if (videoElement) {
+                    videoRef.current = videoElement
+                  }
+                }}
               />
 
               <div style={{
@@ -518,11 +542,30 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               )}
 
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
-                <div className="relative w-[85%] h-[55%] rounded-[12px] border-[3px] border-[#1e3a8a]">
-                  <span className="absolute -top-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-l-[4px] border-[#1e40af] rounded-tl-[12px]" />
-                  <span className="absolute -top-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-r-[4px] border-[#1e40af] rounded-tr-[12px]" />
-                  <span className="absolute -bottom-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-l-[4px] border-[#1e40af] rounded-bl-[12px]" />
-                  <span className="absolute -bottom-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-r-[4px] border-[#1e40af] rounded-br-[12px]" />
+                <div 
+                  className="relative border-[3px] border-white rounded-[12px]"
+                  style={{
+                    width: '85%',
+                    aspectRatio: '1.586', // Ratio carte bancaire : 85.6mm x 54mm
+                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  <span className="absolute -top-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-l-[4px] border-white rounded-tl-[12px]" />
+                  <span className="absolute -top-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-[12px]" />
+                  <span className="absolute -bottom-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-[12px]" />
+                  <span className="absolute -bottom-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-r-[4px] border-white rounded-br-[12px]" />
+                  
+                  <p 
+                    className="absolute text-white text-sm font-medium"
+                    style={{
+                      bottom: '-30px',
+                      width: '100%',
+                      textAlign: 'center',
+                      left: '0'
+                    }}
+                  >
+                    Cadrez la pièce dans le rectangle
+                  </p>
                 </div>
               </div>
             </div>
