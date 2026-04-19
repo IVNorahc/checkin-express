@@ -385,9 +385,16 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
         >
           {isVersoMode || showVersoPrompt ? 'Retour' : 'Retour'}
         </button>
-        <h1 className="absolute inset-0 flex items-center justify-center text-lg font-semibold">
-          {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
-        </h1>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h1 className="text-lg font-semibold">
+            {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
+          </h1>
+          {!showVersoPrompt && !isVersoMode && (
+            <p className="text-sm text-gray-300 ml-4">
+              Placez la pièce à 15-20cm du téléphone
+            </p>
+          )}
+        </div>
       </header>
 
       <main className="px-4 pb-8 flex flex-col items-center">
@@ -541,32 +548,52 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 </div>
               )}
 
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
-                <div 
-                  className="relative border-[3px] border-white rounded-[12px]"
-                  style={{
-                    width: '85%',
-                    aspectRatio: '1.586', // Ratio carte bancaire : 85.6mm x 54mm
-                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)'
-                  }}
-                >
-                  <span className="absolute -top-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-l-[4px] border-white rounded-tl-[12px]" />
-                  <span className="absolute -top-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-[12px]" />
-                  <span className="absolute -bottom-[3px] -left-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-[12px]" />
-                  <span className="absolute -bottom-[3px] -right-[3px] w-8 h-8 sm:w-10 sm:h-10 border-b-[4px] border-r-[4px] border-white rounded-br-[12px]" />
-                  
-                  <p 
-                    className="absolute text-white text-sm font-medium"
-                    style={{
-                      bottom: '-30px',
-                      width: '100%',
-                      textAlign: 'center',
-                      left: '0'
-                    }}
-                  >
-                    Cadrez la pièce dans le rectangle
-                  </p>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none'
+              }}>
+                {/* Fond sombre autour du cadre */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.45)'
+                }} />
+                {/* Cadre blanc proportions carte d'identité */}
+                <div style={{
+                  position: 'relative',
+                  width: '92%',
+                  aspectRatio: '1.586',
+                  border: '3px solid white',
+                  borderRadius: '10px',
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
+                  zIndex: 10
+                }}>
+                  {/* Coins de guidage */}
+                  <div style={{position:'absolute',top:-3,left:-3,width:20,height:20,
+                    borderTop:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
+                  <div style={{position:'absolute',top:-3,right:-3,width:20,height:20,
+                    borderTop:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
+                  <div style={{position:'absolute',bottom:-3,left:-3,width:20,height:20,
+                    borderBottom:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
+                  <div style={{position:'absolute',bottom:-3,right:-3,width:20,height:20,
+                    borderBottom:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
                 </div>
+                {/* Texte guide */}
+                <p style={{
+                  position: 'absolute',
+                  bottom: '15%',
+                  color: 'white',
+                  fontSize: '14px',
+                  textAlign: 'center',
+                  zIndex: 11,
+                  textShadow: '0 1px 3px rgba(0,0,0,0.8)'
+                }}>
+                  📏 Rapprochez-vous · La carte doit remplir le cadre
+                </p>
               </div>
             </div>
 
