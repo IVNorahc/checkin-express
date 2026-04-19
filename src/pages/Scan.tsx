@@ -50,7 +50,8 @@ async function prepareForOCR(base64: string): Promise<string> {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const maxSize = 1600 // Plus grand pour meilleure lecture OCR
+      // Mistral OCR performe mieux avec 1600px minimum
+      const maxSize = 1600
       let { width, height } = img
       if (width > maxSize) {
         height = (height * maxSize) / width
@@ -59,8 +60,10 @@ async function prepareForOCR(base64: string): Promise<string> {
       canvas.width = width
       canvas.height = height
       const ctx = canvas.getContext('2d')!
+      // Améliorer le contraste pour meilleure lecture
+      ctx.filter = 'contrast(1.2) brightness(1.05)'
       ctx.drawImage(img, 0, 0, width, height)
-      resolve(canvas.toDataURL('image/jpeg', 0.92)
+      resolve(canvas.toDataURL('image/jpeg', 0.95)
         .replace(/^data:image\/jpeg;base64,/, ''))
     }
     img.src = base64.startsWith('data:') 

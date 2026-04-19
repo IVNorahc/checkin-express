@@ -22,10 +22,13 @@ const mockData = {
   nationality: 'FRANÇAISE',
   sex: 'M',
   expiryDate: '2030-06-14',
+  dateDelivrance: '2020-06-14',
   address: '123 Rue de la Paix, 75001 Paris',
   profession: 'Ingénieur',
   nomPere: 'PIERRE DUPONT',
   nomMere: 'MARIE DURAND',
+  venantDe: 'Paris',
+  allantA: 'Dakar',
   confidence: 0.97,
 }
 
@@ -61,10 +64,13 @@ const fieldLabels: Record<string, string> = {
   nationality: 'Nationalité',
   sex: 'Sexe',
   expiryDate: "Date d'expiration",
+  dateDelivrance: 'Date de délivrance',
   address: 'Adresse',
   profession: 'Profession',
   nomPere: 'Nom du père',
   nomMere: 'Nom de la mère',
+  venantDe: 'Venant de',
+  allantA: 'Allant à',
 }
 
 const initialData: FormData = {
@@ -77,10 +83,13 @@ const initialData: FormData = {
   nationality: mockData.nationality,
   sex: mockData.sex,
   expiryDate: mockData.expiryDate,
+  dateDelivrance: mockData.dateDelivrance,
   address: mockData.address ?? '',
   profession: mockData.profession,
   nomPere: mockData.nomPere,
   nomMere: mockData.nomMere,
+  venantDe: mockData.venantDe,
+  allantA: mockData.allantA,
 }
 
 type ConfirmProps = {
@@ -102,10 +111,13 @@ const buildFormDataFromOCR = (ocr: OCRData): FormData => {
     nationality: ocr.nationalite ?? '', // nationalite -> nationality
     sex: '', // Champ non fourni par l'OCR
     expiryDate: ocr.dateExpiration ?? '', // dateExpiration -> expiryDate
+    dateDelivrance: ocr.dateDelivrance ?? '', // dateDelivrance -> dateDelivrance
     address: ocr.adresse ?? '', // adresse -> address
     profession: ocr.profession ?? '', // profession -> profession
     nomPere: ocr.nomPere ?? '', // nomPere -> nomPere
     nomMere: ocr.nomMere ?? '', // nomMere -> nomMere
+    venantDe: '', // Champ manuel
+    allantA: '', // Champ manuel
   }
 }
 
@@ -497,7 +509,8 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.text('Venant de :', x, y)
-      drawDottedLine(x + 20, y, maxWidth - 20)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.venantDe || '', x + 20, y)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
       pdf.text('Coming from', x, y + 2.5)
@@ -507,7 +520,8 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.text('Allant à :', x, y)
-      drawDottedLine(x + 20, y, maxWidth - 20)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(formData.allantA || '', x + 20, y)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
       pdf.text('Going to', x, y + 2.5)
