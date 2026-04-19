@@ -4,109 +4,91 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-  
+
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
-    const { imageBase64, mediaType } = req.body
+    const { imageBase64 } = req.body
+    if (!imageBase64) return res.status(400).json({ error: 'Image manquante' })
 
-    if (!imageBase64) {
-      return res.status(400).json({ error: 'Image manquante' })
-    }
-
-    // Nettoyer le base64 (enlever le préfixe data:image/...;base64, si présent)
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '')
-    const cleanMediaType = mediaType || 'image/jpeg'
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    // ÉTAPE 1 : Mistral OCR extrait le texte brut du document
+    const ocrRes = await fetch('https://api.mistral.ai/v1/ocr', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}` 
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 1024,
+        model: 'mistral-ocr-latest',
+        document: {
+          type: 'image_url',
+          image_url: `data:image/jpeg;base64,${cleanBase64}` 
+        }
+      })
+    })
+
+    if (!ocrRes.ok) {
+      const err = await ocrRes.json()
+      console.error('Mistral OCR error:', err)
+      return res.status(ocrRes.status).json({ error: err })
+    }
+
+    const ocrData = await ocrRes.json()
+    const extractedText = ocrData.pages?.[0]?.markdown || ''
+    console.log('Texte extrait:', extractedText)
+
+    // ÉTAPE 2 : Mistral Chat analyse le texte extrait et structure les données
+    const chatRes = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}` 
+      },
+      body: JSON.stringify({
+        model: 'mistral-small-latest',
         messages: [{
           role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: cleanMediaType,
-                data: cleanBase64
-              }
-            },
-            {
-              type: 'text',
-              text: `Tu es un expert en lecture de CNI sénégalaise CEDEAO (recto).
-Lis TRÈS attentivement chaque chiffre et lettre.
+          content: `Voici le texte extrait d'une pièce d'identité sénégalaise :
 
-Sur le RECTO de cette CNI sénégalaise :
-- Les PRÉNOMS sont écrits en premier (souvent 2 mots)
-- Le NOM DE FAMILLE est en dessous des prénoms (souvent 1 mot)
-- La DATE DE NAISSANCE est au format JJ/MM/AAAA - lis chaque chiffre séparément
-- Le LIEU DE NAISSANCE est une ville sénégalaise
-- La DATE DE DÉLIVRANCE est la date d'émission de la carte
-- La DATE D'EXPIRATION est 10 ans après la délivrance
+${extractedText}
 
-IMPORTANT : 
-- Le numéro NIN est au VERSO, pas ici - laisse numeroDocument vide
-- Lis la ligne MRZ en bas pour vérifier les dates si illisibles
-- La ligne MRZ format : I<SEN[numéro]<<[date_naissance]...[date_expiration]
+Sur une CNI sénégalaise CEDEAO :
+- Le NOM DE FAMILLE est un mot court (ex: SAMB, DIOP, FALL)
+- Les PRÉNOMS peuvent être composés (ex: MOUHAMADOU MOUSTAPHA)
+- Le NIN (Numéro d'Identification National) commence par "NIN" - uniquement au verso
+- Les dates sont au format JJ/MM/AAAA
+- La ligne MRZ commence par I<SEN
 
-Réponds UNIQUEMENT avec ce JSON :
+Extrais les informations et réponds UNIQUEMENT avec ce JSON :
 {
   "documentType": "CNI",
   "needsVerso": true,
-  "nom": "NOM_FAMILLE",
-  "prenoms": "PRENOM(S)",
+  "nom": "",
+  "prenoms": "",
   "dateNaissance": "JJ/MM/AAAA",
-  "lieuNaissance": "VILLE",
+  "lieuNaissance": "",
   "nationalite": "SENEGALAISE",
   "numeroDocument": "",
   "dateDelivrance": "JJ/MM/AAAA",
   "dateExpiration": "JJ/MM/AAAA",
+  "adresse": "",
+  "profession": "",
   "confidence": 0.95
-}`
-            }
-          ]
-        }]
+}
+Si c'est le verso, remplis numeroDocument avec le NIN.
+Ne mets rien dans les champs que tu ne peux pas lire avec certitude.`
+        }],
+        response_format: { type: 'json_object' }
       })
     })
 
-    const data = await anthropicRes.json()
+    const chatData = await chatRes.json()
+    const result = JSON.parse(chatData.choices[0].message.content)
+    return res.status(200).json(result)
 
-    if (!anthropicRes.ok) {
-      console.error('Anthropic error full:', JSON.stringify(data))
-      return res.status(200).json({ 
-        debugError: data,
-        documentType: 'AUTRE',
-        needsVerso: false,
-        nom: 'ERREUR: ' + JSON.stringify(data.error),
-        prenoms: '',
-        dateNaissance: '',
-        lieuNaissance: '',
-        nationalite: '',
-        numeroDocument: '',
-        dateDelivrance: '',
-        dateExpiration: '',
-        confidence: 0
-      })
-    }
-
-    const text = data.content[0].text.trim()
-    
-    try {
-      return res.status(200).json(JSON.parse(text))
-    } catch {
-      const match = text.match(/\{[\s\S]*\}/)
-      if (match) return res.status(200).json(JSON.parse(match[0]))
-      return res.status(500).json({ error: 'Réponse OCR invalide: ' + text })
-    }
   } catch (err: any) {
     console.error('Proxy error:', err)
     return res.status(500).json({ error: err.message })
