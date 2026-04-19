@@ -78,6 +78,8 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [canRetry, setCanRetry] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [rectoResult, setRectoResult] = useState<OCRData | null>(null)
+  const [isVersoMode, setIsVersoMode] = useState(false)
   const isMountedRef = useRef(true)
 
   // Fonction alternative avec API sécurisée
@@ -126,6 +128,44 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   }, [])
 
   const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+  const handleScanResult = (result: OCRData) => {
+    if (isVersoMode) {
+      // Mode verso : fusionner recto + verso et passer au formulaire
+      const mergedData = { ...rectoResult, ...result }
+      onCapture(mergedData)
+    } else {
+      // Mode recto : vérifier si verso nécessaire
+      if (result.documentType === 'CNI' || result.needsVerso === true) {
+        // CNI détectée : sauvegarder recto et passer en mode verso
+        setRectoResult(result)
+        setIsVersoMode(true)
+        setCapturedImage(null)
+        setCapturedImageBase64(null)
+        setCapturedMimeType(null)
+        setIsAnalyzing(false)
+      } else {
+        // Pas de verso nécessaire : passer directement au formulaire
+        onCapture(result)
+      }
+    }
+  }
+
+  const handleSkipVerso = () => {
+    if (rectoResult) {
+      onCapture(rectoResult)
+    }
+  }
+
+  const handleBackToRecto = () => {
+    setIsVersoMode(false)
+    setRectoResult(null)
+    setCapturedImage(null)
+    setCapturedImageBase64(null)
+    setCapturedMimeType(null)
+    setAnalysisError(null)
+    setCanRetry(false)
+  }
 
   const extractGeminiErrorMessage = (err: unknown) => {
     if (err && typeof err === 'object') {
@@ -208,7 +248,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       const secureApiData = await analyzeWithSecureAPI(enhanced.imageBase64, enhanced.mimeType)
       
       if (secureApiData && isMountedRef.current) {
-        onCapture(secureApiData)
+        handleScanResult(secureApiData)
         return
       }
       
@@ -218,7 +258,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
         const compressedBase64 = await compressImage(enhanced.imageBase64)
         const data = (await scanDocument(compressedBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
-        onCapture(data)
+        handleScanResult(data)
         return
       }
     } catch (e1) {
@@ -231,7 +271,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
           const compressedBase64 = await compressImage(enhanced.imageBase64)
           const data = (await scanDocument(compressedBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
-          onCapture(data)
+          handleScanResult(data)
           return
         }
       } catch (e2) {
@@ -265,7 +305,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
         const compressedBase64 = await compressImage(capturedImageBase64)
         const data = (await scanDocument(compressedBase64)) as unknown as OCRData
         if (!isMountedRef.current) return
-        onCapture(data)
+        handleScanResult(data)
         return
       }
     } catch (e1) {
@@ -278,7 +318,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
           const compressedBase64 = await compressImage(capturedImageBase64)
           const data = (await scanDocument(compressedBase64)) as unknown as OCRData
           if (!isMountedRef.current) return
-          onCapture(data)
+          handleScanResult(data)
           return
         }
       } catch (e2) {
@@ -313,14 +353,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       <header className="h-16 px-4 flex items-center relative">
         <button
           type="button"
-          onClick={onBack}
+          onClick={isVersoMode ? handleBackToRecto : onBack}
           className="text-2xl leading-none text-white z-10"
           aria-label="Retour"
         >
-          ←
+          {isVersoMode ? 'Retour recto' : 'Retour'}
         </button>
         <h1 className="absolute inset-0 flex items-center justify-center text-lg font-semibold">
-          Scanner un document
+          {isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
         </h1>
       </header>
 
@@ -332,6 +372,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               alt="Capture du document"
               className="w-full rounded-xl border border-white/20"
             />
+            
+            {/* Message spécial pour mode verso */}
+            {isVersoMode && !analysisError && !isAnalyzing && (
+              <div className="mt-6 p-4 bg-blue-50/90 border border-blue-200 text-blue-700 rounded-xl text-center">
+                <p className="font-medium">CNI détectée ! Retournez la carte et scannez le verso.</p>
+              </div>
+            )}
+            
             <div className="mt-6 flex items-center justify-center gap-3 text-white">
               {isAnalyzing ? (
                 <>
@@ -356,6 +404,27 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 </button>
               </div>
             )}
+            
+            {/* Boutons spécifiques au mode verso */}
+            {isVersoMode && !isAnalyzing && !analysisError && (
+              <div className="mt-6 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  className="px-8 h-12 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Scanner le verso
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSkipVerso}
+                  className="text-sm text-blue-300 hover:text-blue-200 transition-colors underline"
+                >
+                  Passer le verso
+                </button>
+              </div>
+            )}
+            
             <div className="mt-6 flex justify-center">
               <button
                 type="button"
@@ -363,7 +432,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 className="px-8 h-12 rounded-full border border-white text-white hover:bg-white/10 transition-colors"
                 disabled={isAnalyzing}
               >
-                ↻ Reprendre
+                Reprendre
               </button>
             </div>
           </div>

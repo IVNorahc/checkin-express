@@ -42,24 +42,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             {
               type: 'text',
-              text: `Analyse cette pièce d'identité et extrais les informations en JSON strict.
-Réponds UNIQUEMENT avec ce JSON, sans texte autour, sans markdown :
+              text: `Tu es un expert en lecture de documents d'identité officiels.
+Analyse attentivement cette pièce d'identité et extrais les informations.
+
+Pour une CNI sénégalaise (CEDEAO), les champs sont :
+- NOM (nom de famille, en majuscules)
+- Prénoms (prénom(s))
+- Date de naissance (format JJ/MM/AAAA)
+- Lieu de naissance
+- Numéro de la carte (commence par I ou B suivi de chiffres)
+- Date de délivrance
+- Date d'expiration
+- Nationalité : SENEGALAISE
+
+Réponds UNIQUEMENT avec ce JSON sans texte autour :
 {
   "documentType": "CNI",
   "needsVerso": true,
-  "nom": "",
-  "prenoms": "",
-  "dateNaissance": "",
-  "lieuNaissance": "",
-  "nationalite": "",
-  "numeroDocument": "",
-  "dateDelivrance": "",
-  "dateExpiration": "",
+  "nom": "NOM_DE_FAMILLE",
+  "prenoms": "PRENOM(S)",
+  "dateNaissance": "JJ/MM/AAAA",
+  "lieuNaissance": "VILLE",
+  "nationalite": "SENEGALAISE",
+  "numeroDocument": "NUMERO",
+  "dateDelivrance": "JJ/MM/AAAA",
+  "dateExpiration": "JJ/MM/AAAA",
   "confidence": 0.95
 }
-documentType : CNI, PASSEPORT, TITRE_SEJOUR, ou AUTRE
-needsVerso : true seulement pour CNI et TITRE_SEJOUR
-Si tu ne peux pas lire un champ, laisse une chaîne vide.`
+Si tu ne peux pas lire un champ avec certitude, laisse-le vide.
+Ne confonds pas le nom et le prénom.`
             }
           ]
         }]
