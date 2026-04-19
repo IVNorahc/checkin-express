@@ -42,35 +42,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             {
               type: 'text',
-              text: `Tu es un expert en lecture de documents d'identité officiels.
-Analyse attentivement cette pièce d'identité et extrais les informations.
+              text: `Tu es un expert en lecture de CNI sénégalaise (CEDEAO).
+Sur cette carte, lis attentivement :
+- La ligne 'Nom' ou le nom de famille (mot court, souvent seul sur sa ligne)
+- La ligne 'Prénoms' (peut contenir plusieurs mots)
+- La date de naissance exacte (lis chaque chiffre attentivement)
+- Le numéro de document (format : I 01 AAAAMMJJ XXXXX)
 
-Pour une CNI sénégalaise (CEDEAO), les champs sont :
-- NOM (nom de famille, en majuscules)
-- Prénoms (prénom(s))
-- Date de naissance (format JJ/MM/AAAA)
-- Lieu de naissance
-- Numéro de la carte (commence par I ou B suivi de chiffres)
-- Date de délivrance
-- Date d'expiration
-- Nationalité : SENEGALAISE
+ATTENTION : Ne confonds pas nom et prénom.
+Sur les CNI sénégalaises :
+- NOM = nom de famille (ex: SAMB, DIOP, FALL)  
+- PRÉNOMS = prénom(s) complet(s) (ex: MOUHAMADOU MOUSTAPHA)
 
-Réponds UNIQUEMENT avec ce JSON sans texte autour :
+Réponds UNIQUEMENT avec ce JSON :
 {
-  "documentType": "CNI",
-  "needsVerso": true,
-  "nom": "NOM_DE_FAMILLE",
-  "prenoms": "PRENOM(S)",
-  "dateNaissance": "JJ/MM/AAAA",
-  "lieuNaissance": "VILLE",
-  "nationalite": "SENEGALAISE",
-  "numeroDocument": "NUMERO",
-  "dateDelivrance": "JJ/MM/AAAA",
-  "dateExpiration": "JJ/MM/AAAA",
-  "confidence": 0.95
-}
-Si tu ne peux pas lire un champ avec certitude, laisse-le vide.
-Ne confonds pas le nom et le prénom.`
+  'documentType': 'CNI',
+  'needsVerso': true,
+  'nom': 'NOM_FAMILLE',
+  'prenoms': 'PRENOM(S)',
+  'dateNaissance': 'JJ/MM/AAAA',
+  'lieuNaissance': 'VILLE',
+  'nationalite': 'SENEGALAISE',
+  'numeroDocument': 'NUMERO_COMPLET',
+  'dateDelivrance': 'JJ/MM/AAAA',
+  'dateExpiration': 'JJ/MM/AAAA',
+  'confidence': 0.95
+}`
             }
           ]
         }]

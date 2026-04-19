@@ -80,6 +80,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [rectoResult, setRectoResult] = useState<OCRData | null>(null)
   const [isVersoMode, setIsVersoMode] = useState(false)
+  const [showVersoPrompt, setShowVersoPrompt] = useState(false)
   const isMountedRef = useRef(true)
 
   // Fonction alternative avec API sécurisée
@@ -137,12 +138,9 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     } else {
       // Mode recto : vérifier si verso nécessaire
       if (result.documentType === 'CNI' || result.needsVerso === true) {
-        // CNI détectée : sauvegarder recto et passer en mode verso
+        // CNI détectée : sauvegarder recto et afficher l'écran intermédiaire
         setRectoResult(result)
-        setIsVersoMode(true)
-        setCapturedImage(null)
-        setCapturedImageBase64(null)
-        setCapturedMimeType(null)
+        setShowVersoPrompt(true)
         setIsAnalyzing(false)
       } else {
         // Pas de verso nécessaire : passer directement au formulaire
@@ -157,9 +155,22 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
   }
 
+  const handleStartVerso = () => {
+    setShowVersoPrompt(false)
+    setIsVersoMode(true)
+    setCapturedImage(null)
+    setCapturedImageBase64(null)
+    setCapturedMimeType(null)
+  }
+
   const handleBackToRecto = () => {
-    setIsVersoMode(false)
-    setRectoResult(null)
+    if (showVersoPrompt) {
+      setShowVersoPrompt(false)
+      setRectoResult(null)
+    } else {
+      setIsVersoMode(false)
+      setRectoResult(null)
+    }
     setCapturedImage(null)
     setCapturedImageBase64(null)
     setCapturedMimeType(null)
@@ -353,19 +364,54 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       <header className="h-16 px-4 flex items-center relative">
         <button
           type="button"
-          onClick={isVersoMode ? handleBackToRecto : onBack}
+          onClick={handleBackToRecto}
           className="text-2xl leading-none text-white z-10"
           aria-label="Retour"
         >
-          {isVersoMode ? 'Retour recto' : 'Retour'}
+          {isVersoMode || showVersoPrompt ? 'Retour' : 'Retour'}
         </button>
         <h1 className="absolute inset-0 flex items-center justify-center text-lg font-semibold">
-          {isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
+          {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
         </h1>
       </header>
 
       <main className="px-4 pb-8 flex flex-col items-center">
-        {capturedImage ? (
+        {showVersoPrompt ? (
+          // Écran intermédiaire après détection CNI
+          <div className="w-full max-w-xl flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-8">
+              <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white mb-4 text-center">
+              CNI détectée
+            </h2>
+            
+            <p className="text-lg text-gray-300 mb-8 text-center">
+              Retournez la carte pour scanner le verso
+            </p>
+            
+            <div className="w-full space-y-4">
+              <button
+                type="button"
+                onClick={handleStartVerso}
+                className="w-full px-8 h-14 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium text-lg flex items-center justify-center gap-2"
+              >
+                <span className="text-xl">Scanner le verso</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleSkipVerso}
+                className="w-full px-8 h-12 rounded-full border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors font-medium"
+              >
+                Passer le verso
+              </button>
+            </div>
+          </div>
+        ) : capturedImage ? (
           <div className="w-full max-w-xl">
             <img
               src={capturedImage}
