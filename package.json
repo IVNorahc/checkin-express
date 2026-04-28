@@ -12,6 +12,8 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.99.3",
+    "@tensorflow/tfjs": "^4.17.0",
+    "@tensorflow-models/coco-ssd": "^2.2.2",
     "dexie": "^4.3.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",

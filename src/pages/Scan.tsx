@@ -1,7 +1,9 @@
-  import { useEffect, useRef, useState } from 'react'
+  import { useEffect, useRef, useState, useCallback } from 'react'
 import Webcam from 'react-webcam'
 import { scanDocument } from '../utils/ocrService'
 import { apiService } from '../services/apiService'
+import * as tf from '@tensorflow/tfjs'
+import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
 type ScanProps = {
   onBack: () => void
@@ -84,6 +86,12 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [rectoResult, setRectoResult] = useState<OCRData | null>(null)
   const [isVersoMode, setIsVersoMode] = useState(false)
   const [showVersoPrompt, setShowVersoPrompt] = useState(false)
+  const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null)
+  const [cardDetected, setCardDetected] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const [showManualCapture, setShowManualCapture] = useState(false)
+  const countdownRef = useRef<number | null>(null)
+  const detectionRef = useRef<number | null>(null)
   const isMountedRef = useRef(true)
 
   // Fonction alternative avec API sécurisée
@@ -234,6 +242,134 @@ Réponds UNIQUEMENT avec ce JSON :
   useEffect(() => {
     return () => {
       isMountedRef.current = false
+      // Nettoyer la détection et le compte à rebours
+      if (detectionRef.current) cancelAnimationFrame(detectionRef.current)
+      if (countdownRef.current) clearInterval(countdownRef.current)
+    }
+  }, [])
+
+  // Charger le modèle TensorFlow.js au montage
+  useEffect(() => {
+    let timeoutId: number
+    const loadModel = async () => {
+      try {
+        await tf.ready()
+        const loadedModel = await cocoSsd.load()
+        setModel(loadedModel)
+        console.log('Modèle TensorFlow.js chargé')
+      } catch (error) {
+        console.error('Erreur chargement modèle:', error)
+      }
+    }
+    
+    loadModel()
+    
+    // Fallback après 5s si le modèle ne charge pas
+    timeoutId = setTimeout(() => {
+      if (!model) {
+        console.log('Timeout modèle, affichage capture manuelle')
+        setShowManualCapture(true)
+      }
+    }, 5000)
+    
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [model])
+
+  // Détection en temps réel
+  const startDetection = useCallback((videoEl: HTMLVideoElement) => {
+    if (!model || !videoEl) return
+    
+    const detect = async () => {
+      if (!model || !videoEl || isAnalyzing) return
+      
+      try {
+        const predictions = await model.detect(videoEl)
+        
+        // Chercher une carte/document dans les prédictions
+        const card = predictions.find(p => 
+          ['cell phone', 'book', 'laptop', 'remote', 'card'].includes(p.class) ||
+          p.score > 0.6
+        )
+        
+        // Vérifier aussi la taille de l'objet détecté
+        const videoArea = videoEl.videoWidth * videoEl.videoHeight
+        const cardArea = card ? card.bbox[2] * card.bbox[3] : 0
+        const coverage = cardArea / videoArea
+        
+        const isWellFramed = card && coverage > 0.25
+        
+        setCardDetected(!!isWellFramed)
+        
+        if (isWellFramed && !countdownRef.current) {
+          // Démarrer le compte à rebours
+          let count = 3
+          setCountdown(count)
+          countdownRef.current = setInterval(() => {
+            count -= 1
+            setCountdown(count)
+            if (count === 0) {
+              clearInterval(countdownRef.current!)
+              countdownRef.current = null
+              captureAndAnalyze(videoEl)
+            }
+          }, 1000)
+        } else if (!isWellFramed && countdownRef.current) {
+          // Reset si la carte sort du cadre
+          clearInterval(countdownRef.current)
+          countdownRef.current = null
+          setCountdown(null)
+        }
+      } catch (error) {
+        console.error('Erreur détection:', error)
+      }
+      
+      detectionRef.current = requestAnimationFrame(detect)
+    }
+  
+    detectionRef.current = requestAnimationFrame(detect)
+  }, [model, isAnalyzing])
+
+  // Capture et analyse automatique
+  const captureAndAnalyze = useCallback(async (videoEl: HTMLVideoElement) => {
+    // Arrêter la détection
+    if (detectionRef.current) cancelAnimationFrame(detectionRef.current)  
+    
+    // Capturer l'image haute qualité
+    const canvas = document.createElement('canvas')
+    canvas.width = videoEl.videoWidth
+    canvas.height = videoEl.videoHeight
+    const ctx = canvas.getContext('2d')!
+    ctx.filter = 'contrast(1.2) brightness(1.05)'
+    ctx.drawImage(videoEl, 0, 0)
+    
+    const base64 = canvas.toDataURL('image/jpeg', 0.95)
+      .replace(/^data:image\/jpeg;base64,/, '')
+    
+    setCapturedImage(canvas.toDataURL('image/jpeg', 0.95))
+    setCapturedImageBase64(base64)
+    setCapturedMimeType('image/jpeg')
+    setIsAnalyzing(true)
+    
+    try {
+      const result = await scanDocument(base64)
+      if (!isMountedRef.current) return
+      // Ajouter les champs manquants pour correspondre au type OCRData
+      const completeResult: OCRData = {
+        ...result,
+        adresse: (result as any).adresse || '',
+        profession: (result as any).profession || '',
+        nomPere: (result as any).nomPere || '',
+        nomMere: (result as any).nomMere || ''
+      }
+      handleScanResult(completeResult)
+    } catch (err) {
+      if (!isMountedRef.current) return
+      setAnalysisError('Erreur lors de l\'analyse. Veuillez réessayer.')
+      setCanRetry(true)
+    } finally {
+      if (isMountedRef.current) setIsAnalyzing(false)
     }
   }, [])
 
@@ -645,6 +781,8 @@ Réponds UNIQUEMENT avec ce JSON :
                   const videoElement = webcamRef.current?.video
                   if (videoElement) {
                     videoRef.current = videoElement
+                    // Démarrer la détection automatique
+                    startDetection(videoElement)
                   }
                 }}
               />
@@ -679,57 +817,109 @@ Réponds UNIQUEMENT avec ce JSON :
                   inset: 0,
                   backgroundColor: 'rgba(0,0,0,0.45)'
                 }} />
-                {/* Cadre blanc proportions carte d'identité */}
+                {/* Cadre dynamique (blanc/vert) */}
                 <div style={{
                   position: 'relative',
                   width: '92%',
                   aspectRatio: '1.586',
-                  border: '3px solid white',
+                  border: `3px solid ${cardDetected ? '#10b981' : 'white'}`,
                   borderRadius: '10px',
-                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
-                  zIndex: 10
+                  boxShadow: `0 0 0 9999px rgba(0,0,0,0.45)`,
+                  zIndex: 10,
+                  ...(cardDetected && {
+                    animation: 'pulse-border 1s ease-in-out infinite'
+                  })
                 }}>
                   {/* Coins de guidage */}
                   <div style={{position:'absolute',top:-3,left:-3,width:20,height:20,
-                    borderTop:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
+                    borderTop:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderLeft:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
                   <div style={{position:'absolute',top:-3,right:-3,width:20,height:20,
-                    borderTop:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
+                    borderTop:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderRight:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
                   <div style={{position:'absolute',bottom:-3,left:-3,width:20,height:20,
-                    borderBottom:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
+                    borderBottom:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderLeft:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
                   <div style={{position:'absolute',bottom:-3,right:-3,width:20,height:20,
-                    borderBottom:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
+                    borderBottom:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderRight:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
                 </div>
-                {/* Texte guide */}
-                <p style={{
-                  position: 'absolute',
-                  bottom: '15%',
-                  color: 'white',
-                  fontSize: '14px',
-                  textAlign: 'center',
-                  zIndex: 11,
-                  textShadow: '0 1px 3px rgba(0,0,0,0.8)'
-                }}>
-                  📏 Rapprochez-vous · La carte doit remplir le cadre
-                </p>
+                
+                {/* Compte à rebours */}
+                {countdown !== null && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontSize: '120px',
+                    fontWeight: 'bold',
+                    color: '#10b981',
+                    textShadow: '0 0 20px rgba(16, 185, 129, 0.8)',
+                    zIndex: 20,
+                    animation: 'countdown-pulse 1s ease-in-out infinite'
+                  }}>
+                    {countdown}
+                  </div>
+                )}
+                
+                {/* Messages guide */}
+                {!countdown && (
+                  <p style={{
+                    position: 'absolute',
+                    bottom: '15%',
+                    color: 'white',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    zIndex: 11,
+                    textShadow: '0 1px 3px rgba(0,0,0,0.8)'
+                  }}>
+                    📏 Rapprochez-vous · La carte doit remplir le cadre
+                  </p>
+                )}
+                
+                {countdown !== null && (
+                  <p style={{
+                    position: 'absolute',
+                    bottom: '15%',
+                    color: '#10b981',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    zIndex: 11,
+                    textShadow: '0 1px 3px rgba(0,0,0,0.8)'
+                  }}>
+                    Maintenez la carte immobile...
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-white text-sm sm:text-base space-y-1 px-4">
               <p>📏 Placez le document bien à plat</p>
               <p>💡 Assurez-vous d'avoir un bon éclairage</p>
-              <p>🔍 Remplissez le cadre avec le document</p>
-              <p>⏱️ Restez immobile au moment de capturer</p>
             </div>
 
             <div className="mt-6 sm:mt-8 w-full max-w-xl flex flex-col items-center gap-3 sm:gap-4 px-4">
-              <button
-                type="button"
-                onClick={handleCapture}
-                disabled={isAnalyzing}
-                className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
-              >
-                📸 CAPTURER
-              </button>
+              {/* Bouton de capture automatique */}
+              {!showManualCapture && (
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  disabled={isAnalyzing}
+                  className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
+                >
+                  {isAnalyzing ? 'Analyse en cours...' : 'CAPTURER'}
+                </button>
+              )}
+              
+              {/* Bouton de capture manuelle - fallback */}
+              {showManualCapture && (
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  disabled={isAnalyzing}
+                  className="w-full h-12 sm:h-14 rounded-xl bg-orange-600 text-white text-base sm:text-lg font-bold hover:bg-orange-700 transition-colors"
+                >
+                  Capturer manuellement
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleManualInput}
@@ -737,6 +927,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 className="w-full h-12 rounded-xl bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] font-bold hover:bg-[#1e3a8a] hover:text-white transition-colors"
                 style={{ marginTop: '12px' }}
               >
+                SAISIE MANUELLE
                 ✏️ SAISIE MANUELLE
               </button>
               <button
