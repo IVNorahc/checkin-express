@@ -50,15 +50,15 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
         background: "rgba(232,244,253,0.60)",
         backdropFilter: "blur(1px)",
         padding: "40px 16px"
-      }}>
+      }} className="min-h-screen w-full px-4 py-8 pt-12 overflow-x-hidden overflow-y-auto">
         <div style={{maxWidth: "1200px", margin: "0 auto"}}>
           {/* En-tête */}
           <div style={{textAlign: "center", marginBottom: "48px"}}>
-            <div className="flex flex-col items-center mb-4">
-              <img
-                src="/percepta-logo.png"
-                alt="Check-in Express by Percepta"
-                className="h-24 w-auto object-contain mx-auto mb-2"
+            <div className="flex justify-center mb-6">
+              <img 
+                src="/percepta-logo.png" 
+                alt="Percepta"
+                className="h-20 w-auto object-contain"
               />
             </div>
             <h1 style={{color: "#1e3a8a", fontSize: "32px", fontWeight: "800", margin: "0 0 16px"}}>
@@ -185,7 +185,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           </div>
 
           {/* Cartes de tarification */}
-          <div className="flex flex-col md:flex-row gap-8 justify-center items-start max-w-5xl mx-auto px-4 w-full">
+          <div className="flex flex-col md:flex-row gap-8 justify-center items-center max-w-5xl mx-auto px-4 w-full mt-8">
             
             {/* STARTER */}
             <div style={{
@@ -197,7 +197,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               padding: "32px",
               display: "flex",
               flexDirection: "column"
-            }} className="flex-1">
+            }} className="w-full max-w-sm mx-auto flex-1">
               <div style={{textAlign: "center", flex: 1}}>
                 <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
                   Starter
@@ -268,23 +268,12 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               padding: "32px",
               display: "flex",
               flexDirection: "column",
-              transform: "scale(1.05)",
-              position: "relative"
-            }} className="flex-1">
-              <div style={{
-                position: "absolute",
-                top: "-14px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "#facc15",
-                color: "#1e3a8a",
-                padding: "6px 20px",
-                borderRadius: "20px",
-                fontSize: "14px",
-                fontWeight: "bold",
-                whiteSpace: "nowrap"
-              }}>
-                ⭐ Plus populaire
+              transform: "scale(1.05)"
+            }} className="w-full max-w-sm mx-auto flex-1">
+              <div className="w-full flex justify-center mb-4">
+                <span className="bg-yellow-400 text-blue-900 font-bold px-4 py-2 rounded-full text-sm">
+                  ⭐ Plus populaire
+                </span>
               </div>
               
               <div style={{textAlign: "center", flex: 1}}>
