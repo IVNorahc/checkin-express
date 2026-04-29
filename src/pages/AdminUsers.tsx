@@ -25,16 +25,25 @@ export const AdminUsers: React.FC = () => {
   const fetchHotels = async () => {
     try {
       setLoading(true);
-      const { data: hotels, error } = await supabase
-        .rpc('get_all_hotels_admin')
+      const { data, error } = await supabase.rpc('get_all_hotels_admin')
 
       if (error) {
-        console.error('Erreur:', error)
+        console.error('Erreur RPC:', error)
         return
       }
 
-      console.log('Hotels trouvés:', hotels?.length, hotels)
-      setHotels(hotels || [])
+      // La fonction retourne des objets JSON - les parser
+      const hotels = data?.map((row: any) => {
+        // Si c'est déjà un objet, l'utiliser directement
+        // Si c'est une string JSON, la parser
+        return typeof row === 'string' ? JSON.parse(row) : 
+               typeof row.get_all_hotels_admin === 'string' ? 
+               JSON.parse(row.get_all_hotels_admin) : 
+               row.get_all_hotels_admin || row
+      }) || []
+
+      console.log('Hotels parsed:', hotels)
+      setHotels(hotels)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
     } finally {
