@@ -50,7 +50,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
         background: "rgba(232,244,253,0.60)",
         backdropFilter: "blur(1px)",
         padding: "16px 16px"
-      }} className="min-h-screen w-full px-4 py-4 overflow-x-hidden">
+      }} className="min-h-screen w-full px-4 py-4 pb-12 overflow-x-hidden">
         <div style={{maxWidth: "1200px", margin: "0 auto"}}>
           {/* En-tête */}
           <div style={{textAlign: "center", marginBottom: "24px"}}>
@@ -227,8 +227,12 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                       display: "flex",
                       alignItems: "center"
                     }}>
-                      <span style={{color: "#16a34a", marginRight: "8px", fontSize: "16px"}}>?</span>
-                      {feature}
+                      <svg className="w-5 h-5 text-green-500 flex-shrink-0" 
+                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" 
+                              strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span style={{marginLeft: "8px"}}>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -265,16 +269,18 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               border: "2px solid #4a90d9",
               borderRadius: "20px",
               boxShadow: "0 16px 48px rgba(30,58,138,0.4)",
-              padding: "24px",
+              padding: "16px 24px",
               display: "flex",
               flexDirection: "column",
               transform: "scale(1.05)",
               maxHeight: "75vh",
               overflowY: "auto"
-            }} className="w-full max-w-sm mx-auto flex-1">
-              <div className="flex justify-center w-full mb-3">
-                <span className="bg-yellow-400 text-blue-900 font-bold px-4 py-2 rounded-full text-sm">
-                  ? Plus populaire
+            }} className="w-full max-w-sm mx-auto flex-1 flex flex-col">
+              <div className="flex justify-center mb-4">
+                <span className="bg-yellow-400 text-blue-900 font-bold 
+                                 px-5 py-2 rounded-full text-sm flex items-center gap-1">
+                  <span>?</span>
+                  <span>Plus populaire</span>
                 </span>
               </div>
               
@@ -291,7 +297,8 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                   <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
                 </div>
                 
-                <ul style={{listStyle: "none", padding: 0, margin: "0 0 16px", textAlign: "left"}}>
+                <ul style={{listStyle: "none", padding: 0, margin: "0 0 16px", textAlign: "left"}} 
+                  className="flex flex-col gap-2 flex-1">
                   {[
                     "500 scans inclus/mois",
                     "Fiches de police PDF", 
@@ -304,13 +311,17 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                     <li key={feature} style={{
                       color: "#bfdbfe", 
                       fontSize: "14px", 
-                      padding: "6px 0",
+                      padding: "4px 0",
                       borderBottom: "1px solid rgba(255,255,255,0.1)",
                       display: "flex",
                       alignItems: "center"
                     }}>
-                      <span style={{color: "#facc15", marginRight: "8px", fontSize: "16px"}}>✓</span>
-                      {feature}
+                      <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" 
+                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" 
+                              strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span style={{marginLeft: "8px"}}>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -342,9 +353,10 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           </div>
 
           {/* Footer */}
-          <div style={{textAlign: "center", fontSize: "14px", color: "#64748b", lineHeight: "1.6"}}>
-            <p>🔒 Paiement sécurisé via Lemon Squeezy</p>
-            <p>Annulation à tout moment • Sans engagement</p>
+          <div style={{textAlign: "center", fontSize: "14px", color: "#64748b", lineHeight: "1.6"}} 
+               className="mt-6 text-center pb-8">
+            <p>?</p>
+            <p>Annulation à tout moment ? Sans engagement</p>
             <p>
               Des questions ?{" "}
               <a href="mailto:contact@percepta.io" style={{color: "#4a90d9", textDecoration: "none"}}>
@@ -365,7 +377,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                   fontWeight: "600"
                 }}
               >
-                Essayer gratuitement 7 jours →
+                Essayer gratuitement 7 jours ?
               </button>
             )}
           </div>
