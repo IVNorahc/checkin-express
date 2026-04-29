@@ -207,7 +207,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 </p>
                 
                 <div style={{fontSize: "32px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "16px"}}>
-                  49,99?
+                  49,99{'€'}
                   <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
                 </div>
                 
@@ -258,7 +258,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 </button>
                 
                 <p style={{fontSize: "12px", color: "#94a3b8", marginTop: "12px", textAlign: "center"}}>
-                  0,25€/scan au-delà de 200
+                  0,25{'€'}/scan au-delà de 200
                 </p>
               </div>
             </div>
@@ -279,8 +279,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               <div className="flex justify-center mb-4">
                 <span className="bg-yellow-400 text-blue-900 font-bold 
                                  px-5 py-2 rounded-full text-sm flex items-center gap-1">
-                  <span>?</span>
-                  <span>Plus populaire</span>
+              <span>Plus populaire</span>
                 </span>
               </div>
               
@@ -293,7 +292,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 </p>
                 
                 <div style={{fontSize: "32px", fontWeight: "bold", color: "white", marginBottom: "16px"}}>
-                  89,99€
+                  89,99{'€'}
                   <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
                 </div>
                 
@@ -305,7 +304,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                     "Signature électronique",
                     "Historique clients",
                     "Support prioritaire",
-                    "0,25€/scan supplémentaire",
+                    "0,25{'€'}/scan suppl&eacute;mentaire",
                     "Dashboard statistiques"
                   ].map((feature) => (
                     <li key={feature} style={{
@@ -346,7 +345,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 </button>
                 
                 <p style={{fontSize: "12px", color: "#bfdbfe", marginTop: "12px", textAlign: "center"}}>
-                  0,25€/scan au-delà de 500
+                  0,25{'€'}/scan au-delà de 500
                 </p>
               </div>
             </div>
@@ -355,8 +354,8 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           {/* Footer */}
           <div style={{textAlign: "center", fontSize: "14px", color: "#64748b", lineHeight: "1.6"}} 
                className="mt-6 text-center pb-8">
-            <p>?</p>
-            <p>Annulation à tout moment ? Sans engagement</p>
+            <p>Sécurisé Paiement sécurisé via Lemon Squeezy</p>
+            <p>Annulation à tout moment - Sans engagement</p>
             <p>
               Des questions ?{" "}
               <a href="mailto:contact@percepta.io" style={{color: "#4a90d9", textDecoration: "none"}}>
