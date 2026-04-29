@@ -115,31 +115,34 @@ export const AdminDashboard: React.FC = () => {
 
   const fetchKPIs = async () => {
     try {
-      // Total hôtels
+      // Total hôtels (exclure les comptes admin)
       const { count: totalHotelsCount } = await supabase
-        .from('hotels')
-        .select('*', { count: 'exact', head: true });
+        .from('hotels_with_email')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_admin', false);
 
-      // Abonnés actifs (non-trial)
+      // Abonnés actifs (non-trial, exclure admin)
       const { count: activeCount } = await supabase
-        .from('hotels')
+        .from('hotels_with_email')
         .select('*', { count: 'exact', head: true })
         .in('subscription_status', ['starter', 'business'])
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .eq('is_admin', false);
 
       // Scans aujourd'hui
       const today = new Date().toISOString().slice(0, 10);
       const { count: todayScansCount } = await supabase
-        .from('scan_history')
+        .from('scan_history_with_hotel')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today);
 
-      // Revenus mensuels
+      // Revenus mensuels (exclure admin)
       const { data: revenueData } = await supabase
-        .from('hotels')
+        .from('hotels_with_email')
         .select('subscription_status')
         .in('subscription_status', ['starter', 'business'])
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .eq('is_admin', false);
 
       const revenue = (revenueData?.filter(h => h.subscription_status === 'starter').length || 0) * 49.99 +
                       (revenueData?.filter(h => h.subscription_status === 'business').length || 0) * 89.99;
@@ -226,9 +229,10 @@ export const AdminDashboard: React.FC = () => {
   const fetchHotels = async () => {
     try {
       const { data } = await supabase
-        .from('hotels')
+        .from('hotels_with_email')
         .select('id, hotel_name')
         .eq('status', 'active')
+        .eq('is_admin', false) // Exclure les comptes admin
         .order('hotel_name');
 
       setHotels(data || []);

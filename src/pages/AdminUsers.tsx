@@ -11,6 +11,9 @@ interface Hotel {
   suspended_at?: string;
   suspended_reason?: string;
   created_at: string;
+  user_created_at?: string;
+  last_sign_in_at?: string;
+  is_admin?: boolean;
   monthly_scan_counts?: { scan_count: number; month_year: string }[];
 }
 
@@ -23,7 +26,7 @@ export const AdminUsers: React.FC = () => {
     try {
       setLoading(true);
       const { data, error: fetchError } = await supabase
-        .from('hotels')
+        .from('hotels_with_email')
         .select(`
           id,
           hotel_name,
@@ -33,11 +36,15 @@ export const AdminUsers: React.FC = () => {
           suspended_at,
           suspended_reason,
           created_at,
+          user_created_at,
+          last_sign_in_at,
+          is_admin,
           monthly_scan_counts (
             scan_count,
             month_year
           )
         `)
+        .eq('is_admin', false) // Exclure les comptes admin
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -284,6 +291,9 @@ export const AdminUsers: React.FC = () => {
                     Créé le
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Dernière connexion
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -320,6 +330,13 @@ export const AdminUsers: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(hotel.created_at).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {hotel.last_sign_in_at 
+                        ? new Date(hotel.last_sign_in_at).toLocaleDateString('fr-FR') + ' ' + 
+                          new Date(hotel.last_sign_in_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                        : 'Jamais'
+                      }
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
