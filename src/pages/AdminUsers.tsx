@@ -25,7 +25,7 @@ export const AdminUsers: React.FC = () => {
   const fetchHotels = async () => {
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
+      const { data: hotels, error } = await supabase
         .from('hotels_with_email')
         .select(`
           id,
@@ -44,11 +44,15 @@ export const AdminUsers: React.FC = () => {
             month_year
           )
         `)
-        .eq('is_admin', false) // Exclure les comptes admin
+        .neq('email', 'muhammadsamb@gmail.com')
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
-      setHotels(data || []);
+      if (error) {
+        console.error('Erreur fetch hotels:', error);
+        throw error;
+      }
+      
+      setHotels(hotels || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
     } finally {
