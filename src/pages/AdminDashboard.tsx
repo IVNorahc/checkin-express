@@ -102,6 +102,12 @@ export const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<string>('all');
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    trial: 0,
+    active: 0,
+    expired: 0
+  });
   
   // KPIs
   const [totalHotels, setTotalHotels] = useState(0);
@@ -227,19 +233,28 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const fetchHotels = async () => {
-    try {
-      const { data } = await supabase
-        .from('hotels_with_email')
-        .select('id, hotel_name')
-        .eq('status', 'active')
-        .eq('is_admin', false) // Exclure les comptes admin
-        .order('hotel_name');
-
-      setHotels(data || []);
-    } catch (err) {
-      console.error('Error fetching hotels:', err);
-    }
-  };
+  const { data, error } = await supabase.rpc('get_all_hotels_admin')
+  
+  console.log('RAW DATA:', JSON.stringify(data))
+  console.log('ERROR:', error)
+  
+  if (error || !data) return
+  
+  // Parser chaque ligne JSON
+  const parsed = data.map((row: any) => {
+    const val = row?.get_all_hotels_admin ?? row
+    return typeof val === 'string' ? JSON.parse(val) : val
+  })
+  
+  console.log('PARSED HOTELS:', parsed)
+  setHotels(parsed)
+  setStats({
+    total: parsed.length,
+    trial: parsed.filter((h: any) => h.subscription_status === 'trial').length,
+    active: parsed.filter((h: any) => ['starter','business'].includes(h.subscription_status)).length,
+    expired: parsed.filter((h: any) => h.subscription_status === 'expired').length,
+  })
+}
 
   const fetchAllData = async () => {
     setLoading(true);
