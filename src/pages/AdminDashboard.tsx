@@ -98,6 +98,8 @@ interface MonthlyScanData {
 }
 
 export const AdminDashboard: React.FC = () => {
+  console.log('ADMIN DASHBOARD MOUNTED')
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<string>('all');
@@ -271,6 +273,10 @@ export const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHotels()
+  }, [])
 
   useEffect(() => {
     fetchAllData();

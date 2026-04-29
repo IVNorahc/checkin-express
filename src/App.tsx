@@ -5,7 +5,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
-import Admin from './pages/Admin'
+import AdminDashboard from './pages/AdminDashboard'
 import Subscribe from './pages/Subscribe'
 import Layout from './components/Layout'
 
@@ -228,7 +228,7 @@ export default function App() {
     return (
       <Layout>
         <div className="page-transition">
-          <Admin />
+          <AdminDashboard />
         </div>
       </Layout>
     )
