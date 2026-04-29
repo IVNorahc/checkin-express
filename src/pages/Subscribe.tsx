@@ -49,12 +49,12 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
         minHeight: "100vh",
         background: "rgba(232,244,253,0.60)",
         backdropFilter: "blur(1px)",
-        padding: "40px 16px"
-      }} className="min-h-screen w-full px-4 py-8 pt-12 overflow-x-hidden overflow-y-auto">
+        padding: "16px 16px"
+      }} className="min-h-screen w-full px-4 py-4 overflow-x-hidden">
         <div style={{maxWidth: "1200px", margin: "0 auto"}}>
           {/* En-tête */}
-          <div style={{textAlign: "center", marginBottom: "48px"}}>
-            <div className="flex justify-center mb-6">
+          <div style={{textAlign: "center", marginBottom: "24px"}}>
+            <div className="flex justify-center mb-4">
               <img 
                 src="/percepta-logo.png" 
                 alt="Percepta"
@@ -72,7 +72,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           {/* Bannière de bienvenue */}
           {showWelcome && (
             <div style={{
-              marginBottom: "32px",
+              marginBottom: "16px",
               background: "rgba(30,58,138,0.15)",
               backdropFilter: "blur(1px)",
               border: "1px solid rgba(134,239,172,0.5)",
@@ -80,10 +80,10 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               padding: "16px",
               textAlign: "center",
               maxWidth: "600px",
-              margin: "0 auto 32px"
+              margin: "0 auto 16px"
             }}>
               <p style={{color: "#166534", fontWeight: "600", margin: 0}}>
-                ✅ Votre compte a été créé avec succès ! Complétez votre inscription.
+                Votre compte a été créé avec succès ! Complétez votre inscription.
               </p>
             </div>
           )}
@@ -91,7 +91,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           {/* Message de paiement */}
           {showRefresh && (
             <div style={{
-              marginBottom: "32px",
+              marginBottom: "16px",
               background: "rgba(219,234,254,0.9)",
               backdropFilter: "blur(1px)",
               border: "1px solid rgba(147,197,253,0.5)",
@@ -99,10 +99,10 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               padding: "16px",
               textAlign: "center",
               maxWidth: "600px",
-              margin: "0 auto 32px"
+              margin: "0 auto 16px"
             }}>
               <p style={{color: "#1e3a8a", fontWeight: "600", marginBottom: "16px"}}>
-                ✅ Une fois votre paiement effectué, cliquez ci-dessous.
+                Une fois votre paiement effectué, cliquez ci-dessous.
               </p>
               <button
                 onClick={handleRefresh}
@@ -117,7 +117,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                   fontSize: "14px"
                 }}
               >
-                ✅ Actualiser mon accès
+                Actualiser mon accès
               </button>
             </div>
           )}
@@ -127,7 +127,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
             display: "flex",
             justifyContent: "center",
             gap: "32px",
-            marginBottom: "32px",
+            marginBottom: "16px",
             flexWrap: "wrap"
           }}>
             <div style={{textAlign: "center"}}>
@@ -194,7 +194,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               border: "2px solid rgba(191,219,254,0.5)",
               borderRadius: "20px",
               boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
-              padding: "32px",
+              padding: "24px",
               display: "flex",
               flexDirection: "column"
             }} className="w-full max-w-sm mx-auto flex-1">
@@ -202,16 +202,16 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
                   Starter
                 </h3>
-                <p style={{color: "#64748b", marginBottom: "24px"}}>
+                <p style={{color: "#64748b", marginBottom: "16px"}}>
                   Idéal pour les petits hôtels
                 </p>
                 
-                <div style={{fontSize: "36px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "24px"}}>
-                  49,99€
-                  <span style={{fontSize: "16px", fontWeight: "normal"}}>/mois</span>
+                <div style={{fontSize: "32px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "16px"}}>
+                  49,99?
+                  <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
                 </div>
                 
-                <ul style={{listStyle: "none", padding: 0, margin: "0 0 24px", textAlign: "left"}}>
+                <ul style={{listStyle: "none", padding: 0, margin: "0 0 16px", textAlign: "left"}}>
                   {[
                     "200 scans inclus/mois",
                     "Fiches de police PDF", 
@@ -222,12 +222,12 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                     <li key={feature} style={{
                       color: "#1e293b", 
                       fontSize: "14px", 
-                      padding: "8px 0",
+                      padding: "6px 0",
                       borderBottom: "1px solid rgba(191,219,254,0.3)",
                       display: "flex",
                       alignItems: "center"
                     }}>
-                      <span style={{color: "#16a34a", marginRight: "8px", fontSize: "16px"}}>✓</span>
+                      <span style={{color: "#16a34a", marginRight: "8px", fontSize: "16px"}}>?</span>
                       {feature}
                     </li>
                   ))}
@@ -265,14 +265,16 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               border: "2px solid #4a90d9",
               borderRadius: "20px",
               boxShadow: "0 16px 48px rgba(30,58,138,0.4)",
-              padding: "32px",
+              padding: "24px",
               display: "flex",
               flexDirection: "column",
-              transform: "scale(1.05)"
+              transform: "scale(1.05)",
+              maxHeight: "85vh",
+              overflowY: "auto"
             }} className="w-full max-w-sm mx-auto flex-1">
-              <div className="w-full flex justify-center mb-4">
+              <div className="flex justify-center w-full mb-3">
                 <span className="bg-yellow-400 text-blue-900 font-bold px-4 py-2 rounded-full text-sm">
-                  ⭐ Plus populaire
+                  ? Plus populaire
                 </span>
               </div>
               
@@ -280,16 +282,16 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 <h3 style={{color: "white", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
                   Business
                 </h3>
-                <p style={{color: "#bfdbfe", marginBottom: "24px"}}>
+                <p style={{color: "#bfdbfe", marginBottom: "16px"}}>
                   Pour les hôtels actifs
                 </p>
                 
-                <div style={{fontSize: "36px", fontWeight: "bold", color: "white", marginBottom: "24px"}}>
+                <div style={{fontSize: "32px", fontWeight: "bold", color: "white", marginBottom: "16px"}}>
                   89,99€
-                  <span style={{fontSize: "16px", fontWeight: "normal"}}>/mois</span>
+                  <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
                 </div>
                 
-                <ul style={{listStyle: "none", padding: 0, margin: "0 0 24px", textAlign: "left"}}>
+                <ul style={{listStyle: "none", padding: 0, margin: "0 0 16px", textAlign: "left"}}>
                   {[
                     "500 scans inclus/mois",
                     "Fiches de police PDF", 
@@ -302,7 +304,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                     <li key={feature} style={{
                       color: "#bfdbfe", 
                       fontSize: "14px", 
-                      padding: "8px 0",
+                      padding: "6px 0",
                       borderBottom: "1px solid rgba(255,255,255,0.1)",
                       display: "flex",
                       alignItems: "center"
