@@ -269,7 +269,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               display: "flex",
               flexDirection: "column",
               transform: "scale(1.05)",
-              maxHeight: "85vh",
+              maxHeight: "75vh",
               overflowY: "auto"
             }} className="w-full max-w-sm mx-auto flex-1">
               <div className="flex justify-center w-full mb-3">
