@@ -26,33 +26,15 @@ export const AdminUsers: React.FC = () => {
     try {
       setLoading(true);
       const { data: hotels, error } = await supabase
-        .from('hotels_with_email')
-        .select(`
-          id,
-          hotel_name,
-          email,
-          subscription_status,
-          status,
-          suspended_at,
-          suspended_reason,
-          created_at,
-          user_created_at,
-          last_sign_in_at,
-          is_admin,
-          monthly_scan_counts (
-            scan_count,
-            month_year
-          )
-        `)
-        .neq('email', 'muhammadsamb@gmail.com')
-        .order('created_at', { ascending: false });
+        .rpc('get_all_hotels_admin')
 
       if (error) {
-        console.error('Erreur fetch hotels:', error);
-        throw error;
+        console.error('Erreur:', error)
+        return
       }
-      
-      setHotels(hotels || []);
+
+      console.log('Hotels trouvés:', hotels?.length, hotels)
+      setHotels(hotels || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
     } finally {
@@ -214,8 +196,14 @@ export const AdminUsers: React.FC = () => {
     }
     
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const currentMonthData = hotel.monthly_scan_counts.find(
-      count => count.month_year?.slice(0, 7) === currentMonth
+    
+    // monthly_scan_counts est maintenant un tableau JSON depuis la RPC
+    const monthlyCounts = Array.isArray(hotel.monthly_scan_counts) 
+      ? hotel.monthly_scan_counts 
+      : [];
+    
+    const currentMonthData = monthlyCounts.find(
+      (count: any) => count.month_year?.slice(0, 7) === currentMonth
     );
     
     return currentMonthData?.scan_count || 0;
