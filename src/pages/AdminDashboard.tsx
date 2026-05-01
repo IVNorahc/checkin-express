@@ -250,12 +250,21 @@ export const AdminDashboard: React.FC = () => {
   
   console.log('PARSED HOTELS:', parsed)
   setHotels(parsed)
-  setStats({
-    total: parsed.length,
-    trial: parsed.filter((h: any) => h.subscription_status === 'trial').length,
-    active: parsed.filter((h: any) => ['starter','business'].includes(h.subscription_status)).length,
-    expired: parsed.filter((h: any) => h.subscription_status === 'expired').length,
-  })
+  
+  // Calculer les stats directement depuis parsed
+  const total = parsed.length
+  const trial = parsed.filter((h: any) => 
+    h.subscription_status === 'trial').length
+  const active = parsed.filter((h: any) => 
+    ['starter', 'business'].includes(h.subscription_status)).length
+
+  // Un hotel est expiré si trial_end < maintenant ET status = trial
+  const now = new Date()
+  const expired = parsed.filter((h: any) => 
+    h.subscription_status === 'trial' && 
+    new Date(h.trial_end) < now).length
+
+  setStats({ total, trial: trial - expired, active, expired })
 }
 
   const fetchAllData = async () => {
@@ -352,80 +361,31 @@ export const AdminDashboard: React.FC = () => {
           <KPICard 
             title="Total hôtels" 
             value={totalHotels} 
-            icon="{'\ud83c\udfe8'}" 
+            icon="H" 
             color="blue" 
             loading={loading}
           />
           <KPICard 
             title="Abonnés actifs" 
             value={activeSubscriptions} 
-            icon="{'\u2705'}" 
+            icon="A" 
             color="green" 
             loading={loading}
           />
           <KPICard 
             title="Scans aujourd'hui" 
             value={todayScans} 
-            icon="{'\ud83d\udcf8'}" 
+            icon="S" 
             color="purple" 
             loading={loading}
           />
           <KPICard 
             title="Revenus/mois" 
-            value={`${monthlyRevenue.toFixed(2)}{'\u20ac'}`} 
-            icon="{'\ud83d\udcb0'}" 
+            value={`${monthlyRevenue.toFixed(2)}€`} 
+            icon="R" 
             color="yellow" 
             loading={loading}
           />
-        </div>
-
-        {/* Graphiques */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Graphique 1 - Scans par jour */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Scans par jour (30 derniers jours)
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dailyScansData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="scans" 
-                  stroke="#3B82F6" 
-                  name="Scans" 
-                  strokeWidth={2}
-                  dot={{ fill: '#3B82F6' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Graphique 2 - Scans par utilisateur */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Scans ce mois par hôtel
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyScansPerUser}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hotel_name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar 
-                  dataKey="scans" 
-                  fill="#3B82F6" 
-                  name="Scans ce mois"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
         </div>
 
         {/* Actions rapides */}
@@ -450,6 +410,104 @@ export const AdminDashboard: React.FC = () => {
             >
               Paramètres système
             </button>
+          </div>
+        </div>
+
+        {/* Liste des utilisateurs */}
+        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">
+                Liste des utilisateurs ({hotels.length})
+              </h2>
+              <div className="flex gap-4 text-sm">
+                <span className="text-gray-600">
+                  Total: {stats.total}
+                </span>
+                <span className="text-green-600">
+                  Actifs: {stats.active}
+                </span>
+                <span className="text-yellow-600">
+                  Trial: {stats.trial}
+                </span>
+                <span className="text-red-600">
+                  Expirés: {stats.expired}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hôtel
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Abonnement
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Statut
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Créé le
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {hotels.map((hotel: any) => (
+                  <tr key={hotel.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {hotel.hotel_name || 'Non spécifié'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{hotel.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        hotel.subscription_status === 'trial' ? 'bg-yellow-100 text-yellow-800' :
+                        hotel.subscription_status === 'starter' ? 'bg-green-100 text-green-800' :
+                        hotel.subscription_status === 'business' ? 'bg-blue-100 text-blue-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {hotel.subscription_status === 'trial' ? 'Trial' :
+                         hotel.subscription_status === 'starter' ? 'Starter' :
+                         hotel.subscription_status === 'business' ? 'Business' :
+                         'Expiré'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        hotel.status === 'active' ? 'bg-green-100 text-green-800' :
+                        hotel.status === 'suspended' ? 'bg-yellow-100 text-yellow-800' :
+                        hotel.status === 'disabled' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {hotel.status === 'active' ? 'Actif' :
+                         hotel.status === 'suspended' ? 'Suspendu' :
+                         hotel.status === 'disabled' ? 'Désactivé' :
+                         'Inconnu'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(hotel.created_at).toLocaleDateString('fr-FR')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {hotels.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-500">Aucun utilisateur trouvé</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
