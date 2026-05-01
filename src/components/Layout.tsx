@@ -1,10 +1,13 @@
 import React from 'react'
+import Header from './Header'
 
 interface LayoutProps {
   children: React.ReactNode
+  showBackButton?: boolean
+  onBackClick?: () => void
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, showBackButton = false, onBackClick }: LayoutProps) {
   return (
     <div 
       className="min-h-screen w-full relative"
@@ -16,19 +19,8 @@ export default function Layout({ children }: LayoutProps) {
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* Header avec logo Percepta */}
-      <header className="flex items-center justify-between px-4 py-3 w-full">
-        <div className="flex items-center gap-2 bg-white/90 rounded-xl px-3 py-2 shadow-sm">
-          <img 
-            src="/percepta-logo.png" 
-            alt="Percepta"
-            className="h-9 w-auto object-contain"
-          />
-          <span className="font-bold text-blue-800 text-sm">
-            Check-in Express
-          </span>
-        </div>
-      </header>
+      {/* Header global avec logo et déconnexion */}
+      <Header showBackButton={showBackButton} onBackClick={onBackClick} />
       
       {/* Overlay léger comme la page login */}
       <div className="min-h-screen w-full bg-blue-50/40">
