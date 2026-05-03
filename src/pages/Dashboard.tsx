@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
 import { generateFicheControle, saveFicheToSupabase } from '../utils/generateFicheControle'
 import FichesControle from './FichesControle'
-import NavLink from '../components/NavLink'
 
 type DashboardProps = {
   onRequireLogin: () => void
@@ -463,24 +462,9 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               </span>
             </div>
 
-            {/* Menu de navigation complet */}
-            <nav className="flex items-center gap-2">
-              <NavLink to="/dashboard" icon="🏠" label="Accueil" isActive={true} />
-              <NavLink to="/scan" icon="📸" label="Scanner" />
-              <NavLink to="/historique" icon="📋" label="Historique" />
-              <NavLink to="/fiches" icon="📄" label="Fiches" />
-              <NavLink to="/parametres" icon="⚙️" label="Paramètres" />
-              <NavLink to="/support" icon="💬" label="Support" />
-              {isAdmin && onAdminClick && (
-                <button
-                  type="button"
-                  onClick={onAdminClick}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
-                  <span>👑</span>
-                  <span>Admin</span>
-                </button>
-              )}
+            {/* Navigation au centre si nécessaire */}
+            <nav>
+              {/* Options de navigation peuvent être ajoutées ici */}
             </nav>
 
             {/* Bouton déconnexion sans fond blanc */}

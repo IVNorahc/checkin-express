@@ -7,16 +7,10 @@ import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
 import AdminDashboard from './pages/AdminDashboard'
 import Subscribe from './pages/Subscribe'
-import Historique from './pages/Historique'
-import FichesControle from './pages/FichesControle'
-import Parametres from './pages/Parametres'
-import Support from './pages/Support'
 import Layout from './components/Layout'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
-  const [session, setSession] = useState<any>(null)
-  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [ocrData, setOcrData] = useState<{
     documentType: string | null
     needsVerso: boolean | null
@@ -34,6 +28,7 @@ export default function App() {
     nomPere: string | null
     nomMere: string | null
   } | null>(null)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
 
   // Timeout de sécurité
   useEffect(() => {
@@ -55,8 +50,6 @@ export default function App() {
           setIsCheckingSession(false)
           return
         }
-        
-        setSession(sessionData.session)
         
         const isAdmin = sessionData.session.user?.user_metadata?.is_admin === true
         
@@ -85,7 +78,6 @@ export default function App() {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
         if (session) {
-          setSession(session)
           const isAdmin = session.user?.user_metadata?.is_admin === true
           
           if (isAdmin) {
@@ -99,12 +91,10 @@ export default function App() {
           // Le profil sera récupéré dans le composant Dashboard lui-même
         } else {
           setCurrentPage('login')
-          setSession(null)
         }
       } catch (error) {
         console.error('Auth state change error:', error)
         setCurrentPage('login')
-        setSession(null)
       }
     })
 
@@ -249,55 +239,6 @@ export default function App() {
       <Layout>
         <div className="page-transition">
           <Subscribe 
-            onBack={() => setCurrentPage('dashboard')} 
-          />
-        </div>
-      </Layout>
-    )
-  }
-
-  if (currentPage === 'historique') {
-    return (
-      <Layout>
-        <div className="page-transition">
-          <Historique 
-            onBack={() => setCurrentPage('dashboard')} 
-          />
-        </div>
-      </Layout>
-    )
-  }
-
-  if (currentPage === 'fiches') {
-    return (
-      <Layout>
-        <div className="page-transition">
-          <FichesControle 
-            session={session || null}
-            onBack={() => setCurrentPage('dashboard')} 
-          />
-        </div>
-      </Layout>
-    )
-  }
-
-  if (currentPage === 'parametres') {
-    return (
-      <Layout>
-        <div className="page-transition">
-          <Parametres 
-            onBack={() => setCurrentPage('dashboard')} 
-          />
-        </div>
-      </Layout>
-    )
-  }
-
-  if (currentPage === 'support') {
-    return (
-      <Layout>
-        <div className="page-transition">
-          <Support 
             onBack={() => setCurrentPage('dashboard')} 
           />
         </div>
