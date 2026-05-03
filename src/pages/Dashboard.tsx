@@ -25,17 +25,10 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const [scansThisMonth, setScansThisMonth] = useState(0)
   const [showFiches, setShowFiches] = useState(false)
 
-  const handleSignOut = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    try {
-      await supabase.auth.signOut()
-      window.location.replace(window.location.origin + '/login')
-    } catch (error) {
-      console.error('Erreur déconnexion:', error)
-      window.location.replace(window.location.origin + '/login')
-    }
-  }
+  const handleSignOut = async () => {
+  await supabase.auth.signOut()
+  window.location.replace(window.location.origin + '/login')
+}
 
   useEffect(() => {
     const loadSession = async () => {
