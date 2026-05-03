@@ -203,7 +203,7 @@ export default function App() {
 
   if (currentPage === 'scan') {
     return (
-      <Layout showBackButton={true} onBackClick={() => setCurrentPage('dashboard')}>
+      <Layout>
         <div className="page-transition">
           <Scan
             onBack={() => setCurrentPage('dashboard')}
@@ -258,7 +258,7 @@ export default function App() {
 
   if (currentPage === 'historique') {
     return (
-      <Layout showBackButton={true} onBackClick={() => setCurrentPage('dashboard')}>
+      <Layout>
         <div className="page-transition">
           <Historique 
             onBack={() => setCurrentPage('dashboard')} 
@@ -270,7 +270,7 @@ export default function App() {
 
   if (currentPage === 'fiches') {
     return (
-      <Layout showBackButton={true} onBackClick={() => setCurrentPage('dashboard')}>
+      <Layout>
         <div className="page-transition">
           <FichesControle 
             session={session || null}
@@ -283,7 +283,7 @@ export default function App() {
 
   if (currentPage === 'parametres') {
     return (
-      <Layout showBackButton={true} onBackClick={() => setCurrentPage('dashboard')}>
+      <Layout>
         <div className="page-transition">
           <Parametres 
             onBack={() => setCurrentPage('dashboard')} 
@@ -295,7 +295,7 @@ export default function App() {
 
   if (currentPage === 'support') {
     return (
-      <Layout showBackButton={true} onBackClick={() => setCurrentPage('dashboard')}>
+      <Layout>
         <div className="page-transition">
           <Support 
             onBack={() => setCurrentPage('dashboard')} 
@@ -307,7 +307,7 @@ export default function App() {
 
   if (currentPage === 'pricing') {
     return (
-      <Layout showBackButton={true} onBackClick={() => setCurrentPage('dashboard')}>
+      <Layout>
         <div className="page-transition">
           <Subscribe 
             onBack={() => setCurrentPage('dashboard')} 
