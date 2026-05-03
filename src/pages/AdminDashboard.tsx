@@ -267,6 +267,28 @@ export const AdminDashboard: React.FC = () => {
   setStats({ total, trial: trial - expired, active, expired })
 }
 
+const handleReactivate = async (hotelId: string) => {
+  const newTrialEnd = new Date()
+  newTrialEnd.setDate(newTrialEnd.getDate() + 7)
+  
+  const { error } = await supabase
+    .from('hotels')
+    .update({ 
+      subscription_status: 'trial',
+      trial_end: newTrialEnd.toISOString(),
+      status: 'active'
+    })
+    .eq('id', hotelId)
+  
+  if (error) {
+    alert('Erreur: ' + error.message)
+    return
+  }
+  
+  alert('Compte réactivé pour 7 jours !')
+  fetchHotels()
+}
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -456,6 +478,9 @@ export const AdminDashboard: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Créé le
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -497,6 +522,17 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(hotel.created_at).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {hotel.subscription_status === 'trial' && 
+                       new Date(hotel.trial_end) < new Date() && (
+                        <button
+                          onClick={() => handleReactivate(hotel.id)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                        >
+                          Réactiver
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
