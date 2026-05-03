@@ -13,7 +13,7 @@ type FicheControle = {
 }
 
 type FichesControleProps = {
-  session: Session
+  session?: Session
   onBack: () => void
 }
 
@@ -30,6 +30,8 @@ export default function FichesControle({ session, onBack }: FichesControleProps)
 
   const loadFiches = async () => {
     try {
+      if (!session) return
+      
       const { data, error } = await supabase
         .from('fiches_controle')
         .select('*')
@@ -63,6 +65,11 @@ export default function FichesControle({ session, onBack }: FichesControleProps)
   const handleGenerateFiche = async () => {
     if (!guestName.trim()) {
       alert('Veuillez entrer le nom du client')
+      return
+    }
+
+    if (!session) {
+      alert('Session non trouvée')
       return
     }
 

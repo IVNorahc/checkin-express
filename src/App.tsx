@@ -7,6 +7,10 @@ import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
 import AdminDashboard from './pages/AdminDashboard'
 import Subscribe from './pages/Subscribe'
+import Historique from './pages/Historique'
+import FichesControle from './pages/FichesControle'
+import Parametres from './pages/Parametres'
+import Support from './pages/Support'
 import Layout from './components/Layout'
 
 export default function App() {
@@ -175,7 +179,7 @@ export default function App() {
 
   if (currentPage === 'dashboard') {
     return (
-      <Layout>
+      <Layout currentPage="dashboard" onNavigate={setCurrentPage} showNavigation={true}>
         <div className="page-transition">
           <Dashboard
             onRequireLogin={() => setCurrentPage('login')}
@@ -193,7 +197,7 @@ export default function App() {
 
   if (currentPage === 'scan') {
     return (
-      <Layout>
+      <Layout currentPage="scan" onNavigate={setCurrentPage} showNavigation={true}>
         <div className="page-transition">
           <Scan
             onBack={() => setCurrentPage('dashboard')}
@@ -209,7 +213,7 @@ export default function App() {
 
   if (currentPage === 'confirm') {
     return (
-      <Layout>
+      <Layout currentPage="scan" onNavigate={setCurrentPage} showNavigation={true}>
         <div className="page-transition">
           <Confirm
             data={ocrData}
@@ -218,6 +222,55 @@ export default function App() {
               setCurrentPage('scan')
             }}
             onConfirm={() => setCurrentPage('dashboard')}
+          />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'historique') {
+    return (
+      <Layout currentPage="historique" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <Historique 
+            onBack={() => setCurrentPage('dashboard')} 
+          />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'fiches') {
+    return (
+      <Layout currentPage="fiches" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <FichesControle 
+            session={undefined}
+            onBack={() => setCurrentPage('dashboard')} 
+          />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'parametres') {
+    return (
+      <Layout currentPage="parametres" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <Parametres 
+            onBack={() => setCurrentPage('dashboard')} 
+          />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'support') {
+    return (
+      <Layout currentPage="support" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <Support 
+            onBack={() => setCurrentPage('dashboard')} 
           />
         </div>
       </Layout>
