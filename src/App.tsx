@@ -304,9 +304,7 @@ export default function App() {
     return (
       <Layout currentPage="historique" onNavigate={setCurrentPage} showNavigation={true}>
         <div className="page-transition">
-          <Historique 
-            onBack={() => setCurrentPage('dashboard')} 
-          />
+          <Historique />
         </div>
       </Layout>
     )

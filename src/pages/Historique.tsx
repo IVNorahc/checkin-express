@@ -3,68 +3,61 @@ import { supabase } from '../lib/supabase'
 
 interface Client {
   id: string
+  hotel_id: string
   nom: string
   prenoms: string
-  type_piece: string
-  date_checkin: string
+  date_naissance: string
+  lieu_naissance: string
+  nationalite: string
+  document_type: string
+  numero_document: string
+  date_delivrance: string
+  date_expiration: string
   chambre: string
-  hotel_id: string
+  profession: string
+  domicile: string
+  venant_de: string
+  allant_a: string
+  objet_voyage: string
+  nb_enfants: string
+  immatriculation: string
+  signature: string
+  created_at: string
 }
 
-interface HistoriqueProps {
-  onBack?: () => void
+interface Hotel {
+  id: string
+  subscription_status: string
 }
 
-export default function Historique({ onBack }: HistoriqueProps) {
+export default function Historique() {
   const [clients, setClients] = useState<Client[]>([])
+  const [hotel, setHotel] = useState<Hotel | null>(null)
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [search, setSearch] = useState('')
   const [dateFilter, setDateFilter] = useState('')
-  const [user, setUser] = useState<any>(null)
-  const [userPlan, setUserPlan] = useState<string>('')
 
   useEffect(() => {
-    fetchUserAndData()
+    fetchHotelAndClients()
   }, [])
 
-  const fetchUserAndData = async () => {
+  const fetchHotelAndClients = async () => {
     try {
       // Récupérer l'utilisateur courant
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      setUser(user)
-
-      // Récupérer le plan de l'utilisateur
-      const { data: profile } = await supabase
+      // Récupérer les informations de l'hôtel
+      const { data: hotelData } = await supabase
         .from('hotels')
-        .select('subscription_status')
+        .select('*')
         .eq('user_id', user.id)
         .single()
 
-      setUserPlan(profile?.subscription_status || 'trial')
-
-      // Récupérer l'historique des check-ins
-      const { data: scanData, error } = await supabase
-        .from('scan_history')
-        .select('*')
-        .eq('hotel_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      // Transformer les données pour le tableau
-      const formattedData = scanData?.map(item => ({
-        id: item.id,
-        nom: item.nom || 'Non spécifié',
-        prenoms: item.prenoms || 'Non spécifié',
-        type_piece: item.document_type || 'CNI',
-        date_checkin: item.created_at,
-        chambre: item.chambre || 'Non spécifiée',
-        hotel_id: item.hotel_id
-      })) || []
-
-      setClients(formattedData)
+      if (hotelData) {
+        setHotel(hotelData)
+        await fetchClients(hotelData.id)
+      }
     } catch (error) {
       console.error('Erreur lors du chargement:', error)
     } finally {
@@ -72,53 +65,58 @@ export default function Historique({ onBack }: HistoriqueProps) {
     }
   }
 
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = 
-      client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.prenoms.toLowerCase().includes(searchTerm.toLowerCase())
+  const fetchClients = async (hotelId: string) => {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('hotel_id', hotelId)
+      .order('created_at', { ascending: false })
     
-    const matchesDate = dateFilter 
-      ? new Date(client.date_checkin).toISOString().split('T')[0] === dateFilter
-      : true
-
-    return matchesSearch && matchesDate
-  })
-
-  const exportToCSV = () => {
-    if (userPlan !== 'business') {
-      alert('L\'export CSV est disponible uniquement pour le plan Business')
-      return
+    if (!error) {
+      setClients(data || [])
     }
-
-    const headers = ['Nom', 'Prénoms', 'Type pièce', 'Date check-in', 'Chambre']
-    const csvData = filteredClients.map(client => [
-      client.nom,
-      client.prenoms,
-      client.type_piece,
-      new Date(client.date_checkin).toLocaleString('fr-FR'),
-      client.chambre
-    ])
-
-    const csv = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `historique-clients-${new Date().toISOString().split('T')[0]}.csv`
-    link.click()
   }
 
-  const viewFiche = (client: Client) => {
-    // Rediriger vers la page de fiche avec les données du client
-    alert(`Fiche pour ${client.nom} ${client.prenoms} - Fonctionnalité à implémenter`)
+  const filteredClients = clients.filter(client => {
+    const matchSearch = search === '' || 
+      `${client.nom} ${client.prenoms}` 
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    
+    const matchDate = dateFilter === '' || 
+      client.created_at.startsWith(dateFilter)
+    
+    return matchSearch && matchDate
+  })
+
+  const handleExportCSV = () => {
+    const headers = ['Nom', 'Prénoms', 'Type pièce', 
+                     'N° document', 'Chambre', 'Date check-in']
+    const rows = filteredClients.map(c => [
+      c.nom, c.prenoms, c.document_type,
+      c.numero_document, c.chambre,
+      new Date(c.created_at).toLocaleDateString('fr-FR')
+    ])
+    
+    const csv = [headers, ...rows]
+      .map(row => row.join(','))
+      .join('\n')
+    
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `historique-${new Date().toISOString().split('T')[0]}.csv` 
+    a.click()
+  }
+
+  const navigate = (path: string) => {
+    window.location.href = path
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Chargement de l'historique...</p>
@@ -128,154 +126,176 @@ export default function Historique({ onBack }: HistoriqueProps) {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">Historique des clients</h1>
-            <div className="flex gap-3">
-              <button
-                onClick={exportToCSV}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  userPlan === 'business'
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                disabled={userPlan !== 'business'}
-              >
-                📊 Export CSV {userPlan !== 'business' && '(Business)'}
-              </button>
-              {onBack && (
-                <button
-                  onClick={onBack}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                >
-                  ← Retour
-                </button>
-              )}
+    <div 
+      className="min-h-screen"
+      style={{
+        backgroundImage: 'url(/hotel-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="min-h-screen bg-white/80">
+        
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-4 py-3"
+          style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)' }}>
+          
+          <div className="flex items-center gap-3">
+            <div className="bg-white/90 rounded-xl p-2">
+              <img src="/percepta-logo.png" className="h-10 w-auto object-contain" />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-lg">Check-in Express</h1>
+              <p className="text-blue-200 text-xs">Historique des clients</p>
             </div>
           </div>
 
-          {/* Filtres */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Recherche par nom
-              </label>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              window.location.replace(window.location.origin + '/login')
+            }}
+            className="bg-white/20 hover:bg-white/30 text-white 
+                       border border-white/30 px-4 py-2 rounded-lg text-sm"
+          >
+            Déconnexion
+          </button>
+        </header>
+
+        {/* CONTENU */}
+        <div className="p-6">
+          
+          {/* Bouton retour */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 text-blue-700 
+                       hover:text-blue-900 font-medium mb-6"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" 
+                    strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour
+          </button>
+
+          <div className="max-w-7xl mx-auto">
+            
+            {/* Titre */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Historique des clients</h1>
+              <p className="mt-2 text-gray-600">Tous les check-ins effectués dans votre établissement</p>
+            </div>
+
+            {/* Barre de recherche + filtres */}
+            <div className="flex gap-3 mb-6">
+              {/* Recherche par nom */}
               <input
                 type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher un client..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Rechercher par nom..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 border rounded-lg px-4 py-2"
               />
-            </div>
-            <div className="sm:w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Filtre par date
-              </label>
+              
+              {/* Filtre par date */}
               <input
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border rounded-lg px-4 py-2"
               />
+              
+              {/* Bouton export CSV - Plan Business uniquement */}
+              {hotel?.subscription_status === 'business' && (
+                <button
+                  onClick={handleExportCSV}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Exporter CSV
+                </button>
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* Tableau des clients */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nom
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prénom(s)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type pièce
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date check-in
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Chambre
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {client.nom}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {client.prenoms}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {client.type_piece}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(client.date_checkin).toLocaleString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {client.chambre}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => viewFiche(client)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        👁 Voir fiche
-                      </button>
-                    </td>
+            {/* Table des clients */}
+            {filteredClients.length > 0 ? (
+              <table className="w-full bg-white/90 rounded-xl shadow-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nom complet
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type pièce
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      N° document
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Chambre
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date check-in
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredClients.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-500">
-                {clients.length === 0 
-                  ? 'Aucun client enregistré' 
-                  : 'Aucun client trouvé avec ces filtres'
-                }
+                </thead>
+                <tbody>
+                  {filteredClients.map(client => (
+                    <tr key={client.id} className="border-b hover:bg-blue-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {client.nom} {client.prenoms}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {client.document_type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {client.numero_document}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          {client.chambre || 'Non spécifiée'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(client.created_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => navigate(`/fiches/${client.id}`)}
+                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                        >
+                          Voir fiche
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              /* État vide */
+              <div className="text-center py-16">
+                <p className="text-4xl mb-4">📋</p>
+                <p className="font-bold text-blue-900 text-xl">
+                  Aucun check-in effectué
+                </p>
+                <p className="text-gray-500 mb-6">
+                  Les clients apparaîtront ici après leur check-in
+                </p>
+                <button
+                  onClick={() => navigate('/scan')}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+                >
+                  Scanner un premier client
+                </button>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Statistiques */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="text-2xl font-bold text-blue-600">{clients.length}</div>
-            <div className="text-sm text-gray-600">Total check-ins</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="text-2xl font-bold text-green-600">{filteredClients.length}</div>
-            <div className="text-sm text-gray-600">Résultats filtrés</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="text-2xl font-bold text-purple-600">
-              {clients.filter(c => 
-                new Date(c.date_checkin).toDateString() === new Date().toDateString()
-              ).length}
-            </div>
-            <div className="text-sm text-gray-600">Check-ins aujourd'hui</div>
+            )}
           </div>
         </div>
       </div>
