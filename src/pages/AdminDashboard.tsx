@@ -2,10 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+// Icônes SVG pour chaque KPI
+const HotelIcon = () => (
+  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+  </svg>
+)
+
+const UsersIcon = () => (
+  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
+
+const ScanIcon = () => (
+  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+  </svg>
+)
+
+const RevenueIcon = () => (
+  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
+
 interface KPICardProps {
   title: string;
   value: string | number;
-  icon: string;
+  icon: React.ReactNode;
   color: string;
   loading?: boolean;
 }
@@ -289,6 +318,53 @@ const handleReactivate = async (hotelId: string) => {
   fetchHotels()
 }
 
+const handleAction = async (hotelId: string, newStatus: string) => {
+  const messages: any = {
+    suspended: 'Suspendre ce compte ?',
+    disabled: 'Désactiver définitivement ce compte ?',
+    active: 'Réactiver ce compte ?'
+  }
+  
+  if (!confirm(messages[newStatus])) return
+  
+  const updateData: any = { status: newStatus }
+  
+  if (newStatus === 'active') {
+    const newTrialEnd = new Date()
+    newTrialEnd.setDate(newTrialEnd.getDate() + 7)
+    updateData.subscription_status = 'trial'
+    updateData.trial_end = newTrialEnd.toISOString()
+  }
+  
+  const { error } = await supabase
+    .from('hotels')
+    .update(updateData)
+    .eq('id', hotelId)
+  
+  if (error) {
+    alert('Erreur: ' + error.message)
+    return
+  }
+  
+  fetchHotels()
+}
+
+const handleDelete = async (hotelId: string) => {
+  if (!confirm('ATTENTION : Supprimer définitivement ce compte et toutes ses données ?')) return
+  
+  const { error } = await supabase
+    .from('hotels')
+    .delete()
+    .eq('id', hotelId)
+  
+  if (error) {
+    alert('Erreur: ' + error.message)
+    return
+  }
+  
+  fetchHotels()
+}
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -382,30 +458,30 @@ const handleReactivate = async (hotelId: string) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <KPICard 
             title="Total hôtels" 
-            value={totalHotels} 
-            icon="H" 
-            color="blue" 
+            value={hotels.length} 
+            icon={<HotelIcon />} 
+            color="bg-blue-500" 
             loading={loading}
           />
           <KPICard 
             title="Abonnés actifs" 
             value={activeSubscriptions} 
-            icon="A" 
-            color="green" 
+            icon={<UsersIcon />} 
+            color="bg-green-500" 
             loading={loading}
           />
           <KPICard 
             title="Scans aujourd'hui" 
             value={todayScans} 
-            icon="S" 
-            color="purple" 
+            icon={<ScanIcon />} 
+            color="bg-yellow-500" 
             loading={loading}
           />
           <KPICard 
             title="Revenus/mois" 
-            value={`${monthlyRevenue.toFixed(2)}€`} 
-            icon="R" 
-            color="yellow" 
+            value={monthlyRevenue} 
+            icon={<RevenueIcon />} 
+            color="bg-purple-500" 
             loading={loading}
           />
         </div>
@@ -479,6 +555,12 @@ const handleReactivate = async (hotelId: string) => {
                     Créé le
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fin essai
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Scans
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -523,16 +605,52 @@ const handleReactivate = async (hotelId: string) => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(hotel.created_at).toLocaleDateString('fr-FR')}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {hotel.trial_end ? new Date(hotel.trial_end).toLocaleDateString('fr-FR') : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {hotel.ocr_scans_used || 0}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {hotel.subscription_status === 'trial' && 
-                       new Date(hotel.trial_end) < new Date() && (
+                      <div className="flex gap-2 flex-wrap">
+                        {/* Suspendre */}
                         <button
-                          onClick={() => handleReactivate(hotel.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          onClick={() => handleAction(hotel.id, 'suspended')}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white 
+                                     px-2 py-1 rounded text-xs font-medium"
                         >
-                          Réactiver
+                          Suspendre
                         </button>
-                      )}
+                        
+                        {/* Désactiver */}
+                        <button
+                          onClick={() => handleAction(hotel.id, 'disabled')}
+                          className="bg-orange-500 hover:bg-orange-600 text-white 
+                                     px-2 py-1 rounded text-xs font-medium"
+                        >
+                          Désactiver
+                        </button>
+                        
+                        {/* Supprimer */}
+                        <button
+                          onClick={() => handleDelete(hotel.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white 
+                                     px-2 py-1 rounded text-xs font-medium"
+                        >
+                          Supprimer
+                        </button>
+                        
+                        {/* Réactiver si suspendu ou désactivé */}
+                        {(hotel.status === 'suspended' || hotel.status === 'disabled') && (
+                          <button
+                            onClick={() => handleAction(hotel.id, 'active')}
+                            className="bg-green-600 hover:bg-green-700 text-white 
+                                       px-2 py-1 rounded text-xs font-medium"
+                          >
+                            Réactiver
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
