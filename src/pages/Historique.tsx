@@ -188,14 +188,14 @@ export default function Historique() {
             </div>
 
             {/* Barre de recherche + filtres */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               {/* Recherche par nom */}
               <input
                 type="text"
                 placeholder="Rechercher par nom..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 border rounded-lg px-4 py-2"
+                className="w-full border rounded-lg px-4 py-2"
               />
               
               {/* Filtre par date */}
@@ -203,14 +203,14 @@ export default function Historique() {
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="border rounded-lg px-4 py-2"
+                className="w-full sm:w-auto border rounded-lg px-4 py-2"
               />
               
               {/* Bouton export CSV - Plan Business uniquement */}
               {hotel?.subscription_status === 'business' && (
                 <button
                   onClick={handleExportCSV}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                  className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg"
                 >
                   Exporter CSV
                 </button>
