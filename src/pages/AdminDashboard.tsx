@@ -425,34 +425,86 @@ const handleDelete = async (hotelId: string) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard Admin</h1>
-              <p className="mt-2 text-gray-600">Vue d'ensemble de l'activité</p>
+    <div 
+      className="min-h-screen"
+      style={{
+        backgroundImage: 'url(/hotel-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="min-h-screen bg-white/80">
+        
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-4 py-3"
+          style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)' }}>
+          
+          <div className="flex items-center gap-3">
+            <div className="bg-white/90 rounded-xl p-2">
+              <img src="/percepta-logo.png" className="h-10 w-auto object-contain" />
             </div>
-            <div className="flex items-center gap-4">
-              <select
-                value={selectedHotel}
-                onChange={(e) => setSelectedHotel(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">Tous les hôtels</option>
-                {hotels.map(h => (
-                  <option key={h.id} value={h.id}>{h.hotel_name}</option>
-                ))}
-              </select>
-              <button
-                onClick={fetchAllData}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Actualiser
-              </button>
+            <div>
+              <h1 className="text-white font-bold text-lg">Admin — Check-in Express</h1>
+              <p className="text-blue-200 text-xs">Gestion des utilisateurs et KPIs</p>
             </div>
           </div>
-        </div>
+
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              window.location.replace(window.location.origin + '/login')
+            }}
+            className="bg-white/20 hover:bg-white/30 text-white 
+                       border border-white/30 px-4 py-2 rounded-lg text-sm"
+          >
+            Déconnexion
+          </button>
+        </header>
+
+        {/* CONTENU */}
+        <div className="p-6">
+          
+          {/* Bouton retour */}
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 text-blue-700 
+                       hover:text-blue-900 font-medium mb-6"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" 
+                    strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour
+          </button>
+
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Dashboard Admin</h1>
+                  <p className="mt-2 text-gray-600">Vue d'ensemble de l'activité</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <select
+                    value={selectedHotel}
+                    onChange={(e) => setSelectedHotel(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="all">Tous les hôtels</option>
+                    {hotels.map(h => (
+                      <option key={h.id} value={h.id}>{h.hotel_name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={fetchAllData}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Actualiser
+                  </button>
+                </div>
+              </div>
+            </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -491,7 +543,7 @@ const handleDelete = async (hotelId: string) => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
-              onClick={() => window.location.href = '/admin/users'}
+              onClick={() => document.getElementById('liste-users')?.scrollIntoView({ behavior: 'smooth' })}
               className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 text-center"
             >
               Gérer les utilisateurs
@@ -503,7 +555,7 @@ const handleDelete = async (hotelId: string) => {
               Analytics détaillés
             </button>
             <button
-              onClick={() => window.location.href = '/admin/settings'}
+              onClick={() => window.location.href = '/admin/parametres'}
               className="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 text-center"
             >
               Paramètres système
@@ -512,7 +564,7 @@ const handleDelete = async (hotelId: string) => {
         </div>
 
         {/* Liste des utilisateurs */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div id="liste-users" className="bg-white shadow-sm rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-gray-900">
@@ -666,6 +718,8 @@ const handleDelete = async (hotelId: string) => {
         </div>
       </div>
     </div>
+  </div>
+</div>
   );
 };
 
