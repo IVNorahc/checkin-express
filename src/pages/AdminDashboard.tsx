@@ -550,13 +550,13 @@ const handleDelete = async (hotelId: string) => {
             </button>
             <button
               onClick={() => window.location.href = '/admin/analytics'}
-              className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 text-center"
+              className="bg-blue-700 text-white px-4 py-3 rounded-lg hover:bg-blue-800 text-center"
             >
               Analytics détaillés
             </button>
             <button
               onClick={() => window.location.href = '/admin/parametres'}
-              className="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 text-center"
+              className="bg-blue-800 text-white px-4 py-3 rounded-lg hover:bg-blue-900 text-center"
             >
               Paramètres système
             </button>

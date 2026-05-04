@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminAnalytics from './pages/AdminAnalytics'
+import AdminParametres from './pages/AdminParametres'
 import Subscribe from './pages/Subscribe'
 import Historique from './pages/Historique'
 import FichesControle from './pages/FichesControle'
@@ -106,6 +108,76 @@ export default function App() {
       subscription.unsubscribe()
     }
   }, [])
+
+  // Gérer les URLs
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const path = window.location.pathname
+      
+      if (path === '/admin') {
+        setCurrentPage('admin')
+      } else if (path === '/admin/analytics') {
+        setCurrentPage('admin-analytics')
+      } else if (path === '/admin/parametres') {
+        setCurrentPage('admin-parametres')
+      } else if (path === '/dashboard') {
+        setCurrentPage('dashboard')
+      } else if (path === '/scan') {
+        setCurrentPage('scan')
+      } else if (path === '/historique') {
+        setCurrentPage('historique')
+      } else if (path === '/fiches') {
+        setCurrentPage('fiches')
+      } else if (path === '/parametres') {
+        setCurrentPage('parametres')
+      } else if (path === '/support') {
+        setCurrentPage('support')
+      } else if (path === '/login') {
+        setCurrentPage('login')
+      } else if (path === '/register') {
+        setCurrentPage('register')
+      } else if (path === '/subscribe') {
+        setCurrentPage('subscribe')
+      } else if (path === '/pricing') {
+        setCurrentPage('pricing')
+      } else if (path === '/') {
+        setCurrentPage('loading')
+      }
+    }
+
+    // Écouter les changements d'URL
+    window.addEventListener('popstate', handleUrlChange)
+    
+    // Gérer l'URL initiale
+    handleUrlChange()
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange)
+    }
+  }, [])
+
+  // Mettre à jour l'URL quand la page change
+  useEffect(() => {
+    const urlMap: Record<string, string> = {
+      'admin': '/admin',
+      'admin-analytics': '/admin/analytics',
+      'admin-parametres': '/admin/parametres',
+      'dashboard': '/dashboard',
+      'scan': '/scan',
+      'historique': '/historique',
+      'fiches': '/fiches',
+      'parametres': '/parametres',
+      'support': '/support',
+      'login': '/login',
+      'register': '/register',
+      'subscribe': '/subscribe',
+      'pricing': '/pricing'
+    }
+
+    if (urlMap[currentPage] && window.location.pathname !== urlMap[currentPage]) {
+      window.history.pushState({}, '', urlMap[currentPage])
+    }
+  }, [currentPage])
 
   if (currentPage === 'loading') {
     return (
@@ -282,6 +354,26 @@ export default function App() {
       <Layout>
         <div className="page-transition">
           <AdminDashboard />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'admin-analytics') {
+    return (
+      <Layout>
+        <div className="page-transition">
+          <AdminAnalytics />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'admin-parametres') {
+    return (
+      <Layout>
+        <div className="page-transition">
+          <AdminParametres />
         </div>
       </Layout>
     )
