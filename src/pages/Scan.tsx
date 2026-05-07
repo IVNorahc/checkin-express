@@ -1,9 +1,8 @@
   import { useEffect, useRef, useState, useCallback } from 'react'
-import Webcam from 'react-webcam'
 import { scanDocument } from '../utils/ocrService'
 import { apiService } from '../services/apiService'
-import * as tf from '@tensorflow/tfjs'
-import * as cocoSsd from '@tensorflow-models/coco-ssd'
+// import * as tf from '@tensorflow/tfjs'
+// import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
 type ScanProps = {
   onBack: () => void
@@ -75,7 +74,6 @@ async function prepareForOCR(base64: string): Promise<string> {
 }
 
 export default function Scan({ onBack, onCapture }: ScanProps) {
-  const webcamRef = useRef<Webcam>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [capturedImageBase64, setCapturedImageBase64] = useState<string | null>(null)
@@ -86,12 +84,8 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [rectoResult, setRectoResult] = useState<OCRData | null>(null)
   const [isVersoMode, setIsVersoMode] = useState(false)
   const [showVersoPrompt, setShowVersoPrompt] = useState(false)
-  const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null)
-  const [cardDetected, setCardDetected] = useState(false)
-  const [countdown, setCountdown] = useState<number | null>(null)
   const [showManualCapture, setShowManualCapture] = useState(false)
-  const countdownRef = useRef<number | null>(null)
-  const detectionRef = useRef<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const isMountedRef = useRef(true)
 
   // Fonction alternative avec API sécurisée
@@ -239,160 +233,127 @@ Réponds UNIQUEMENT avec ce JSON :
     }
   }
 
+  // Fonction startCamera corrigée
+  const startCamera = async () => {
+    try {
+      // Arrêter le stream existant si présent
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+        tracks.forEach(track => track.stop())
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.setAttribute('playsinline', 'true')
+        videoRef.current.setAttribute('autoplay', 'true')
+        videoRef.current.muted = true
+        
+        // Attendre que la vidéo soit prête
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(console.error)
+        }
+      }
+    } catch (err) {
+      console.error('Erreur caméra:', err)
+      setError('Impossible d\'accéder à la caméra. Vérifiez les permissions.')
+    }
+  }
+
   useEffect(() => {
+    startCamera()
+    
     return () => {
       isMountedRef.current = false
-      // Nettoyer la détection et le compte à rebours
-      if (detectionRef.current) cancelAnimationFrame(detectionRef.current)
-      if (countdownRef.current) clearInterval(countdownRef.current)
+      // Nettoyer le stream vidéo
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+        tracks.forEach(track => track.stop())
+      }
     }
   }, [])
 
-  // Charger le modèle TensorFlow.js au montage
-  useEffect(() => {
-    let timeoutId: number
-    const loadModel = async () => {
-      try {
-        await tf.ready()
-        const loadedModel = await cocoSsd.load()
-        setModel(loadedModel)
-        console.log('Modèle TensorFlow.js chargé')
-      } catch (error) {
-        console.error('Erreur chargement modèle:', error)
-      }
-    }
+  // Capture et analyse manuelle
+  const captureAndAnalyze = useCallback(async () => {
+    if (!videoRef.current) return
     
-    loadModel()
-    
-    // Fallback après 5s si le modèle ne charge pas
-    timeoutId = setTimeout(() => {
-      if (!model) {
-        console.log('Timeout modèle, affichage capture manuelle')
-        setShowManualCapture(true)
-      }
-    }, 5000)
-    
-    return () => {
-      clearTimeout(timeoutId)
-    }
-  }, [model])
-
-  // Détection en temps réel
-  const startDetection = useCallback((videoEl: HTMLVideoElement) => {
-    if (!model || !videoEl) return
-    
-    const detect = async () => {
-      if (!model || !videoEl || isAnalyzing) return
-      
-      try {
-        const predictions = await model.detect(videoEl)
-        
-        // Chercher une carte/document dans les prédictions
-        const card = predictions.find(p => 
-          ['cell phone', 'book', 'laptop', 'remote', 'card'].includes(p.class) ||
-          p.score > 0.6
-        )
-        
-        // Vérifier aussi la taille de l'objet détecté
-        const videoArea = videoEl.videoWidth * videoEl.videoHeight
-        const cardArea = card ? card.bbox[2] * card.bbox[3] : 0
-        const coverage = cardArea / videoArea
-        
-        const isWellFramed = card && coverage > 0.25
-        
-        setCardDetected(!!isWellFramed)
-        
-        if (isWellFramed && !countdownRef.current) {
-          // Démarrer le compte à rebours
-          let count = 3
-          setCountdown(count)
-          countdownRef.current = setInterval(() => {
-            count -= 1
-            setCountdown(count)
-            if (count === 0) {
-              clearInterval(countdownRef.current!)
-              countdownRef.current = null
-              captureAndAnalyze(videoEl)
-            }
-          }, 1000)
-        } else if (!isWellFramed && countdownRef.current) {
-          // Reset si la carte sort du cadre
-          clearInterval(countdownRef.current)
-          countdownRef.current = null
-          setCountdown(null)
-        }
-      } catch (error) {
-        console.error('Erreur détection:', error)
-      }
-      
-      detectionRef.current = requestAnimationFrame(detect)
-    }
-  
-    detectionRef.current = requestAnimationFrame(detect)
-  }, [model, isAnalyzing])
-
-  // Capture et analyse automatique
-  const captureAndAnalyze = useCallback(async (videoEl: HTMLVideoElement) => {
-    // Arrêter la détection
-    if (detectionRef.current) cancelAnimationFrame(detectionRef.current)  
-    
-    // Capturer l'image haute qualité
-    const canvas = document.createElement('canvas')
-    canvas.width = videoEl.videoWidth
-    canvas.height = videoEl.videoHeight
-    const ctx = canvas.getContext('2d')!
-    ctx.filter = 'contrast(1.2) brightness(1.05)'
-    ctx.drawImage(videoEl, 0, 0)
-    
-    const base64 = canvas.toDataURL('image/jpeg', 0.95)
-      .replace(/^data:image\/jpeg;base64,/, '')
-    
-    setCapturedImage(canvas.toDataURL('image/jpeg', 0.95))
-    setCapturedImageBase64(base64)
-    setCapturedMimeType('image/jpeg')
     setIsAnalyzing(true)
+    setError(null)
     
     try {
-      const result = await scanDocument(base64)
-      if (!isMountedRef.current) return
-      // Ajouter les champs manquants pour correspondre au type OCRData
+      const canvas = document.createElement('canvas')
+      const video = videoRef.current
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(video, 0, 0)
+      
+      const base64 = canvas.toDataURL('image/jpeg', 0.95)
+      const processedBase64 = await prepareForOCR(base64)
+      
+      setCapturedImage(base64)
+      const { imageBase64, mimeType } = normalizeScreenshot(base64)
+      setCapturedImageBase64(imageBase64)
+      setCapturedMimeType(mimeType)
+      
+      const ocrResult = await scanDocument(processedBase64)
       const completeResult: OCRData = {
-        ...result,
-        adresse: (result as any).adresse || '',
-        profession: (result as any).profession || '',
-        nomPere: (result as any).nomPere || '',
-        nomMere: (result as any).nomMere || ''
+        documentType: ocrResult.documentType,
+        needsVerso: ocrResult.needsVerso,
+        nom: ocrResult.nom,
+        prenoms: ocrResult.prenoms,
+        dateNaissance: ocrResult.dateNaissance,
+        lieuNaissance: ocrResult.lieuNaissance,
+        nationalite: ocrResult.nationalite,
+        numeroDocument: ocrResult.numeroDocument,
+        dateDelivrance: ocrResult.dateDelivrance,
+        dateExpiration: ocrResult.dateExpiration,
+        confidence: ocrResult.confidence,
+        adresse: (ocrResult as any).adresse || '',
+        profession: (ocrResult as any).profession || '',
+        nomPere: (ocrResult as any).nomPere || '',
+        nomMere: (ocrResult as any).nomMere || ''
       }
-      handleScanResult(completeResult)
-    } catch (err) {
-      if (!isMountedRef.current) return
-      setAnalysisError('Erreur lors de l\'analyse. Veuillez réessayer.')
-      setCanRetry(true)
+      setRectoResult(completeResult)
+      
+      if (completeResult?.needsVerso && !isVersoMode) {
+        setShowVersoPrompt(true)
+      } else {
+        onCapture(completeResult)
+      }
+    } catch (error) {
+      console.error('Erreur capture:', error)
+      setError('Erreur lors de la capture. Veuillez réessayer.')
     } finally {
-      if (isMountedRef.current) setIsAnalyzing(false)
+      setIsAnalyzing(false)
     }
-  }, [])
-
-  const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+  }, [isVersoMode, onCapture])
 
   const captureHighQuality = async (): Promise<string> => {
     const video = videoRef.current
     if (!video) {
-      // Fallback sur webcamRef si videoRef n'est pas disponible
-      const screenshot = webcamRef.current?.getScreenshot()
-      if (!screenshot) throw new Error('Impossible de capturer la caméra')
-      return screenshot
+      throw new Error('Impossible de capturer la caméra')
     }
 
     const canvas = document.createElement('canvas')
-    canvas.width = video.videoWidth   // Pleine résolution native
+    canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     const ctx = canvas.getContext('2d')!
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    // Qualité maximale pour l'OCR
+    ctx.filter = 'contrast(1.2) brightness(1.05)'
+    ctx.drawImage(video, 0, 0)
+    
     return canvas.toDataURL('image/jpeg', 0.95)
+      .replace(/^data:image\/jpeg;base64,/, '')
   }
+
+  const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
   const handleScanResult = (result: OCRData) => {
     if (isVersoMode) {
@@ -629,21 +590,21 @@ Réponds UNIQUEMENT avec ce JSON :
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="h-16 px-4 flex items-center relative">
+      <header className="h-16 px-4 flex flex-col items-start relative pt-2">
         <button
           type="button"
           onClick={handleBackToRecto}
-          className="text-2xl leading-none text-white z-10"
+          className="text-lg leading-none text-white z-10 mb-2"
           aria-label="Retour"
         >
           {isVersoMode || showVersoPrompt ? 'Retour' : 'Retour'}
         </button>
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-full text-center">
           <h1 className="text-lg font-semibold">
             {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
           </h1>
           {!showVersoPrompt && !isVersoMode && (
-            <p className="text-sm text-gray-300 ml-4">
+            <p className="text-sm text-gray-300">
               Placez la pièce à 15-20cm du téléphone
             </p>
           )}
@@ -760,30 +721,16 @@ Réponds UNIQUEMENT avec ce JSON :
         ) : (
           <>
             <div className="w-full max-w-xl aspect-[3/4] relative rounded-xl overflow-hidden h-[60vh] max-h-[500px]" style={{animation: "pulse-border 2s infinite"}}>
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                screenshotFormat="image/jpeg"
-                screenshotQuality={0.95}
-                videoConstraints={
-                  {
-                    facingMode: 'environment',
-                    width: { ideal: 1920, min: 1280 },
-                    height: { ideal: 1080, min: 720 },
-                    aspectRatio: { ideal: 1.777 },
-                    focusMode: 'continuous',
-                    zoom: 1.0
-                  } as any
-                }
-                className="w-full h-full object-cover"
-                onUserMedia={() => {
-                  // Accéder à l'élément vidéo après l'initialisation
-                  const videoElement = webcamRef.current?.video
-                  if (videoElement) {
-                    videoRef.current = videoElement
-                    // Démarrer la détection automatique
-                    startDetection(videoElement)
-                  }
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{ 
+                  width: '100%', 
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block'
                 }}
               />
 
@@ -808,86 +755,67 @@ Réponds UNIQUEMENT avec ce JSON :
                 inset: 0,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                pointerEvents: 'none'
+                justifyContent: 'center'
               }}>
-                {/* Fond sombre autour du cadre */}
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  backgroundColor: 'rgba(0,0,0,0.45)'
-                }} />
-                {/* Cadre dynamique (blanc/vert) */}
-                <div style={{
-                  position: 'relative',
-                  width: '92%',
-                  aspectRatio: '1.586',
-                  border: `3px solid ${cardDetected ? '#10b981' : 'white'}`,
-                  borderRadius: '10px',
-                  boxShadow: `0 0 0 9999px rgba(0,0,0,0.45)`,
-                  zIndex: 10,
-                  ...(cardDetected && {
-                    animation: 'pulse-border 1s ease-in-out infinite'
-                  })
-                }}>
-                  {/* Coins de guidage */}
-                  <div style={{position:'absolute',top:-3,left:-3,width:20,height:20,
-                    borderTop:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderLeft:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
-                  <div style={{position:'absolute',top:-3,right:-3,width:20,height:20,
-                    borderTop:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderRight:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
-                  <div style={{position:'absolute',bottom:-3,left:-3,width:20,height:20,
-                    borderBottom:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderLeft:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
-                  <div style={{position:'absolute',bottom:-3,right:-3,width:20,height:20,
-                    borderBottom:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`,borderRight:`4px solid ${cardDetected ? '#10b981' : '#3B82F6'}`}} />
-                </div>
-                
-                {/* Compte à rebours */}
-                {countdown !== null && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: '120px',
-                    fontWeight: 'bold',
-                    color: '#10b981',
-                    textShadow: '0 0 20px rgba(16, 185, 129, 0.8)',
-                    zIndex: 20,
-                    animation: 'countdown-pulse 1s ease-in-out infinite'
-                  }}>
-                    {countdown}
-                  </div>
+                {/* Coins de guidage */}
+                <div style={{position:'absolute',top:-3,left:-3,width:20,height:20,
+                  borderTop:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
+                <div style={{position:'absolute',top:-3,right:-3,width:20,height:20,
+                  borderTop:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
+                <div style={{position:'absolute',bottom:-3,left:-3,width:20,height:20,
+                  borderBottom:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
+                <div style={{position:'absolute',bottom:-3,right:-3,width:20,height:20,
+                  borderBottom:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
+              </div>
+
+              <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-white text-sm sm:text-base space-y-1 px-4">
+                <p>📏 Placez le document bien à plat</p>
+                <p>💡 Assurez-vous d'avoir un bon éclairage</p>
+              </div>
+
+              <div className="mt-6 sm:mt-8 w-full max-w-xl flex flex-col items-center gap-3 sm:gap-4 px-4">
+                {/* Bouton de capture automatique */}
+                {!showManualCapture && (
+                  <button
+                    type="button"
+                    onClick={handleCapture}
+                    disabled={isAnalyzing}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
+                  >
+                    {isAnalyzing ? 'Analyse en cours...' : 'CAPTURER'}
+                  </button>
                 )}
                 
-                {/* Messages guide */}
-                {!countdown && (
-                  <p style={{
-                    position: 'absolute',
-                    bottom: '15%',
-                    color: 'white',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    zIndex: 11,
-                    textShadow: '0 1px 3px rgba(0,0,0,0.8)'
-                  }}>
-                    📏 Rapprochez-vous · La carte doit remplir le cadre
-                  </p>
+                {/* Bouton de capture manuelle - fallback */}
+                {showManualCapture && (
+                  <button
+                    type="button"
+                    onClick={handleCapture}
+                    disabled={isAnalyzing}
+                    className="w-full h-12 sm:h-14 rounded-xl bg-orange-600 text-white text-base sm:text-lg font-bold hover:bg-orange-700 transition-colors"
+                  >
+                    Capturer manuellement
+                  </button>
                 )}
-                
-                {countdown !== null && (
-                  <p style={{
-                    position: 'absolute',
-                    bottom: '15%',
-                    color: '#10b981',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    zIndex: 11,
-                    textShadow: '0 1px 3px rgba(0,0,0,0.8)'
-                  }}>
-                    Maintenez la carte immobile...
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={handleManualInput}
+                  disabled={isAnalyzing}
+                  className="w-full h-12 rounded-xl bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] font-bold hover:bg-[#1e3a8a] hover:text-white transition-colors"
+                  style={{ marginTop: '12px' }}
+                >
+                  ✏️ Saisie manuelle
+                </button>
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="w-full h-12 rounded-xl border border-white/50 text-white hover:bg-white/10 transition-colors"
+                >
+                  ✕ Annuler
+                </button>
+                <p className="w-full text-center text-white/60 text-xs sm:text-sm mt-2 px-4">
+                  💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
+                </p>
               </div>
             </div>
 
