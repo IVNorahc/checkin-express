@@ -590,17 +590,9 @@ Réponds UNIQUEMENT avec ce JSON :
 
   return (
     <div className="min-h-screen bg-slate-50 text-white">
-      <header className="h-16 px-4 flex flex-col items-start relative pt-2">
-        <button
-          type="button"
-          onClick={handleBackToRecto}
-          className="text-lg leading-none text-white z-10 mb-2"
-          aria-label="Retour"
-        >
-          {isVersoMode || showVersoPrompt ? 'Retour' : 'Retour'}
-        </button>
+      <header className="h-16 px-4 flex flex-col items-center justify-center relative pt-2">
         <div className="w-full text-center">
-          <h1 className="text-lg font-semibold">
+          <h1 className="text-lg font-semibold text-gray-800">
             {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
           </h1>
           {!showVersoPrompt && !isVersoMode && (
@@ -782,7 +774,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 <button
                   type="button"
                   onClick={onBack}
-                  className="w-full h-12 rounded-xl border border-white/50 text-white hover:bg-white/10 transition-colors"
+                  className="w-full h-12 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-100 transition-colors"
                 >
                   ✕ Annuler
                 </button>
@@ -833,7 +825,7 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={onBack}
-                className="w-full h-12 rounded-xl border border-white/50 text-white hover:bg-white/10 transition-colors"
+                className="w-full h-12 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-100 transition-colors"
               >
                 ✕ Annuler
               </button>
