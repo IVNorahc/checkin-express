@@ -3,115 +3,111 @@ import { supabase } from '../lib/supabase'
 
 interface Client {
   id: string
-  hotel_id: string
   nom: string
   prenoms: string
-  date_naissance: string
-  lieu_naissance: string
-  nationalite: string
   document_type: string
   numero_document: string
-  date_delivrance: string
-  date_expiration: string
   chambre: string
-  profession: string
-  domicile: string
-  venant_de: string
-  allant_a: string
-  objet_voyage: string
-  nb_enfants: string
-  immatriculation: string
-  signature: string
   created_at: string
+  printed: boolean
 }
 
 interface Hotel {
-  id: string
   subscription_status: string
 }
 
 export default function Historique() {
   const [clients, setClients] = useState<Client[]>([])
-  const [hotel, setHotel] = useState<Hotel | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [dateFilter, setDateFilter] = useState('')
+  const [hotel, setHotel] = useState<Hotel | null>(null)
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    window.location.replace(window.location.origin + '/login')
+  }
 
   useEffect(() => {
-    fetchHotelAndClients()
+    const loadClients = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Récupérer les informations de l'hôtel
+        const { data: hotelData } = await supabase
+          .from('hotels')
+          .select('subscription_status')
+          .eq('user_id', user.id)
+          .single()
+
+        setHotel(hotelData)
+
+        // Récupérer les clients depuis scan_history
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('scan_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (clientsError) {
+          console.error('Erreur chargement clients:', clientsError)
+          setError('Erreur lors du chargement des clients')
+          return
+        }
+
+        setClients(clientsData || [])
+      } catch (err) {
+        console.error('Erreur:', err)
+        setError('Erreur lors du chargement')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadClients()
   }, [])
 
-  const fetchHotelAndClients = async () => {
-    try {
-      // Récupérer l'utilisateur courant
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Récupérer les informations de l'hôtel
-      const { data: hotelData } = await supabase
-        .from('hotels')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (hotelData) {
-        setHotel(hotelData)
-        await fetchClients(hotelData.id)
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchClients = async (hotelId: string) => {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('hotel_id', hotelId)
-      .order('created_at', { ascending: false })
-    
-    if (!error) {
-      setClients(data || [])
-    }
-  }
-
   const filteredClients = clients.filter(client => {
-    const matchSearch = search === '' || 
-      `${client.nom} ${client.prenoms}` 
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    
-    const matchDate = dateFilter === '' || 
-      client.created_at.startsWith(dateFilter)
-    
-    return matchSearch && matchDate
+    const matchesSearch = client.nom.toLowerCase().includes(search.toLowerCase()) ||
+                         client.prenoms.toLowerCase().includes(search.toLowerCase())
+    const matchesDate = dateFilter ? 
+      new Date(client.created_at).toISOString().slice(0, 10) === dateFilter : true
+    return matchesSearch && matchesDate
   })
 
   const handleExportCSV = () => {
-    const headers = ['Nom', 'Prénoms', 'Type pièce', 
-                     'N° document', 'Chambre', 'Date check-in']
-    const rows = filteredClients.map(c => [
-      c.nom, c.prenoms, c.document_type,
-      c.numero_document, c.chambre,
-      new Date(c.created_at).toLocaleDateString('fr-FR')
-    ])
-    
-    const csv = [headers, ...rows]
-      .map(row => row.join(','))
-      .join('\n')
-    
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `historique-${new Date().toISOString().split('T')[0]}.csv` 
-    a.click()
-  }
+    if (hotel?.subscription_status !== 'business') {
+      alert('Export CSV disponible uniquement pour les abonnés Business')
+      return
+    }
 
-  const navigate = (path: string) => {
-    window.location.href = path
+    const headers = ['Nom', 'Prénoms', 'Type pièce', 'N° document', 'Chambre', 'Date check-in', 'Statut']
+    const csvData = filteredClients.map(client => [
+      client.nom,
+      client.prenoms,
+      client.document_type,
+      client.numero_document,
+      client.chambre || '',
+      new Date(client.created_at).toLocaleDateString('fr-FR'),
+      client.printed ? 'Imprimé' : 'En attente'
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `historique-clients-${new Date().toISOString().slice(0, 10)}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   if (loading) {
@@ -120,6 +116,23 @@ export default function Historique() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Chargement de l'historique...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">Erreur</div>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     )
@@ -150,15 +163,22 @@ export default function Historique() {
       </header>
 
       {/* CONTENU */}
-      <div className="min-h-screen bg-white/80">
+      <div className="p-6">
+        {/* Bouton retour */}
+        <button
+          onClick={() => window.location.href = '/dashboard'}
+          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-medium mb-6"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour
+        </button>
 
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut()
-              window.location.replace(window.location.origin + '/login')
-            }}
-            className="bg-white/20 hover:bg-white/30 text-white 
-                       border border-white/30 px-4 py-2 rounded-lg text-sm"
+        {/* Titre */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Historique des clients</h1>
+          <p className="mt-2 text-gray-600">Tous les check-ins effectués dans votre établissement</p>
         </div>
 
         {/* Barre de recherche + filtres */}
@@ -236,7 +256,7 @@ export default function Historique() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button 
-                      onClick={() => navigate(`/fiches/${client.id}`)}
+                      onClick={() => window.location.href = `/fiches/${client.id}`}
                       className="text-blue-600 hover:text-blue-900 font-medium"
                     >
                       Voir fiche
@@ -257,7 +277,7 @@ export default function Historique() {
               Les clients apparaîtront ici après leur check-in
             </p>
             <button
-              onClick={() => navigate('/scan')}
+              onClick={() => window.location.href = '/scan'}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
             >
               Scanner un premier client
