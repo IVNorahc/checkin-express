@@ -3,17 +3,30 @@ import { supabase } from '../lib/supabase'
 
 interface Client {
   id: string
+  hotel_id: string
   nom: string
   prenoms: string
+  date_naissance: string
+  lieu_naissance: string
+  nationalite: string
   document_type: string
   numero_document: string
+  date_delivrance: string
+  date_expiration: string
   chambre: string
+  profession: string
+  domicile: string
+  venant_de: string
+  allant_a: string
+  objet_voyage: string
+  nb_enfants: string
+  immatriculation: string
+  signature: string
   created_at: string
-  printed: boolean
 }
 
 interface Hotel {
-  subscription_status: string
+  hotel_name: string
 }
 
 export default function Historique() {
@@ -38,17 +51,16 @@ export default function Historique() {
         // Récupérer les informations de l'hôtel
         const { data: hotelData } = await supabase
           .from('hotels')
-          .select('subscription_status')
+          .select('hotel_name')
           .eq('user_id', user.id)
           .single()
 
         setHotel(hotelData)
 
-        // Récupérer les clients depuis scan_history
+        // Récupérer les clients depuis la table clients
         const { data: clientsData, error: clientsError } = await supabase
-          .from('scan_history')
+          .from('clients')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
         if (clientsError) {
@@ -59,6 +71,7 @@ export default function Historique() {
 
         setClients(clientsData || [])
       } catch (err) {
+        console.log('Erreur complète:', JSON.stringify(err))
         console.error('Erreur:', err)
         setError('Erreur lors du chargement')
       } finally {
@@ -78,12 +91,7 @@ export default function Historique() {
   })
 
   const handleExportCSV = () => {
-    if (hotel?.subscription_status !== 'business') {
-      alert('Export CSV disponible uniquement pour les abonnés Business')
-      return
-    }
-
-    const headers = ['Nom', 'Prénoms', 'Type pièce', 'N° document', 'Chambre', 'Date check-in', 'Statut']
+    const headers = ['Nom', 'Prénoms', 'Type pièce', 'N° document', 'Chambre', 'Date check-in', 'Nationalité', 'Profession']
     const csvData = filteredClients.map(client => [
       client.nom,
       client.prenoms,
@@ -91,7 +99,8 @@ export default function Historique() {
       client.numero_document,
       client.chambre || '',
       new Date(client.created_at).toLocaleDateString('fr-FR'),
-      client.printed ? 'Imprimé' : 'En attente'
+      client.nationalite,
+      client.profession || ''
     ])
 
     const csvContent = [
@@ -200,15 +209,13 @@ export default function Historique() {
             className="w-full sm:w-auto border rounded-lg px-4 py-2"
           />
           
-          {/* Bouton export CSV - Plan Business uniquement */}
-          {hotel?.subscription_status === 'business' && (
-            <button
-              onClick={handleExportCSV}
-              className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg"
-            >
-              Exporter CSV
-            </button>
-          )}
+          {/* Bouton export CSV */}
+          <button
+            onClick={handleExportCSV}
+            className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg"
+          >
+            Exporter CSV
+          </button>
         </div>
 
         {/* Table des clients */}
@@ -232,6 +239,9 @@ export default function Historique() {
                   Date check-in
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Nationalité
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -253,6 +263,9 @@ export default function Historique() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {new Date(client.created_at).toLocaleDateString('fr-FR')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {client.nationalite}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button 

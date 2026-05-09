@@ -2,19 +2,28 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import jsPDF from 'jspdf'
 
-interface Fiche {
+interface Client {
   id: string
+  hotel_id: string
   nom: string
-  prenom: string
+  prenoms: string
   date_naissance: string
+  lieu_naissance: string
   nationalite: string
-  numero_piece: string
-  type_piece: 'CIN' | 'Passeport' | 'Titre de séjour'
-  date_arrivee: string
-  date_depart: string
-  numero_chambre: string
+  document_type: string
+  numero_document: string
+  date_delivrance: string
+  date_expiration: string
+  chambre: string
+  profession: string
+  domicile: string
+  venant_de: string
+  allant_a: string
+  objet_voyage: string
+  nb_enfants: string
+  immatriculation: string
+  signature: string
   created_at: string
-  statut: 'En attente' | 'Imprimé'
 }
 
 interface Hotel {
@@ -22,7 +31,7 @@ interface Hotel {
 }
 
 export default function Fiches() {
-  const [fiches, setFiches] = useState<Fiche[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -30,14 +39,22 @@ export default function Fiches() {
   const [showModal, setShowModal] = useState(false)
   const [formData, setFormData] = useState({
     nom: '',
-    prenom: '',
+    prenoms: '',
     date_naissance: '',
+    lieu_naissance: '',
     nationalite: '',
-    numero_piece: '',
-    type_piece: 'CIN' as 'CIN' | 'Passeport' | 'Titre de séjour',
-    date_arrivee: '',
-    date_depart: '',
-    numero_chambre: ''
+    document_type: 'CIN' as 'CIN' | 'Passeport' | 'Titre de séjour',
+    numero_document: '',
+    date_delivrance: '',
+    date_expiration: '',
+    chambre: '',
+    profession: '',
+    domicile: '',
+    venant_de: '',
+    allant_a: '',
+    objet_voyage: '',
+    nb_enfants: '',
+    immatriculation: ''
   })
 
   const signOut = async () => {
@@ -46,7 +63,7 @@ export default function Fiches() {
   }
 
   useEffect(() => {
-    const loadFiches = async () => {
+    const loadClients = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
@@ -60,37 +77,21 @@ export default function Fiches() {
 
         setHotel(hotelData)
 
-        // Récupérer les fiches depuis scan_history
-        const { data: fichesData, error: fichesError } = await supabase
-          .from('scan_history')
+        // Récupérer les clients depuis la table clients
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
-        if (fichesError) {
-          console.error('Erreur chargement fiches:', fichesError)
-          setError('Erreur lors du chargement des fiches')
+        if (clientsError) {
+          console.error('Erreur chargement clients:', clientsError)
+          setError('Erreur lors du chargement des clients')
           return
         }
 
-        // Transformer les données en format Fiche
-        const transformedFiches = (fichesData || []).map(item => ({
-          id: item.id,
-          nom: item.nom || '',
-          prenom: item.prenoms || '',
-          date_naissance: item.dateNaissance || '',
-          nationalite: item.nationalite || '',
-          numero_piece: item.numeroDocument || '',
-          type_piece: item.documentType as 'CIN' | 'Passeport' | 'Titre de séjour' || 'CIN',
-          date_arrivee: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '',
-          date_depart: '', // À calculer selon la logique métier
-          numero_chambre: item.roomNumber || '',
-          created_at: item.created_at,
-          statut: (item.printed ? 'Imprimé' : 'En attente') as 'Imprimé' | 'En attente'
-        }))
-
-        setFiches(transformedFiches)
+        setClients(clientsData || [])
       } catch (err) {
+        console.log('Erreur complète:', JSON.stringify(err))
         console.error('Erreur:', err)
         setError('Erreur lors du chargement')
       } finally {
@@ -98,12 +99,12 @@ export default function Fiches() {
       }
     }
 
-    loadFiches()
+    loadClients()
   }, [])
 
-  const filteredFiches = fiches.filter(fiche => 
-    fiche.nom.toLowerCase().includes(search.toLowerCase()) ||
-    fiche.prenom.toLowerCase().includes(search.toLowerCase())
+  const filteredClients = clients.filter(client => 
+    client.nom.toLowerCase().includes(search.toLowerCase()) ||
+    client.prenoms.toLowerCase().includes(search.toLowerCase())
   )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -118,19 +119,40 @@ export default function Fiches() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Sauvegarder dans Supabase
+      // Récupérer l'ID de l'hôtel
+      const { data: hotelData } = await supabase
+        .from('hotels')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!hotelData?.id) {
+        alert('Erreur: hôtel non trouvé')
+        return
+      }
+
+      // Sauvegarder dans la table clients
       const { data, error } = await supabase
-        .from('scan_history')
+        .from('clients')
         .insert({
-          user_id: user.id,
+          hotel_id: hotelData.id,
           nom: formData.nom,
-          prenoms: formData.prenom,
-          dateNaissance: formData.date_naissance,
+          prenoms: formData.prenoms,
+          date_naissance: formData.date_naissance,
+          lieu_naissance: formData.lieu_naissance,
           nationalite: formData.nationalite,
-          numeroDocument: formData.numero_piece,
-          documentType: formData.type_piece,
-          roomNumber: formData.numero_chambre,
-          printed: false
+          document_type: formData.document_type,
+          numero_document: formData.numero_document,
+          date_delivrance: formData.date_delivrance,
+          date_expiration: formData.date_expiration,
+          chambre: formData.chambre,
+          profession: formData.profession,
+          domicile: formData.domicile,
+          venant_de: formData.venant_de,
+          allant_a: formData.allant_a,
+          objet_voyage: formData.objet_voyage,
+          nb_enfants: formData.nb_enfants,
+          immatriculation: formData.immatriculation
         })
         .select()
         .single()
@@ -144,32 +166,42 @@ export default function Fiches() {
       // Générer le PDF
       await generatePDF({
         id: data.id,
+        hotel_id: hotelData.id,
         ...formData,
-        created_at: new Date().toISOString(),
-        statut: 'En attente'
+        signature: '',
+        created_at: new Date().toISOString()
       })
 
       // Mettre à jour la liste
-      const newFiche: Fiche = {
+      const newClient: Client = {
         id: data.id,
+        hotel_id: hotelData.id,
         ...formData,
-        created_at: new Date().toISOString(),
-        statut: 'En attente'
+        signature: '',
+        created_at: new Date().toISOString()
       }
-      setFiches(prev => [newFiche, ...prev])
+      setClients(prev => [newClient, ...prev])
 
       // Fermer la modale et réinitialiser
       setShowModal(false)
       setFormData({
         nom: '',
-        prenom: '',
+        prenoms: '',
         date_naissance: '',
+        lieu_naissance: '',
         nationalite: '',
-        numero_piece: '',
-        type_piece: 'CIN',
-        date_arrivee: '',
-        date_depart: '',
-        numero_chambre: ''
+        document_type: 'CIN',
+        numero_document: '',
+        date_delivrance: '',
+        date_expiration: '',
+        chambre: '',
+        profession: '',
+        domicile: '',
+        venant_de: '',
+        allant_a: '',
+        objet_voyage: '',
+        nb_enfants: '',
+        immatriculation: ''
       })
 
     } catch (err) {
@@ -178,7 +210,7 @@ export default function Fiches() {
     }
   }
 
-  const generatePDF = async (fiche: Fiche) => {
+  const generatePDF = async (client: Client) => {
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -195,17 +227,19 @@ export default function Fiches() {
     pdf.setFontSize(10)
     let yPosition = 40
     
-    pdf.text(`Nom: ${fiche.nom}`, 8, yPosition)
+    pdf.text(`Nom: ${client.nom}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Prénom: ${fiche.prenom}`, 8, yPosition)
+    pdf.text(`Prénoms: ${client.prenoms}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Date de naissance: ${fiche.date_naissance}`, 8, yPosition)
+    pdf.text(`Date de naissance: ${client.date_naissance}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Nationalité: ${fiche.nationalite}`, 8, yPosition)
+    pdf.text(`Lieu de naissance: ${client.lieu_naissance}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Type pièce: ${fiche.type_piece}`, 8, yPosition)
+    pdf.text(`Nationalité: ${client.nationalite}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Numéro pièce: ${fiche.numero_piece}`, 8, yPosition)
+    pdf.text(`Type pièce: ${client.document_type}`, 8, yPosition)
+    yPosition += 8
+    pdf.text(`Numéro pièce: ${client.numero_document}`, 8, yPosition)
 
     // PAGE 2 - VERSO
     pdf.addPage()
@@ -215,11 +249,17 @@ export default function Fiches() {
     pdf.setFontSize(10)
     yPosition = 40
     
-    pdf.text(`Date d'arrivée: ${fiche.date_arrivee}`, 8, yPosition)
+    pdf.text(`Profession: ${client.profession}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Date de départ: ${fiche.date_depart}`, 8, yPosition)
+    pdf.text(`Domicile: ${client.domicile}`, 8, yPosition)
     yPosition += 8
-    pdf.text(`Numéro de chambre: ${fiche.numero_chambre}`, 8, yPosition)
+    pdf.text(`Venant de: ${client.venant_de}`, 8, yPosition)
+    yPosition += 8
+    pdf.text(`Allant à: ${client.allant_a}`, 8, yPosition)
+    yPosition += 8
+    pdf.text(`Objet du voyage: ${client.objet_voyage}`, 8, yPosition)
+    yPosition += 8
+    pdf.text(`Chambre: ${client.chambre}`, 8, yPosition)
     yPosition += 20
     
     // Zone signature client
@@ -245,20 +285,10 @@ export default function Fiches() {
         }, 1000)
       }
     }
-
-    // Mettre à jour le statut
-    await supabase
-      .from('scan_history')
-      .update({ printed: true })
-      .eq('id', fiche.id)
   }
 
-  const handlePrintFiche = async (fiche: Fiche) => {
-    await generatePDF(fiche)
-    // Mettre à jour le statut localement
-    setFiches(prev => 
-      prev.map(f => f.id === fiche.id ? { ...f, statut: 'Imprimé' } : f)
-    )
+  const handlePrintFiche = async (client: Client) => {
+    await generatePDF(client)
   }
 
   if (loading) {
@@ -353,7 +383,7 @@ export default function Fiches() {
         </div>
 
         {/* Tableau des fiches */}
-        {filteredFiches.length > 0 ? (
+        {filteredClients.length > 0 ? (
           <div className="bg-white/90 rounded-xl shadow-sm overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -362,19 +392,16 @@ export default function Fiches() {
                     Nom
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prénom
+                    Prénoms
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date d'arrivée
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date de départ
+                    Nationalité
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Chambre
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
+                    Date check-in
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -382,35 +409,26 @@ export default function Fiches() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredFiches.map(fiche => (
-                  <tr key={fiche.id}>
+                {filteredClients.map(client => (
+                  <tr key={client.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {fiche.nom}
+                      {client.nom}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {fiche.prenom}
+                      {client.prenoms}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {fiche.date_arrivee}
+                      {client.nationalite}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {fiche.date_depart || '-'}
+                      {client.chambre || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {fiche.numero_chambre || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        fiche.statut === 'Imprimé' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {fiche.statut}
-                      </span>
+                      {new Date(client.created_at).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => handlePrintFiche(fiche)}
+                        onClick={() => handlePrintFiche(client)}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         Imprimer fiche
@@ -464,12 +482,12 @@ export default function Fiches() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Prénom *
+                      Prénoms *
                     </label>
                     <input
                       type="text"
-                      name="prenom"
-                      value={formData.prenom}
+                      name="prenoms"
+                      value={formData.prenoms}
                       onChange={handleInputChange}
                       required
                       className="w-full border rounded-lg px-3 py-2"
@@ -493,17 +511,30 @@ export default function Fiches() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nationalité *
+                      Lieu de naissance
                     </label>
                     <input
                       type="text"
-                      name="nationalite"
-                      value={formData.nationalite}
+                      name="lieu_naissance"
+                      value={formData.lieu_naissance}
                       onChange={handleInputChange}
-                      required
                       className="w-full border rounded-lg px-3 py-2"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nationalité *
+                  </label>
+                  <input
+                    type="text"
+                    name="nationalite"
+                    value={formData.nationalite}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -512,8 +543,8 @@ export default function Fiches() {
                       Type pièce *
                     </label>
                     <select
-                      name="type_piece"
-                      value={formData.type_piece}
+                      name="document_type"
+                      value={formData.document_type}
                       onChange={handleInputChange}
                       required
                       className="w-full border rounded-lg px-3 py-2"
@@ -529,8 +560,8 @@ export default function Fiches() {
                     </label>
                     <input
                       type="text"
-                      name="numero_piece"
-                      value={formData.numero_piece}
+                      name="numero_document"
+                      value={formData.numero_document}
                       onChange={handleInputChange}
                       required
                       className="w-full border rounded-lg px-3 py-2"
@@ -541,27 +572,25 @@ export default function Fiches() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date d'arrivée *
+                      Date de délivrance
                     </label>
                     <input
                       type="date"
-                      name="date_arrivee"
-                      value={formData.date_arrivee}
+                      name="date_delivrance"
+                      value={formData.date_delivrance}
                       onChange={handleInputChange}
-                      required
                       className="w-full border rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date de départ *
+                      Date d'expiration
                     </label>
                     <input
                       type="date"
-                      name="date_depart"
-                      value={formData.date_depart}
+                      name="date_expiration"
+                      value={formData.date_expiration}
                       onChange={handleInputChange}
-                      required
                       className="w-full border rounded-lg px-3 py-2"
                     />
                   </div>
@@ -573,12 +602,105 @@ export default function Fiches() {
                   </label>
                   <input
                     type="text"
-                    name="numero_chambre"
-                    value={formData.numero_chambre}
+                    name="chambre"
+                    value={formData.chambre}
                     onChange={handleInputChange}
                     required
                     className="w-full border rounded-lg px-3 py-2"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Profession
+                  </label>
+                  <input
+                    type="text"
+                    name="profession"
+                    value={formData.profession}
+                    onChange={handleInputChange}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Domicile
+                  </label>
+                  <input
+                    type="text"
+                    name="domicile"
+                    value={formData.domicile}
+                    onChange={handleInputChange}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Venant de
+                    </label>
+                    <input
+                      type="text"
+                      name="venant_de"
+                      value={formData.venant_de}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Allant à
+                    </label>
+                    <input
+                      type="text"
+                      name="allant_a"
+                      value={formData.allant_a}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Objet du voyage
+                  </label>
+                  <input
+                    type="text"
+                    name="objet_voyage"
+                    value={formData.objet_voyage}
+                    onChange={handleInputChange}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre d'enfants
+                    </label>
+                    <input
+                      type="text"
+                      name="nb_enfants"
+                      value={formData.nb_enfants}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Immatriculation véhicule
+                    </label>
+                    <input
+                      type="text"
+                      name="immatriculation"
+                      value={formData.immatriculation}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg px-3 py-2"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
