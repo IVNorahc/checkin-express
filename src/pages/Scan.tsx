@@ -589,14 +589,14 @@ Réponds UNIQUEMENT avec ce JSON :
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-white">
+    <div className="min-h-screen bg-slate-50">
       <header className="h-16 px-4 flex flex-col items-center justify-center relative pt-2">
         <div className="w-full text-center">
-          <h1 className="text-lg font-semibold text-gray-800">
+          <h1 className="text-xl font-bold text-gray-900">
             {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
           </h1>
           {!showVersoPrompt && !isVersoMode && (
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-700">
               Placez la pièce à 15-20cm du téléphone
             </p>
           )}
@@ -613,11 +613,11 @@ Réponds UNIQUEMENT avec ce JSON :
               </svg>
             </div>
             
-            <h2 className="text-2xl font-bold text-white mb-4 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
               CNI détectée
             </h2>
             
-            <p className="text-lg text-gray-300 mb-8 text-center">
+            <p className="text-lg text-gray-700 mb-8 text-center">
               Retournez la carte pour scanner le verso
             </p>
             
@@ -633,7 +633,7 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={handleSkipVerso}
-                className="w-full px-8 h-12 rounded-full border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors font-medium"
+                className="w-full px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
               >
                 Passer le verso
               </button>
@@ -654,10 +654,10 @@ Réponds UNIQUEMENT avec ce JSON :
               </div>
             )}
             
-            <div className="mt-6 flex items-center justify-center gap-3 text-white">
+            <div className="mt-6 flex items-center justify-center gap-3 text-gray-900">
               {isAnalyzing ? (
                 <>
-                  <span className="inline-block h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <span className="inline-block h-5 w-5 rounded-full border-2 border-blue-700 border-t-transparent animate-spin" />
                   <p className="text-lg font-medium">Analyse en cours...</p>
                 </>
               ) : (
@@ -671,7 +671,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 <button
                   type="button"
                   onClick={handleRetryAnalysis}
-                  className="px-8 h-12 rounded-full border border-white text-white bg-transparent hover:bg-white/10 transition-colors"
+                  className="px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
                   disabled={isAnalyzing}
                 >
                   Réessayer
@@ -685,14 +685,14 @@ Réponds UNIQUEMENT avec ce JSON :
                 <button
                   type="button"
                   onClick={handleCapture}
-                  className="px-8 h-12 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium"
+                  className="px-8 h-12 rounded-full bg-blue-700 text-white hover:bg-blue-800 transition-colors font-medium"
                 >
                   Scanner le verso
                 </button>
                 <button
                   type="button"
                   onClick={handleSkipVerso}
-                  className="text-sm text-blue-300 hover:text-blue-200 transition-colors underline"
+                  className="text-sm text-gray-600 hover:text-gray-700 transition-colors underline"
                 >
                   Passer le verso
                 </button>
@@ -703,7 +703,7 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={handleRetry}
-                className="px-8 h-12 rounded-full border border-white text-white hover:bg-white/10 transition-colors"
+                className="px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
                 disabled={isAnalyzing}
               >
                 Reprendre
@@ -733,7 +733,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 </div>
               )}
 
-              <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-700 text-sm sm:text-base space-y-1 px-4">
+              <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-600 text-sm sm:text-base space-y-1 px-4">
                 <p>📏 Placez le document bien à plat</p>
                 <p>💡 Assurez-vous d'avoir un bon éclairage</p>
               </div>
@@ -766,7 +766,7 @@ Réponds UNIQUEMENT avec ce JSON :
                   type="button"
                   onClick={handleManualInput}
                   disabled={isAnalyzing}
-                  className="w-full h-12 rounded-xl bg-white border-2 border-gray-800 text-gray-800 font-bold hover:bg-gray-800 hover:text-white transition-colors"
+                  className="w-full h-12 rounded-xl bg-white border-2 border-blue-700 text-blue-700 font-bold hover:bg-blue-50 transition-colors"
                   style={{ marginTop: '12px' }}
                 >
                   ✏️ Saisie manuelle
@@ -774,17 +774,17 @@ Réponds UNIQUEMENT avec ce JSON :
                 <button
                   type="button"
                   onClick={onBack}
-                  className="w-full h-12 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-100 transition-colors"
+                  className="w-full h-12 rounded-xl bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   ✕ Annuler
                 </button>
-                <p className="w-full text-center text-gray-600 text-xs sm:text-sm mt-2 px-4">
+                <p className="w-full text-center text-gray-500 text-xs sm:text-sm mt-2 px-4">
                   💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-700 text-sm sm:text-base space-y-1 px-4">
+            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-600 text-sm sm:text-base space-y-1 px-4">
               <p>📏 Placez le document bien à plat</p>
               <p>💡 Assurez-vous d'avoir un bon éclairage</p>
             </div>
@@ -796,7 +796,7 @@ Réponds UNIQUEMENT avec ce JSON :
                   type="button"
                   onClick={handleCapture}
                   disabled={isAnalyzing}
-                  className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
+                  className="w-full h-12 sm:h-14 rounded-xl bg-blue-700 text-white text-base sm:text-lg font-bold hover:bg-blue-800 transition-colors"
                 >
                   {isAnalyzing ? 'Analyse en cours...' : 'CAPTURER'}
                 </button>
@@ -817,7 +817,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 type="button"
                 onClick={handleManualInput}
                 disabled={isAnalyzing}
-                className="w-full h-12 rounded-xl bg-white border-2 border-gray-800 text-gray-800 font-bold hover:bg-gray-800 hover:text-white transition-colors"
+                className="w-full h-12 rounded-xl bg-white border-2 border-blue-700 text-blue-700 font-bold hover:bg-blue-50 transition-colors"
                 style={{ marginTop: '12px' }}
               >
                 ✏️ SAISIE MANUELLE
@@ -825,11 +825,11 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={onBack}
-                className="w-full h-12 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-100 transition-colors"
+                className="w-full h-12 rounded-xl bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 ✕ Annuler
               </button>
-              <p className="w-full text-center text-gray-600 text-xs sm:text-sm mt-2 px-4">
+              <p className="w-full text-center text-gray-500 text-xs sm:text-sm mt-2 px-4">
                 💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
               </p>
             </div>
