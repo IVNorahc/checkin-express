@@ -1,317 +1,333 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-interface SupportProps {
-  onBack?: () => void
+interface User {
+  id: string
+  email: string
 }
 
 interface FAQ {
+  id: number
   question: string
   reponse: string
-  categorie: string
 }
 
-export default function Support({ onBack }: SupportProps) {
+export default function Support({ onBack }: { onBack: () => void }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
-  const [user, setUser] = useState<any>(null)
-  const [userPlan, setUserPlan] = useState<string>('')
+
+  // Formulaire de contact
   const [formData, setFormData] = useState({
-    nom: '',
-    email: '',
+    sujet: '',
     message: ''
   })
-  const [sending, setSending] = useState(false)
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    window.location.replace(window.location.origin + '/login')
+  }
 
   useEffect(() => {
-    fetchUser()
+    const loadUser = async () => {
+      try {
+        const { data: { user: userData } } = await supabase.auth.getUser()
+        if (!userData) return
+
+        setUser({ id: userData.id, email: userData.email || '' })
+
+      } catch (err) {
+        console.error('Erreur:', err)
+        setError('Erreur lors du chargement')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUser()
   }, [])
 
-  const fetchUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      setUser(user)
-
-      // Récupérer le plan de l'utilisateur
-      const { data: profile } = await supabase
-        .from('hotels')
-        .select('subscription_status')
-        .eq('user_id', user.id)
-        .single()
-
-      setUserPlan(profile?.subscription_status || 'trial')
-      
-      setFormData(prev => ({
-        ...prev,
-        email: user.email || ''
-      }))
-    } catch (error) {
-      console.error('Erreur lors du chargement utilisateur:', error)
-    }
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const faqs: FAQ[] = [
-    {
-      categorie: 'Scanner',
-      question: 'Comment scanner une pièce d\'identité ?',
-      reponse: 'Utilisez votre smartphone pour prendre une photo claire de la pièce d\'identité (CNI, passeport ou titre de séjour). Assurez-vous que l\'éclairage est bon et que tous les textes sont lisibles. L\'application détectera automatiquement le type de document et extraira les informations.'
-    },
-    {
-      categorie: 'Fiches',
-      question: 'Comment générer une fiche de police ?',
-      reponse: 'Après avoir scanné un client, allez dans la section "Fiches de contrôle" et cliquez sur "Générer nouvelle fiche". Entrez le nom du client et la fiche PDF sera générée automatiquement avec toutes les informations requises pour les autorités.'
-    },
-    {
-      categorie: 'Abonnement',
-      question: 'Comment changer mon abonnement ?',
-      reponse: 'Allez dans "Paramètres" puis "Abonnement" et cliquez sur "Mettre à niveau". Vous pouvez choisir entre les plans Starter (49,99€/mois) et Business (89,99€/mois) selon vos besoins.'
-    },
-    {
-      categorie: 'Export',
-      question: 'Comment exporter mes données ?',
-      reponse: 'Dans la section "Historique", les utilisateurs du plan Business peuvent exporter toutes leurs données au format CSV en cliquant sur le bouton "Export CSV". Le fichier contiendra toutes les informations des clients check-in.'
-    },
-    {
-      categorie: 'Scanner',
-      question: 'Quels types de documents sont acceptés ?',
-      reponse: 'L\'application accepte les cartes nationales d\'identité (CNI), les passeports et les titres de séjour. Le verso est automatiquement demandé pour les CNI et titres de séjour.'
-    },
-    {
-      categorie: 'Fiches',
-      question: 'Puis-je modifier une fiche générée ?',
-      reponse: 'Une fois générée, la fiche ne peut pas être modifiée pour des raisons de conformité légale. Cependant, vous pouvez générer une nouvelle fiche si des informations ont changé.'
-    }
-  ]
-
-  const toggleFAQ = (index: number) => {
-    setExpandedFAQ(expandedFAQ === index ? null : index)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitContact = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!formData.nom.trim() || !formData.email.trim() || !formData.message.trim()) {
-      alert('Veuillez remplir tous les champs')
-      return
-    }
-
     setSending(true)
-    try {
-      // Envoyer l'email via une fonction Supabase Edge Function ou API
-      const response = await fetch('/api/support', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nom: formData.nom,
-          email: formData.email,
-          message: formData.message,
-          plan: userPlan,
-          hotel_id: user?.id
-        })
-      })
+    setError(null)
+    setSuccess(null)
 
-      if (response.ok) {
-        alert('Message envoyé avec succès! Nous vous répondrons dans les plus brefs délais.')
-        setFormData({ nom: '', email: user?.email || '', message: '' })
-      } else {
-        throw new Error('Erreur lors de l\'envoi')
+    try {
+      if (!user?.email) {
+        setError('Utilisateur non connecté')
+        return
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi:', error)
-      alert('Erreur lors de l\'envoi du message. Veuillez réessayer ou nous contacter directement à support@percepta.io')
+
+      // Préparer le contenu de l'email
+      const emailSubject = `[Check-in Express] ${formData.sujet} - ${user.email}`
+      const emailBody = `
+De: ${user.email}
+Sujet: ${formData.sujet}
+Date: ${new Date().toLocaleString('fr-FR')}
+
+Message:
+${formData.message}
+      `.trim()
+
+      // Créer un mailto: link comme fallback
+      const mailtoLink = `mailto:support@percepta.app?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+      
+      // Ouvrir le client email par défaut
+      window.open(mailtoLink, '_blank')
+      
+      setSuccess('Client email ouvert. Veuillez envoyer votre message.')
+
+      // Réinitialiser le formulaire
+      setFormData({ sujet: '', message: '' })
+
+    } catch (err) {
+      console.error('Erreur:', err)
+      setError('Erreur lors de l\'envoi du message')
     } finally {
       setSending(false)
     }
   }
 
-  const categories = [...new Set(faqs.map(faq => faq.categorie))]
+  const toggleFAQ = (id: number) => {
+    setExpandedFAQ(expandedFAQ === id ? null : id)
+  }
+
+  const faqData: FAQ[] = [
+    {
+      id: 1,
+      question: "Comment scanner une pièce d'identité ?",
+      reponse: "Allez sur la page Scanner, pointez la caméra de votre téléphone sur le document d'identité. L'OCR (reconnaissance optique de caractères) remplira automatiquement les champs du formulaire avec les informations détectées."
+    },
+    {
+      id: 2,
+      question: "Comment générer une fiche de police ?",
+      reponse: "Allez sur la page Fiches, cliquez sur 'Nouvelle fiche' pour créer une nouvelle fiche manuellement, ou cliquez sur 'Imprimer' sur un client existant dans la liste pour générer automatiquement une fiche de police au format A6."
+    },
+    {
+      id: 3,
+      question: "Comment ajouter un autre utilisateur ?",
+      reponse: "La fonctionnalité multi-utilisateurs est disponible uniquement sur le plan Business. Si vous êtes sur le plan Starter, veuillez contacter le support pour mettre à niveau votre abonnement."
+    },
+    {
+      id: 4,
+      question: "Comment changer mon abonnement ?",
+      reponse: "Allez dans Paramètres > Abonnement > Gérer mon abonnement. Vous serez redirigé vers Lemon Squeezy où vous pourrez mettre à niveau, modifier ou annuler votre abonnement."
+    }
+  ]
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement du support...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Support</h1>
-              <p className="text-gray-600 mt-1">
-                Nous sommes là pour vous aider
-              </p>
-            </div>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                ← Retour
-              </button>
-            )}
+    <div className="min-h-screen bg-slate-50">
+      {/* HEADER */}
+      <header className="flex items-center justify-between px-4 py-3"
+        style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)' }}>
+        
+        <div className="flex items-center gap-3">
+          <div className="bg-white/90 rounded-xl p-2">
+            <img src="/percepta-logo.png" className="h-10 w-auto object-contain" />
+          </div>
+          <div>
+            <h1 className="text-white font-bold text-lg">Check-in Express</h1>
+            <p className="text-blue-200 text-xs">Support</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Contact rapide */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Contact rapide
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    📧
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">Email</div>
-                    <div className="text-sm text-gray-600">support@percepta.io</div>
-                  </div>
-                </div>
-                
-                {userPlan === 'business' && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-yellow-600">⭐</span>
-                      <span className="font-medium text-yellow-800">Support prioritaire</span>
-                    </div>
-                    <p className="text-sm text-yellow-700">
-                      En tant que client Business, vous bénéficiez d'un support prioritaire avec réponse sous 2h.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+        <button 
+          onClick={signOut}
+          className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          Déconnexion
+        </button>
+      </header>
 
-            {/* Statut du plan */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Votre plan
-              </h3>
-              <div className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${
-                userPlan === 'trial' ? 'bg-yellow-100 text-yellow-800' :
-                userPlan === 'starter' ? 'bg-green-100 text-green-800' :
-                userPlan === 'business' ? 'bg-blue-100 text-blue-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {userPlan === 'trial' ? '🔶 Trial' :
-                 userPlan === 'starter' ? '🟢 Starter' :
-                 userPlan === 'business' ? '🔵 Business' :
-                 '❌ Expiré'}
+      {/* CONTENU */}
+      <div className="p-6">
+        {/* Bouton retour */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-medium mb-6"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour
+        </button>
+
+        {/* Messages d'erreur/succès */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+            {success}
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Section 1 - Formulaire de contact */}
+          <div className="bg-white/90 rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Formulaire de contact</h2>
+            
+            <form onSubmit={handleSubmitContact} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sujet *
+                </label>
+                <select
+                  name="sujet"
+                  value={formData.sujet}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Sélectionner un sujet</option>
+                  <option value="Bug">Bug</option>
+                  <option value="Question">Question</option>
+                  <option value="Demande de fonctionnalité">Demande de fonctionnalité</option>
+                  <option value="Autre">Autre</option>
+                </select>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
-                {userPlan === 'trial' && 'Accès limité aux fonctionnalités de base'}
-                {userPlan === 'starter' && 'Accès complet aux fonctionnalités standards'}
-                {userPlan === 'business' && 'Accès premium avec support prioritaire'}
-              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email de l'utilisateur
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600"
+                  />
+                  <span className="text-sm text-gray-500">Non éditable</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Message *
+                </label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleFormChange}
+                  required
+                  rows={6}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="Décrivez votre question, votre problème ou votre demande..."
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={sending || !formData.sujet || !formData.message}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                >
+                  {sending ? 'Envoi en cours...' : 'Envoyer'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Section 2 - FAQ rapide */}
+          <div className="bg-white/90 rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">FAQ rapide</h2>
+            
+            <div className="space-y-3">
+              {faqData.map((faq) => (
+                <div key={faq.id} className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleFAQ(faq.id)}
+                    className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="font-medium text-gray-900">{faq.question}</span>
+                    <svg
+                      className={`w-5 h-5 text-gray-500 transition-transform ${expandedFAQ === faq.id ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {expandedFAQ === faq.id && (
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                      <p className="text-gray-700">{faq.reponse}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* FAQ */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Questions fréquentes
-              </h2>
-              
-              <div className="space-y-4">
-                {categories.map(categorie => (
-                  <div key={categorie} className="border-b border-gray-200 pb-4 last:border-0">
-                    <h3 className="font-medium text-gray-900 mb-3">
-                      {categorie}
-                    </h3>
-                    <div className="space-y-2">
-                      {faqs
-                        .filter(faq => faq.categorie === categorie)
-                        .map((faq) => {
-                          const globalIndex = faqs.indexOf(faq)
-                          return (
-                            <div key={globalIndex} className="border border-gray-200 rounded-lg">
-                              <button
-                                onClick={() => toggleFAQ(globalIndex)}
-                                className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-                              >
-                                <span className="text-sm font-medium text-gray-900">
-                                  {faq.question}
-                                </span>
-                                <span className="text-gray-400">
-                                  {expandedFAQ === globalIndex ? '−' : '+'}
-                                </span>
-                              </button>
-                              {expandedFAQ === globalIndex && (
-                                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                                  <p className="text-sm text-gray-700">
-                                    {faq.reponse}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                    </div>
+          {/* Section 3 - Contact direct */}
+          <div className="bg-white/90 rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Contact direct</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
                   </div>
-                ))}
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900">Email</h3>
+                  <a
+                    href="mailto:support@percepta.app"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    support@percepta.app
+                  </a>
+                </div>
               </div>
-            </div>
 
-            {/* Formulaire de contact */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Envoyer un message
-              </h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom complet
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nom}
-                    onChange={(e) => setFormData({...formData, nom: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Votre nom"
-                    required
-                  />
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="votre@email.com"
-                    required
-                  />
+                  <h3 className="font-medium text-gray-900">WhatsApp</h3>
+                  <a
+                    href="https://wa.me/221770000000"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:text-green-800 underline"
+                  >
+                    +221 77 000 00 00
+                  </a>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    rows={5}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    placeholder="Décrivez votre problème ou votre question..."
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={sending}
-                  className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {sending ? 'Envoi en cours...' : 'Envoyer le message'}
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         </div>
