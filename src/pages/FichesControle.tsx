@@ -149,7 +149,7 @@ export default function FichesControle({ session, onBack }: FichesControleProps)
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] py-4 sm:py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-4 sm:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

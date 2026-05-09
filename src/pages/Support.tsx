@@ -130,7 +130,7 @@ export default function Support({ onBack }: SupportProps) {
   const categories = [...new Set(faqs.map(faq => faq.categorie))]
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen bg-slate-50 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">

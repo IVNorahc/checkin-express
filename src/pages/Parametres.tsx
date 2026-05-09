@@ -135,7 +135,7 @@ export default function Parametres({ onBack }: ParametresProps) {
   }
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen bg-slate-50 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">

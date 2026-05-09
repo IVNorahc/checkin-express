@@ -425,15 +425,7 @@ const handleDelete = async (hotelId: string) => {
   }
 
   return (
-    <div 
-      className="min-h-screen"
-      style={{
-        backgroundImage: 'url(/hotel-bg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
-    >
+    <div className="min-h-screen bg-slate-50">
       <div className="min-h-screen bg-white/80">
         
         {/* HEADER */}

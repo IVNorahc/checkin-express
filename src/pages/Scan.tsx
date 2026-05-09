@@ -589,7 +589,7 @@ Réponds UNIQUEMENT avec ce JSON :
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-slate-50 text-white">
       <header className="h-16 px-4 flex flex-col items-start relative pt-2">
         <button
           type="button"
@@ -734,39 +734,12 @@ Réponds UNIQUEMENT avec ce JSON :
                 }}
               />
 
-              <div style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                height: "2px",
-                background: "linear-gradient(90deg, transparent, #4a90d9, transparent)",
-                animation: "scan-line 2s linear infinite"
-              }}></div>
-
               {isAnalyzing && (
                 <div className="absolute inset-0 z-10 bg-black/50 flex flex-col items-center justify-center gap-3">
                   <span className="inline-block h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
                   <p className="text-base sm:text-lg font-medium text-center px-4">Analyse en cours...</p>
                 </div>
               )}
-
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {/* Coins de guidage */}
-                <div style={{position:'absolute',top:-3,left:-3,width:20,height:20,
-                  borderTop:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
-                <div style={{position:'absolute',top:-3,right:-3,width:20,height:20,
-                  borderTop:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
-                <div style={{position:'absolute',bottom:-3,left:-3,width:20,height:20,
-                  borderBottom:'4px solid #3B82F6',borderLeft:'4px solid #3B82F6'}} />
-                <div style={{position:'absolute',bottom:-3,right:-3,width:20,height:20,
-                  borderBottom:'4px solid #3B82F6',borderRight:'4px solid #3B82F6'}} />
-              </div>
 
               <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-white text-sm sm:text-base space-y-1 px-4">
                 <p>📏 Placez le document bien à plat</p>

@@ -177,25 +177,25 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
     if (profile?.status === 'trial') {
       if (daysRemaining >= 3) {
         return {
-          className: 'bg-blue-50/90 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 text-center font-medium',
-          text: `Il vous reste ${daysRemaining} jours d'essai`,
+          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
+          text: `Essai gratuit — ${daysRemaining} jours restants`,
         }
       }
       if (daysRemaining === 2) {
         return {
-          className: 'bg-[#fef3c7] text-[#92400e]',
+          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
           text: 'Votre essai se termine bientôt !',
         }
       }
       if (daysRemaining === 1) {
         return {
-          className: 'bg-[#fee2e2] text-[#991b1b]',
+          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
           text: "Dernier jour d'essai !",
         }
       }
       if (daysRemaining === 0) {
         return {
-          className: 'bg-[#fee2e2] text-[#991b1b]',
+          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
           text: 'Votre essai est terminé.',
         }
       }
@@ -441,24 +441,19 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         />
       )}
       {!showFiches && (
-        <div style={{minHeight: "100vh"}}>
-      <header className="flex items-center justify-between px-4 py-3 w-full">
+        <div className="min-h-screen bg-slate-50">
+      <header className="flex items-center justify-between px-3 py-2 bg-white shadow-sm">
             {/* Logo + titre sur fond blanc arrondi */}
-            <div className="flex items-center gap-2 bg-white/90 rounded-xl px-3 py-2 shadow-sm">
+            <div className="flex items-center gap-2">
               <img 
                 src="/percepta-logo.png" 
                 alt="Check-in Express by Percepta" 
-                className="h-9 w-auto object-contain"
+                className="h-8 w-auto object-contain"
               />
-              <span className="font-bold text-blue-800 text-sm">
+              <span className="font-bold text-blue-800 text-sm hidden sm:block">
                 Check-in Express
               </span>
             </div>
-
-            {/* Navigation au centre si nécessaire */}
-            <nav>
-              {/* Options de navigation peuvent être ajoutées ici */}
-            </nav>
 
             {/* Bouton déconnexion sans fond blanc */}
             <div className="flex items-center gap-3">
@@ -474,7 +469,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               <button
                 onClick={handleSignOut}
                 type="button"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
                 Déconnexion
               </button>
@@ -493,21 +488,9 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           marginBottom: "24px",
           overflow: "hidden"
         }} className="sm:h-48 sm:mb-8">
-          <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(30,58,138,0.15)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <h1 className="text-3xl font-bold text-blue-900 drop-shadow-sm text-center">
-              {hotelName}
-            </h1>
-          </div>
+          <h1 className="text-3xl font-bold text-blue-900 drop-shadow-sm text-center">
+            {hotelName}
+          </h1>
         </div>
 
         {trialBanner && (
@@ -551,9 +534,9 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           <button
             type="button"
             onClick={handleGenerateFiche}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors sm:max-w-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold"
           >
-            ? Fiche de contrôle
+            Fiche de contrôle
           </button>
         </section>
 
@@ -655,16 +638,20 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           )}
         </section>
 
-        <div className="mt-4 sm:mt-6 text-center space-y-2">
+        <div className="flex gap-4 justify-center mt-4">
           <button
             onClick={() => setShowFiches(true)}
-            className="text-[#1e3a8a] font-medium hover:text-[#1e40af] text-sm sm:text-base"
+            className="text-blue-600 hover:underline text-sm"
           >
-            📋 Fiches de contrôle
+            Fiches de contrôle
           </button>
-          <a href="#" className="text-[#1e3a8a] font-medium hover:text-[#1e40af] text-sm sm:text-base">
-            Voir l&apos;historique complet
-          </a>
+          <span className="text-gray-300">|</span>
+          <button
+            onClick={() => window.location.href = '/historique'}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            Voir l'historique complet
+          </button>
         </div>
       </main>
     </div>
