@@ -10,6 +10,7 @@ import AdminAnalytics from './pages/AdminAnalytics'
 import AdminParametres from './pages/AdminParametres'
 import Subscribe from './pages/Subscribe'
 import Historique from './pages/Historique'
+import Fiches from './pages/Fiches'
 import FichesControle from './pages/FichesControle'
 import Parametres from './pages/Parametres'
 import Support from './pages/Support'
@@ -314,10 +315,7 @@ export default function App() {
     return (
       <Layout currentPage="fiches" onNavigate={setCurrentPage} showNavigation={true}>
         <div className="page-transition">
-          <FichesControle 
-            session={undefined}
-            onBack={() => setCurrentPage('dashboard')} 
-          />
+          <Fiches />
         </div>
       </Layout>
     )
