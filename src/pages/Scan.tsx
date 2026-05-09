@@ -741,7 +741,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 </div>
               )}
 
-              <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-white text-sm sm:text-base space-y-1 px-4">
+              <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-700 text-sm sm:text-base space-y-1 px-4">
                 <p>📏 Placez le document bien à plat</p>
                 <p>💡 Assurez-vous d'avoir un bon éclairage</p>
               </div>
@@ -774,7 +774,7 @@ Réponds UNIQUEMENT avec ce JSON :
                   type="button"
                   onClick={handleManualInput}
                   disabled={isAnalyzing}
-                  className="w-full h-12 rounded-xl bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] font-bold hover:bg-[#1e3a8a] hover:text-white transition-colors"
+                  className="w-full h-12 rounded-xl bg-white border-2 border-gray-800 text-gray-800 font-bold hover:bg-gray-800 hover:text-white transition-colors"
                   style={{ marginTop: '12px' }}
                 >
                   ✏️ Saisie manuelle
@@ -786,13 +786,13 @@ Réponds UNIQUEMENT avec ce JSON :
                 >
                   ✕ Annuler
                 </button>
-                <p className="w-full text-center text-white/60 text-xs sm:text-sm mt-2 px-4">
+                <p className="w-full text-center text-gray-600 text-xs sm:text-sm mt-2 px-4">
                   💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-white text-sm sm:text-base space-y-1 px-4">
+            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-700 text-sm sm:text-base space-y-1 px-4">
               <p>📏 Placez le document bien à plat</p>
               <p>💡 Assurez-vous d'avoir un bon éclairage</p>
             </div>
@@ -825,10 +825,9 @@ Réponds UNIQUEMENT avec ce JSON :
                 type="button"
                 onClick={handleManualInput}
                 disabled={isAnalyzing}
-                className="w-full h-12 rounded-xl bg-white border-2 border-[#1e3a8a] text-[#1e3a8a] font-bold hover:bg-[#1e3a8a] hover:text-white transition-colors"
+                className="w-full h-12 rounded-xl bg-white border-2 border-gray-800 text-gray-800 font-bold hover:bg-gray-800 hover:text-white transition-colors"
                 style={{ marginTop: '12px' }}
               >
-                SAISIE MANUELLE
                 ✏️ SAISIE MANUELLE
               </button>
               <button
@@ -838,7 +837,7 @@ Réponds UNIQUEMENT avec ce JSON :
               >
                 ✕ Annuler
               </button>
-              <p className="w-full text-center text-white/60 text-xs sm:text-sm mt-2 px-4">
+              <p className="w-full text-center text-gray-600 text-xs sm:text-sm mt-2 px-4">
                 💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
               </p>
             </div>
