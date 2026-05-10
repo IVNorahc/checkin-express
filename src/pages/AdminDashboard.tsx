@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { supabaseAdmin } from '../lib/supabaseAdmin';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Building2, Users, Camera, TrendingUp } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+)
 
 // Icônes Lucide React pour chaque KPI
 const HotelIcon = () => <Building2 className="w-5 h-5 text-white" />;
@@ -386,6 +391,8 @@ const handleDelete = async (hotelId: string) => {
   };
 
   useEffect(() => {
+    console.log('URL:', import.meta.env.VITE_SUPABASE_URL)
+    console.log('SERVICE KEY existe:', !!import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY)
     loadUsers()
   }, [])
 
