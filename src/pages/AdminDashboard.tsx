@@ -162,11 +162,13 @@ export const AdminDashboard: React.FC = () => {
         .from('hotels')
         .select('*', { count: 'exact', head: true });
 
-      // Abonnés actifs
-      const { count: activeSubscriptions } = await supabaseAdmin
+      // Abonnés actifs (active OU trial non expiré)
+      const { data: activeHotels } = await supabaseAdmin
         .from('hotels')
-        .select('*', { count: 'exact', head: true })
-        .eq('subscription_status', 'active');
+        .select('subscription_status, trial_end')
+        .or('subscription_status.eq.active,and(subscription_status.eq.trial,trial_end.gt.' + new Date().toISOString() + ')');
+      
+      const activeSubscriptions = activeHotels?.length || 0;
 
       // Scans aujourd'hui (depuis la table clients)
       const today = new Date().toISOString().slice(0, 10);
@@ -281,21 +283,15 @@ export const AdminDashboard: React.FC = () => {
 
   console.log('HOTELS:', hotelsData, hotelsError)
 
-  // Requête 2 : profiles seuls, sans jointure
-  const { data: profilesData, error: profilesError } = await supabaseAdmin
-    .from('profiles')
-    .select('*')
+  // Requête 2 : auth users pour récupérer les vrais emails
+  const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
 
-  console.log('PROFILES:', profilesData, profilesError)
-  console.log('PROFILES STRUCTURE:', profilesData?.[0])
+  console.log('AUTH USERS:', authUsers?.users?.[0])
 
   if (hotelsData) {
     const merged = hotelsData.map(hotel => ({
       ...hotel,
-      email: profilesData?.find(p => p.id === hotel.user_id)?.email 
-        || profilesData?.find(p => p.id === hotel.user_id)?.username
-        || profilesData?.find(p => p.id === hotel.user_id)?.full_name
-        || 'N/A'
+      email: authUsers?.users?.find(u => u.id === hotel.user_id)?.email || 'N/A'
     }))
     setHotels(merged)
     
