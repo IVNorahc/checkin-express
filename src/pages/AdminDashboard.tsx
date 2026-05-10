@@ -1,35 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Building2, Users, Camera, TrendingUp } from 'lucide-react';
 
-// Icônes SVG pour chaque KPI
-const HotelIcon = () => (
-  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-  </svg>
-)
-
-const UsersIcon = () => (
-  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-)
-
-const ScanIcon = () => (
-  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-  </svg>
-)
-
-const RevenueIcon = () => (
-  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-)
+// Icônes Lucide React pour chaque KPI
+const HotelIcon = () => <Building2 className="w-5 h-5 text-white" />;
+const UsersIcon = () => <Users className="w-5 h-5 text-white" />;
+const ScanIcon = () => <Camera className="w-5 h-5 text-white" />;
+const RevenueIcon = () => <TrendingUp className="w-5 h-5 text-white" />;
 
 interface KPICardProps {
   title: string;
@@ -144,7 +122,7 @@ export const AdminDashboard: React.FC = () => {
   const [totalHotels, setTotalHotels] = useState(0);
   const [activeSubscriptions, setActiveSubscriptions] = useState(0);
   const [todayScans, setTodayScans] = useState(0);
-  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState('€0');
   
   // Graphiques
   const [dailyScansData, setDailyScansData] = useState<DailyScanData[]>([]);
@@ -152,42 +130,31 @@ export const AdminDashboard: React.FC = () => {
 
   const fetchKPIs = async () => {
     try {
-      // Total hôtels (exclure les comptes admin)
-      const { count: totalHotelsCount } = await supabase
-        .from('hotels_with_email')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_admin', false);
+      // Total hôtels
+      const { count: totalHotels } = await supabase
+        .from('hotels')
+        .select('*', { count: 'exact', head: true });
 
-      // Abonnés actifs (non-trial, exclure admin)
-      const { count: activeCount } = await supabase
-        .from('hotels_with_email')
+      // Abonnés actifs
+      const { count: activeSubscriptions } = await supabase
+        .from('hotels')
         .select('*', { count: 'exact', head: true })
-        .in('subscription_status', ['starter', 'business'])
-        .eq('status', 'active')
-        .eq('is_admin', false);
+        .eq('subscription_status', 'active');
 
-      // Scans aujourd'hui
+      // Scans aujourd'hui (depuis la table clients)
       const today = new Date().toISOString().slice(0, 10);
-      const { count: todayScansCount } = await supabase
-        .from('scan_history_with_hotel')
+      const { count: todayScans } = await supabase
+        .from('clients')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today);
 
-      // Revenus mensuels (exclure admin)
-      const { data: revenueData } = await supabase
-        .from('hotels_with_email')
-        .select('subscription_status')
-        .in('subscription_status', ['starter', 'business'])
-        .eq('status', 'active')
-        .eq('is_admin', false);
+      // Revenus mensuels (simulation: 29€ par abonné actif)
+      const monthlyRevenue = activeSubscriptions ? activeSubscriptions * 29 : 0;
 
-      const revenue = (revenueData?.filter(h => h.subscription_status === 'starter').length || 0) * 49.99 +
-                      (revenueData?.filter(h => h.subscription_status === 'business').length || 0) * 89.99;
-
-      setTotalHotels(totalHotelsCount || 0);
-      setActiveSubscriptions(activeCount || 0);
-      setTodayScans(todayScansCount || 0);
-      setMonthlyRevenue(revenue);
+      setTotalHotels(totalHotels || 0);
+      setActiveSubscriptions(activeSubscriptions || 0);
+      setTodayScans(todayScans || 0);
+      setMonthlyRevenue(`€${monthlyRevenue}`);
     } catch (err) {
       console.error('Error fetching KPIs:', err);
     }
@@ -199,7 +166,7 @@ export const AdminDashboard: React.FC = () => {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       let query = supabase
-        .from('scan_history')
+        .from('clients')
         .select('created_at')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
@@ -232,18 +199,21 @@ export const AdminDashboard: React.FC = () => {
   const fetchMonthlyScansPerUser = async () => {
     try {
       const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const monthStart = new Date(currentMonth + '-01').toISOString();
+      const monthEnd = new Date(currentMonth + '-31').toISOString();
       
+      // Calculer les scans mensuels depuis la table clients
       let query = supabase
-        .from('monthly_scan_counts')
+        .from('clients')
         .select(`
-          scan_count,
           hotel_id,
           hotels!inner (
             hotel_name
           )
         `)
-        .eq('month_year', currentMonth)
-        .order('scan_count', { ascending: false });
+        .gte('created_at', monthStart)
+        .lte('created_at', monthEnd)
+        .order('created_at', { ascending: false });
 
       if (selectedHotel !== 'all') {
         query = query.eq('hotel_id', selectedHotel);
@@ -252,10 +222,22 @@ export const AdminDashboard: React.FC = () => {
       const { data } = await query;
 
       if (data) {
-        const chartData = data.map((item: any) => ({
-          hotel_name: item.hotels.hotel_name,
-          scans: item.scan_count
-        }));
+        // Grouper par hôtel et compter les scans
+        const groupedData = data.reduce((acc: Record<string, { hotel_name: string; scans: number }>, item: any) => {
+          const hotelId = item.hotel_id;
+          const hotelName = item.hotels?.hotel_name || 'Hôtel inconnu';
+          
+          if (!acc[hotelId]) {
+            acc[hotelId] = { hotel_name: hotelName, scans: 0 };
+          }
+          acc[hotelId].scans += 1;
+          return acc;
+        }, {});
+
+        const chartData = Object.values(groupedData)
+          .sort((a, b) => b.scans - a.scans)
+          .slice(0, 10); // Top 10
+          
         setMonthlyScansPerUser(chartData);
       }
     } catch (err) {
@@ -264,37 +246,44 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const fetchHotels = async () => {
-  const { data, error } = await supabase.rpc('get_all_hotels_admin')
-  
-  console.log('RAW DATA:', JSON.stringify(data))
-  console.log('ERROR:', error)
-  
-  if (error || !data) return
-  
-  // Parser chaque ligne JSON
-  const parsed = data.map((row: any) => {
-    const val = row?.get_all_hotels_admin ?? row
-    return typeof val === 'string' ? JSON.parse(val) : val
-  })
-  
-  console.log('PARSED HOTELS:', parsed)
-  setHotels(parsed)
-  
-  // Calculer les stats directement depuis parsed
-  const total = parsed.length
-  const trial = parsed.filter((h: any) => 
-    h.subscription_status === 'trial').length
-  const active = parsed.filter((h: any) => 
-    ['starter', 'business'].includes(h.subscription_status)).length
+    try {
+      // Récupérer les hôtels avec les emails des profils
+      const { data: hotelsData, error: hotelsError } = await supabase
+        .from('hotels')
+        .select(`
+          *,
+          profiles!inner (email)
+        `)
+        .order('created_at', { ascending: false })
+      
+      console.log('HOTELS DATA:', JSON.stringify(hotelsData))
+      console.log('HOTELS ERROR:', JSON.stringify(hotelsError))
+      
+      if (hotelsError) {
+        console.error('Erreur hotels:', hotelsError)
+        return
+      }
+      
+      setHotels(hotelsData || [])
+      
+      // Calculer les stats
+      const total = hotelsData?.length || 0
+      const active = hotelsData?.filter((h: any) => 
+        h.subscription_status === 'active').length || 0
+      const trial = hotelsData?.filter((h: any) => 
+        h.subscription_status === 'trial').length || 0
+      
+      // Un hôtel est expiré si trial_end < maintenant ET status = trial
+      const now = new Date()
+      const expired = hotelsData?.filter((h: any) => 
+        h.subscription_status === 'trial' && 
+        new Date(h.trial_end) < now).length || 0
 
-  // Un hotel est expiré si trial_end < maintenant ET status = trial
-  const now = new Date()
-  const expired = parsed.filter((h: any) => 
-    h.subscription_status === 'trial' && 
-    new Date(h.trial_end) < now).length
-
-  setStats({ total, trial: trial - expired, active, expired })
-}
+      setStats({ total, trial: trial - expired, active, expired })
+    } catch (error) {
+      console.error('Erreur fetchHotels:', error)
+    }
+  }
 
 const handleReactivate = async (hotelId: string) => {
   console.log('Tentative de réactivation pour hotelId:', hotelId)
