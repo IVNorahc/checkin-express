@@ -245,45 +245,45 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const fetchHotels = async () => {
-    try {
-      // Récupérer les hôtels avec les emails des profils
-      const { data: hotelsData, error: hotelsError } = await supabase
-        .from('hotels')
-        .select(`
-          *,
-          profiles!inner (email)
-        `)
-        .order('created_at', { ascending: false })
-      
-      console.log('HOTELS DATA:', JSON.stringify(hotelsData))
-      console.log('HOTELS ERROR:', JSON.stringify(hotelsError))
-      
-      if (hotelsError) {
-        console.error('Erreur hotels:', hotelsError)
-        return
-      }
-      
-      setHotels(hotelsData || [])
-      
-      // Calculer les stats
-      const total = hotelsData?.length || 0
-      const active = hotelsData?.filter((h: any) => 
-        h.subscription_status === 'active').length || 0
-      const trial = hotelsData?.filter((h: any) => 
-        h.subscription_status === 'trial').length || 0
-      
-      // Un hôtel est expiré si trial_end < maintenant ET status = trial
-      const now = new Date()
-      const expired = hotelsData?.filter((h: any) => 
-        h.subscription_status === 'trial' && 
-        new Date(h.trial_end) < now).length || 0
+  const loadUsers = async () => {
+  // Requête 1 : hotels seuls, sans jointure
+  const { data: hotelsData, error: hotelsError } = await supabase
+    .from('hotels')
+    .select('*')
+    .order('created_at', { ascending: false })
 
-      setStats({ total, trial: trial - expired, active, expired })
-    } catch (error) {
-      console.error('Erreur fetchHotels:', error)
-    }
+  console.log('HOTELS:', hotelsData, hotelsError)
+
+  // Requête 2 : profiles seuls, sans jointure
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('*')
+
+  console.log('PROFILES:', profilesData, profilesError)
+
+  if (hotelsData) {
+    const merged = hotelsData.map(hotel => ({
+      ...hotel,
+      email: profilesData?.find(p => p.id === hotel.user_id)?.email || 'N/A'
+    }))
+    setHotels(merged)
+    
+    // Calculer les stats
+    const total = merged.length
+    const active = merged.filter((h: any) => 
+      h.subscription_status === 'active').length
+    const trial = merged.filter((h: any) => 
+      h.subscription_status === 'trial').length
+    
+    // Un hôtel est expiré si trial_end < maintenant ET status = trial
+    const now = new Date()
+    const expired = merged.filter((h: any) => 
+      h.subscription_status === 'trial' && 
+      new Date(h.trial_end) < now).length
+
+    setStats({ total, trial: trial - expired, active, expired })
   }
+}
 
 const handleReactivate = async (hotelId: string) => {
   console.log('Tentative de réactivation pour hotelId:', hotelId)
@@ -308,7 +308,7 @@ const handleReactivate = async (hotelId: string) => {
   }
   
   alert('Compte réactivé pour 30 jours !')
-  fetchHotels()
+  loadUsers()
 }
 
 const handleAction = async (hotelId: string, newStatus: string) => {
@@ -344,7 +344,7 @@ const handleAction = async (hotelId: string, newStatus: string) => {
     return
   }
   
-  fetchHotels()
+  loadUsers()
 }
 
 const handleDelete = async (hotelId: string) => {
@@ -366,7 +366,7 @@ const handleDelete = async (hotelId: string) => {
   }
   
   alert('Compte supprimé avec succès !')
-  fetchHotels()
+  loadUsers()
 }
 
   const fetchAllData = async () => {
@@ -376,7 +376,7 @@ const handleDelete = async (hotelId: string) => {
         fetchKPIs(),
         fetchDailyScansData(),
         fetchMonthlyScansPerUser(),
-        fetchHotels()
+        loadUsers()
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -386,7 +386,7 @@ const handleDelete = async (hotelId: string) => {
   };
 
   useEffect(() => {
-    fetchHotels()
+    loadUsers()
   }, [])
 
   useEffect(() => {
