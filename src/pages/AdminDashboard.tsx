@@ -133,6 +133,13 @@ export const AdminDashboard: React.FC = () => {
   const [dailyScansData, setDailyScansData] = useState<DailyScanData[]>([]);
   const [monthlyScansPerUser, setMonthlyScansPerUser] = useState<MonthlyScanData[]>([]);
 
+  // Modales
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [supportEmail, setSupportEmail] = useState('support@percepta.tech');
+  const [supportWhatsApp, setSupportWhatsApp] = useState('+33612345678');
+  const [defaultTrialDays, setDefaultTrialDays] = useState(30);
+
   const fetchKPIs = async () => {
     try {
       // Total hôtels
@@ -544,22 +551,22 @@ const handleDelete = async (hotelId: string) => {
         {/* Actions rapides */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col md:flex-row gap-3 w-full">
             <button
               onClick={() => document.getElementById('liste-users')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 text-center"
+              className="w-full md:w-auto bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 text-center"
             >
               Gérer les utilisateurs
             </button>
             <button
-              onClick={() => window.location.href = '/admin/analytics'}
-              className="bg-blue-700 text-white px-4 py-3 rounded-lg hover:bg-blue-800 text-center"
+              onClick={() => setShowAnalyticsModal(true)}
+              className="w-full md:w-auto bg-blue-700 text-white px-4 py-3 rounded-lg hover:bg-blue-800 text-center"
             >
-              Analytics détaillés
+              Analyses détaillées
             </button>
             <button
-              onClick={() => window.location.href = '/admin/parametres'}
-              className="bg-blue-800 text-white px-4 py-3 rounded-lg hover:bg-blue-900 text-center"
+              onClick={() => setShowSettingsModal(true)}
+              className="w-full md:w-auto bg-blue-800 text-white px-4 py-3 rounded-lg hover:bg-blue-900 text-center"
             >
               Paramètres système
             </button>
@@ -590,7 +597,8 @@ const handleDelete = async (hotelId: string) => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Version Desktop - Tableau */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -720,11 +728,279 @@ const handleDelete = async (hotelId: string) => {
               </div>
             )}
           </div>
+
+          {/* Version Mobile - Cartes */}
+          <div className="block md:hidden space-y-4">
+            {hotels.map((hotel: any) => (
+              <div key={hotel.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                {/* Nom hôtel en titre */}
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {hotel.hotel_name || 'Non spécifié'}
+                </h3>
+                
+                {/* Informations */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Email:</span>
+                    <span className="text-sm text-gray-900">{hotel.email}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Abonnement:</span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      hotel.subscription_status === 'trial' ? 'bg-yellow-100 text-yellow-800' :
+                      hotel.subscription_status === 'starter' ? 'bg-green-100 text-green-800' :
+                      hotel.subscription_status === 'business' ? 'bg-blue-100 text-blue-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {hotel.subscription_status === 'trial' ? 'Trial' :
+                       hotel.subscription_status === 'starter' ? 'Starter' :
+                       hotel.subscription_status === 'business' ? 'Business' :
+                       'Expiré'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Statut:</span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      hotel.status === 'active' ? 'bg-green-100 text-green-800' :
+                      hotel.status === 'suspended' ? 'bg-yellow-100 text-yellow-800' :
+                      hotel.status === 'disabled' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {hotel.status === 'active' ? 'Actif' :
+                       hotel.status === 'suspended' ? 'Suspendu' :
+                       hotel.status === 'disabled' ? 'Désactivé' :
+                       'Inconnu'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Fin essai:</span>
+                    <span className="text-sm text-gray-900">
+                      {hotel.trial_end ? new Date(hotel.trial_end).toLocaleDateString('fr-FR') : '-'}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Boutons d'action */}
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                  {/* Suspendre/Désactiver ou Réactiver */}
+                  {(hotel.subscription_status === 'suspended' || 
+                    hotel.subscription_status === 'inactive' || 
+                    (hotel.subscription_status === 'trial' && new Date(hotel.trial_end) < new Date())) ? (
+                    <button
+                      onClick={() => handleAction(hotel.id, 'active')}
+                      className="bg-green-600 hover:bg-green-700 text-white 
+                                 px-3 py-2 rounded text-xs font-medium flex-1"
+                    >
+                      Réactiver
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleAction(hotel.id, 'suspended')}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white 
+                                   px-3 py-2 rounded text-xs font-medium flex-1"
+                      >
+                        Suspendre
+                      </button>
+                      <button
+                        onClick={() => handleAction(hotel.id, 'inactive')}
+                        className="bg-orange-500 hover:bg-orange-600 text-white 
+                                   px-3 py-2 rounded text-xs font-medium flex-1"
+                      >
+                        Désactiver
+                      </button>
+                    </>
+                  )}
+                  
+                  {/* Supprimer */}
+                  <button
+                    onClick={() => handleDelete(hotel.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white 
+                               px-3 py-2 rounded text-xs font-medium flex-1"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            ))}
+            
+            {hotels.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-500">Aucun utilisateur trouvé</div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
+
+    {/* Modale Analyses détaillées */}
+    {showAnalyticsModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Analyses détaillées</h2>
+              <button
+                onClick={() => setShowAnalyticsModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Graphique scans/jour */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Scans par jour (30 derniers jours)</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                {dailyScansData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={dailyScansData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="scans" 
+                        stroke="#3b82f6" 
+                        strokeWidth={2}
+                        name="Scans"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Aucune donnée de scans disponible
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Graphique scans par hôtel */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Scans par hôtel (ce mois)</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                {monthlyScansPerUser.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyScansPerUser}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hotel_name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar 
+                        dataKey="scans" 
+                        fill="#10b981"
+                        name="Scans"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Aucune donnée de scans par hôtel disponible
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Modale Paramètres système */}
+    {showSettingsModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg max-w-md w-full">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Paramètres système</h2>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Email support */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email support
+                </label>
+                <input
+                  type="email"
+                  value={supportEmail}
+                  onChange={(e) => setSupportEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="support@percepta.tech"
+                />
+              </div>
+
+              {/* WhatsApp support */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  WhatsApp support
+                </label>
+                <input
+                  type="tel"
+                  value={supportWhatsApp}
+                  onChange={(e) => setSupportWhatsApp(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="+33612345678"
+                />
+              </div>
+
+              {/* Durée trial par défaut */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Durée trial par défaut (jours)
+                </label>
+                <input
+                  type="number"
+                  value={defaultTrialDays}
+                  onChange={(e) => setDefaultTrialDays(parseInt(e.target.value) || 30)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="1"
+                  max="365"
+                />
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    // Sauvegarder les paramètres (à implémenter)
+                    alert('Paramètres sauvegardés avec succès !');
+                    setShowSettingsModal(false);
+                  }}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Sauvegarder
+                </button>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </div>
   </div>
-</div>
   );
 };
 
