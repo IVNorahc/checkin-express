@@ -321,17 +321,17 @@ const handleReactivate = async (hotelId: string) => {
 const handleAction = async (hotelId: string, newStatus: string) => {
   const messages: any = {
     suspended: 'Suspendre ce compte ?',
-    disabled: 'Désactiver définitivement ce compte ?',
+    inactive: 'Désactiver définitivement ce compte ?',
     active: 'Réactiver ce compte ?'
   }
   
   if (!confirm(messages[newStatus])) return
   
-  const updateData: any = { status: newStatus }
+  const updateData: any = { subscription_status: newStatus }
   
   if (newStatus === 'active') {
     const newTrialEnd = new Date()
-    newTrialEnd.setDate(newTrialEnd.getDate() + 7)
+    newTrialEnd.setDate(newTrialEnd.getDate() + 30)
     updateData.subscription_status = 'trial'
     updateData.trial_end = newTrialEnd.toISOString()
   }
@@ -657,23 +657,35 @@ const handleDelete = async (hotelId: string) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex gap-2 flex-wrap">
-                        {/* Suspendre */}
-                        <button
-                          onClick={() => handleAction(hotel.id, 'suspended')}
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white 
-                                     px-2 py-1 rounded text-xs font-medium"
-                        >
-                          Suspendre
-                        </button>
-                        
-                        {/* Désactiver */}
-                        <button
-                          onClick={() => handleAction(hotel.id, 'disabled')}
-                          className="bg-orange-500 hover:bg-orange-600 text-white 
-                                     px-2 py-1 rounded text-xs font-medium"
-                        >
-                          Désactiver
-                        </button>
+                        {/* Suspendre/Désactiver ou Réactiver */}
+                        {(hotel.subscription_status === 'suspended' || 
+                          hotel.subscription_status === 'inactive' || 
+                          (hotel.subscription_status === 'trial' && new Date(hotel.trial_end) < new Date())) ? (
+                          <button
+                            onClick={() => handleAction(hotel.id, 'active')}
+                            className="bg-green-600 hover:bg-green-700 text-white 
+                                       px-2 py-1 rounded text-xs font-medium"
+                          >
+                            Réactiver
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleAction(hotel.id, 'suspended')}
+                              className="bg-yellow-500 hover:bg-yellow-600 text-white 
+                                         px-2 py-1 rounded text-xs font-medium"
+                            >
+                              Suspendre
+                            </button>
+                            <button
+                              onClick={() => handleAction(hotel.id, 'inactive')}
+                              className="bg-orange-500 hover:bg-orange-600 text-white 
+                                         px-2 py-1 rounded text-xs font-medium"
+                            >
+                              Désactiver
+                            </button>
+                          </>
+                        )}
                         
                         {/* Supprimer */}
                         <button
@@ -684,16 +696,6 @@ const handleDelete = async (hotelId: string) => {
                           Supprimer
                         </button>
                         
-                        {/* Réactiver si suspendu ou désactivé */}
-                        {(hotel.status === 'suspended' || hotel.status === 'disabled') && (
-                          <button
-                            onClick={() => handleAction(hotel.id, 'active')}
-                            className="bg-green-600 hover:bg-green-700 text-white 
-                                       px-2 py-1 rounded text-xs font-medium"
-                          >
-                            Réactiver
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
