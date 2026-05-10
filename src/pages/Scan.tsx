@@ -4,6 +4,9 @@ import { apiService } from '../services/apiService'
 // import * as tf from '@tensorflow/tfjs'
 // import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
+// Vérifier que la clé API est bien chargée
+console.log('Mistral key:', !!import.meta.env.VITE_MISTRAL_API_KEY)
+
 type ScanProps = {
   onBack: () => void
   onCapture: (data: OCRData | null) => void
@@ -326,30 +329,38 @@ Réponds UNIQUEMENT avec ce JSON :
       setCapturedImageBase64(imageBase64)
       setCapturedMimeType(mimeType)
       
-      const ocrResult = await scanDocument(processedBase64)
-      const completeResult: OCRData = {
-        documentType: ocrResult.documentType,
-        needsVerso: ocrResult.needsVerso,
-        nom: ocrResult.nom,
-        prenoms: ocrResult.prenoms,
-        dateNaissance: ocrResult.dateNaissance,
-        lieuNaissance: ocrResult.lieuNaissance,
-        nationalite: ocrResult.nationalite,
-        numeroDocument: ocrResult.numeroDocument,
-        dateDelivrance: ocrResult.dateDelivrance,
-        dateExpiration: ocrResult.dateExpiration,
-        confidence: ocrResult.confidence,
-        adresse: (ocrResult as any).adresse || '',
-        profession: (ocrResult as any).profession || '',
-        nomPere: (ocrResult as any).nomPere || '',
-        nomMere: (ocrResult as any).nomMere || ''
-      }
-      setRectoResult(completeResult)
-      
-      if (completeResult?.needsVerso && !isVersoMode) {
-        setShowVersoPrompt(true)
-      } else {
-        onCapture(completeResult)
+      try {
+        const ocrResult = await scanDocument(processedBase64)
+        const completeResult: OCRData = {
+          documentType: ocrResult.documentType,
+          needsVerso: ocrResult.needsVerso,
+          nom: ocrResult.nom,
+          prenoms: ocrResult.prenoms,
+          dateNaissance: ocrResult.dateNaissance,
+          lieuNaissance: ocrResult.lieuNaissance,
+          nationalite: ocrResult.nationalite,
+          numeroDocument: ocrResult.numeroDocument,
+          dateDelivrance: ocrResult.dateDelivrance,
+          dateExpiration: ocrResult.dateExpiration,
+          confidence: ocrResult.confidence,
+          adresse: null,
+          profession: null,
+          nomPere: null,
+          nomMere: null
+        }
+
+        if (!isMountedRef.current) return
+        handleScanResult(completeResult)
+        return
+      } catch (err: any) {
+        console.error('OCR error:', err)
+        if (!isMountedRef.current) return
+        
+        // Arrêter le spinner et afficher l'erreur
+        setIsAnalyzing(false)
+        setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
+        setShowManualCapture(true)
+        return
       }
     } catch (error) {
       console.error('Erreur capture:', error)
@@ -534,11 +545,22 @@ Réponds UNIQUEMENT avec ce JSON :
       // Fallback sur Anthropic OCR si l'API sécurisée n'est pas disponible
       console.log('Fallback sur Anthropic OCR')
       if (enhanced.imageBase64 && enhanced.mimeType) {
-        const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
-        const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-        if (!isMountedRef.current) return
-        handleScanResult(data)
-        return
+        try {
+          const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
+          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
+          if (!isMountedRef.current) return
+          handleScanResult(data)
+          return
+        } catch (err: any) {
+          console.error('Fallback OCR error:', err)
+          if (!isMountedRef.current) return
+          
+          // Arrêter le spinner et afficher l'erreur
+          setIsAnalyzing(false)
+          setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
+          setShowManualCapture(true)
+          return
+        }
       }
     } catch (e1) {
       if (!isMountedRef.current) return
@@ -547,11 +569,22 @@ Réponds UNIQUEMENT avec ce JSON :
       try {
         console.log('Fallback sur Anthropic OCR après erreur')
         if (enhanced.imageBase64 && enhanced.mimeType) {
-          const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
-          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-          if (!isMountedRef.current) return
-          handleScanResult(data)
-          return
+          try {
+            const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
+            const data = (await scanDocument(compressedBase64)) as unknown as OCRData
+            if (!isMountedRef.current) return
+            handleScanResult(data)
+            return
+          } catch (err: any) {
+            console.error('Second fallback OCR error:', err)
+            if (!isMountedRef.current) return
+            
+            // Arrêter le spinner et afficher l'erreur
+            setIsAnalyzing(false)
+            setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
+            setShowManualCapture(true)
+            return
+          }
         }
       } catch (e2) {
         if (!isMountedRef.current) return
@@ -596,10 +629,21 @@ Réponds UNIQUEMENT avec ce JSON :
     try {
       if (capturedImageBase64 && capturedMimeType) {
         const compressedBase64 = await prepareForOCR(capturedImageBase64)
-        const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-        if (!isMountedRef.current) return
-        handleScanResult(data)
-        return
+        try {
+          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
+          if (!isMountedRef.current) return
+          handleScanResult(data)
+          return
+        } catch (err: any) {
+          console.error('OCR error:', err)
+          if (!isMountedRef.current) return
+          
+          // Arrêter le spinner et afficher l'erreur
+          setIsAnalyzing(false)
+          setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
+          setShowManualCapture(true)
+          return
+        }
       }
     } catch (e1) {
       if (!isMountedRef.current) return
@@ -609,10 +653,21 @@ Réponds UNIQUEMENT avec ce JSON :
       try {
         if (capturedImageBase64 && capturedMimeType) {
           const compressedBase64 = await prepareForOCR(capturedImageBase64)
-          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-          if (!isMountedRef.current) return
-          handleScanResult(data)
-          return
+          try {
+            const data = (await scanDocument(compressedBase64)) as unknown as OCRData
+            if (!isMountedRef.current) return
+            handleScanResult(data)
+            return
+          } catch (err: any) {
+            console.error('Second OCR error:', err)
+            if (!isMountedRef.current) return
+            
+            // Arrêter le spinner et afficher l'erreur
+            setIsAnalyzing(false)
+            setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
+            setShowManualCapture(true)
+            return
+          }
         }
       } catch (e2) {
         if (!isMountedRef.current) return
