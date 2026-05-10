@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabaseAdmin } from '../lib/supabaseAdmin';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Building2, Users, Camera, TrendingUp } from 'lucide-react';
 
@@ -131,19 +131,19 @@ export const AdminDashboard: React.FC = () => {
   const fetchKPIs = async () => {
     try {
       // Total hôtels
-      const { count: totalHotels } = await supabase
+      const { count: totalHotels } = await supabaseAdmin
         .from('hotels')
         .select('*', { count: 'exact', head: true });
 
       // Abonnés actifs
-      const { count: activeSubscriptions } = await supabase
+      const { count: activeSubscriptions } = await supabaseAdmin
         .from('hotels')
         .select('*', { count: 'exact', head: true })
         .eq('subscription_status', 'active');
 
       // Scans aujourd'hui (depuis la table clients)
       const today = new Date().toISOString().slice(0, 10);
-      const { count: todayScans } = await supabase
+      const { count: todayScans } = await supabaseAdmin
         .from('clients')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today);
@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      let query = supabase
+      let query = supabaseAdmin
         .from('clients')
         .select('created_at')
         .gte('created_at', thirtyDaysAgo.toISOString())
@@ -203,7 +203,7 @@ export const AdminDashboard: React.FC = () => {
       const monthEnd = new Date(currentMonth + '-31').toISOString();
       
       // Calculer les scans mensuels depuis la table clients
-      let query = supabase
+      let query = supabaseAdmin
         .from('clients')
         .select(`
           hotel_id,
@@ -247,7 +247,7 @@ export const AdminDashboard: React.FC = () => {
 
   const loadUsers = async () => {
   // Requête 1 : hotels seuls, sans jointure
-  const { data: hotelsData, error: hotelsError } = await supabase
+  const { data: hotelsData, error: hotelsError } = await supabaseAdmin
     .from('hotels')
     .select('*')
     .order('created_at', { ascending: false })
@@ -255,7 +255,7 @@ export const AdminDashboard: React.FC = () => {
   console.log('HOTELS:', hotelsData, hotelsError)
 
   // Requête 2 : profiles seuls, sans jointure
-  const { data: profilesData, error: profilesError } = await supabase
+  const { data: profilesData, error: profilesError } = await supabaseAdmin
     .from('profiles')
     .select('*')
 
@@ -291,7 +291,7 @@ const handleReactivate = async (hotelId: string) => {
   const trialEnd = new Date()
   trialEnd.setDate(trialEnd.getDate() + 30)
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('hotels')
     .update({ 
       subscription_status: 'active',
@@ -331,7 +331,7 @@ const handleAction = async (hotelId: string, newStatus: string) => {
     updateData.trial_end = newTrialEnd.toISOString()
   }
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('hotels')
     .update(updateData)
     .eq('id', hotelId)
@@ -352,7 +352,7 @@ const handleDelete = async (hotelId: string) => {
   
   if (!confirm('ATTENTION : Supprimer définitivement ce compte et toutes ses données ?')) return
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('hotels')
     .delete()
     .eq('id', hotelId)
@@ -448,7 +448,7 @@ const handleDelete = async (hotelId: string) => {
 
           <button
             onClick={async () => {
-              await supabase.auth.signOut()
+              await supabaseAdmin.auth.signOut()
               window.location.replace(window.location.origin + '/login')
             }}
             className="bg-white/20 hover:bg-white/30 text-white 
