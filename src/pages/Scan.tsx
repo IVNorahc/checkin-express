@@ -233,14 +233,22 @@ Réponds UNIQUEMENT avec ce JSON :
     }
   }
 
+  // Fonction pour arrêter complètement le flux caméra
+  const stopCameraStream = () => {
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+      tracks.forEach(track => track.stop())
+    }
+  }
+
   // Fonction startCamera corrigée
   const startCamera = async () => {
     try {
-      // Arrêter le stream existant si présent
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-        tracks.forEach(track => track.stop())
-      }
+      // Arrêter complètement le stream existant
+      stopCameraStream()
+
+      // Attendre un peu pour que le stream soit bien arrêté
+      await new Promise(resolve => setTimeout(resolve, 100))
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -272,13 +280,34 @@ Réponds UNIQUEMENT avec ce JSON :
     
     return () => {
       isMountedRef.current = false
-      // Nettoyer le stream vidéo
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-        tracks.forEach(track => track.stop())
-      }
+      // Nettoyer complètement le stream vidéo
+      stopCameraStream()
     }
   }, [])
+
+  // useEffect pour gérer les changements d'étape (recto ↔ verso)
+  useEffect(() => {
+    // Quand on change d'étape, redémarrer la caméra
+    if (!showVersoPrompt && !capturedImage) {
+      const restartCamera = async () => {
+        // Arrêter le flux actuel
+        stopCameraStream()
+        
+        // Réinitialiser la vidéo
+        if (videoRef.current) {
+          videoRef.current.srcObject = null
+        }
+        
+        // Attendre 500ms pour la réinitialisation
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Redémarrer la caméra avec facingMode: 'environment'
+        await startCamera()
+      }
+      
+      restartCamera()
+    }
+  }, [isVersoMode, showVersoPrompt])
 
   // Capture et analyse manuelle
   const captureAndAnalyze = useCallback(async () => {
@@ -380,15 +409,29 @@ Réponds UNIQUEMENT avec ce JSON :
     }
   }
 
-  const handleStartVerso = () => {
+  const handleStartVerso = async () => {
     setShowVersoPrompt(false)
     setIsVersoMode(true)
     setCapturedImage(null)
     setCapturedImageBase64(null)
     setCapturedMimeType(null)
+    
+    // Arrêter complètement le flux caméra avant de passer au verso
+    stopCameraStream()
+    
+    // Réinitialiser la vidéo
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    
+    // Attendre 500ms pour la réinitialisation complète
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Redémarrer la caméra pour le scan verso
+    await startCamera()
   }
 
-  const handleBackToRecto = () => {
+  const handleBackToRecto = async () => {
     if (showVersoPrompt) {
       setShowVersoPrompt(false)
       setRectoResult(null)
@@ -401,6 +444,20 @@ Réponds UNIQUEMENT avec ce JSON :
     setCapturedMimeType(null)
     setAnalysisError(null)
     setCanRetry(false)
+    
+    // Arrêter complètement le flux caméra
+    stopCameraStream()
+    
+    // Réinitialiser la vidéo
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    
+    // Attendre 500ms pour la réinitialisation complète
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Redémarrer la caméra pour le scan recto
+    await startCamera()
   }
 
   const extractGeminiErrorMessage = (err: unknown) => {
@@ -520,12 +577,26 @@ Réponds UNIQUEMENT avec ce JSON :
     }
   }
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setCapturedImage(null)
     setCapturedImageBase64(null)
     setAnalysisError(null)
     setIsAnalyzing(false)
     setCanRetry(false)
+    
+    // Arrêter complètement le flux caméra
+    stopCameraStream()
+    
+    // Réinitialiser la vidéo
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    
+    // Attendre 500ms pour la réinitialisation complète
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Redémarrer la caméra
+    await startCamera()
   }
 
   const handleRetryAnalysis = async () => {
