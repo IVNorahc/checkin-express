@@ -661,9 +661,9 @@ Réponds UNIQUEMENT avec ce JSON :
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="h-16 px-4 flex flex-col items-center justify-center relative pt-2">
+      <header className="h-16 px-4 md:px-8 flex flex-col items-center justify-center relative pt-2">
         <div className="w-full text-center">
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">
             {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
           </h1>
           {!showVersoPrompt && !isVersoMode && (
@@ -674,7 +674,7 @@ Réponds UNIQUEMENT avec ce JSON :
         </div>
       </header>
 
-      <main className="px-4 pb-8 flex flex-col items-center">
+      <main className="px-4 md:px-8 pb-8 flex flex-col items-center gap-3 md:gap-6">
         {showVersoPrompt ? (
           // Écran intermédiaire après détection CNI
           <div className="w-full max-w-xl flex flex-col items-center justify-center min-h-[60vh]">
@@ -684,7 +684,7 @@ Réponds UNIQUEMENT avec ce JSON :
               </svg>
             </div>
             
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 text-center">
               CNI détectée
             </h2>
             
@@ -696,7 +696,7 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={handleStartVerso}
-                className="w-full px-8 h-14 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium text-lg flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-8 h-14 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium text-lg flex items-center justify-center gap-2"
               >
                 <span className="text-xl">Scanner le verso</span>
               </button>
@@ -704,7 +704,7 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={handleSkipVerso}
-                className="w-full px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
               >
                 Passer le verso
               </button>
@@ -742,7 +742,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 <button
                   type="button"
                   onClick={handleRetryAnalysis}
-                  className="px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
                   disabled={isAnalyzing}
                 >
                   Réessayer
@@ -756,7 +756,7 @@ Réponds UNIQUEMENT avec ce JSON :
                 <button
                   type="button"
                   onClick={handleCapture}
-                  className="px-8 h-12 rounded-full bg-blue-700 text-white hover:bg-blue-800 transition-colors font-medium"
+                  className="w-full md:w-auto px-8 h-12 rounded-full bg-blue-700 text-white hover:bg-blue-800 transition-colors font-medium"
                 >
                   Scanner le verso
                 </button>
@@ -774,7 +774,7 @@ Réponds UNIQUEMENT avec ce JSON :
               <button
                 type="button"
                 onClick={handleRetry}
-                className="px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
                 disabled={isAnalyzing}
               >
                 Reprendre

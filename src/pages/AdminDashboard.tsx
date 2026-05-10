@@ -140,6 +140,58 @@ export const AdminDashboard: React.FC = () => {
   const [supportWhatsApp, setSupportWhatsApp] = useState('+33612345678');
   const [defaultTrialDays, setDefaultTrialDays] = useState(30);
 
+  const exportToCSV = () => {
+    // Créer les en-têtes CSV
+    const headers = [
+      'Hôtel',
+      'Email',
+      'Abonnement',
+      'Statut',
+      'Créé le',
+      'Fin essai',
+      'Scans'
+    ];
+    
+    // Créer les données CSV
+    const csvData = hotels.map((hotel: any) => [
+      hotel.hotel_name || 'Non spécifié',
+      hotel.email || 'N/A',
+      hotel.subscription_status === 'trial' ? 'Trial' :
+      hotel.subscription_status === 'starter' ? 'Starter' :
+      hotel.subscription_status === 'business' ? 'Business' :
+      'Expiré',
+      hotel.status === 'active' ? 'Actif' :
+      hotel.status === 'suspended' ? 'Suspendu' :
+      hotel.status === 'disabled' ? 'Désactivé' :
+      'Inconnu',
+      hotel.created_at ? new Date(hotel.created_at).toLocaleDateString('fr-FR') : '-',
+      hotel.trial_end ? new Date(hotel.trial_end).toLocaleDateString('fr-FR') : '-',
+      hotel.ocr_scans_used || 0
+    ]);
+    
+    // Créer le contenu CSV
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Créer un blob et déclencher le téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Générer le nom de fichier avec la date
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fileName = `checkin-express-users-${today}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const fetchKPIs = async () => {
     try {
       // Total hôtels
@@ -553,10 +605,10 @@ const handleDelete = async (hotelId: string) => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
           <div className="flex flex-col md:flex-row gap-3 w-full">
             <button
-              onClick={() => document.getElementById('liste-users')?.scrollIntoView({ behavior: 'smooth' })}
-              className="w-full md:w-auto bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 text-center"
+              onClick={exportToCSV}
+              className="w-full md:w-auto bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 text-center"
             >
-              Gérer les utilisateurs
+              Exporter CSV
             </button>
             <button
               onClick={() => setShowAnalyticsModal(true)}

@@ -442,7 +442,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       )}
       {!showFiches && (
         <div className="min-h-screen bg-slate-50">
-      <header className="flex items-center justify-between px-3 py-2 bg-white shadow-sm">
+      <header className="flex items-center justify-between px-4 md:px-8 py-2 bg-white shadow-sm">
             {/* Logo + titre sur fond blanc arrondi */}
             <div className="flex items-center gap-2">
               <img 
@@ -461,7 +461,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                 <button
                   type="button"
                   onClick={onAdminClick}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full md:w-auto px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Admin
                 </button>
@@ -469,14 +469,14 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
               <button
                 onClick={handleSignOut}
                 type="button"
-                className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
+                className="w-full md:w-auto bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
                 Déconnexion
               </button>
             </div>
           </header>
 
-      <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 24px 40px"}}>
+      <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 16px 40px"}} className="md:px-8">
         {/* Hero Section */}
         <div style={{
           height: "150px",
@@ -488,7 +488,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           marginBottom: "24px",
           overflow: "hidden"
         }} className="sm:h-48 sm:mb-8">
-          <h1 className="text-3xl font-bold text-blue-900 drop-shadow-sm text-center">
+          <h1 className="text-xl md:text-2xl font-bold text-blue-900 drop-shadow-sm text-center">
             {hotelName}
           </h1>
         </div>
@@ -499,7 +499,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </div>
       )}
 
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
             onClick={onScanComplete}
@@ -520,21 +520,21 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
           </button>
         </section>
 
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
             onClick={handleSubscribeClick}
-            className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white/80 py-3 px-6 rounded-lg font-semibold transition-colors sm:max-w-sm"
+            className="w-full md:w-auto border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white/80 py-3 px-6 rounded-lg font-semibold transition-colors sm:max-w-sm"
           >
             {profile?.status === 'active' ? 'Gérer mon abonnement' : 'Passer à l\'abonnement'}
           </button>
         </section>
 
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8">
+        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
             onClick={handleGenerateFiche}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold"
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold"
           >
             Fiche de contrôle
           </button>
