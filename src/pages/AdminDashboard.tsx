@@ -297,28 +297,34 @@ export const AdminDashboard: React.FC = () => {
 }
 
 const handleReactivate = async (hotelId: string) => {
-  const newTrialEnd = new Date()
-  newTrialEnd.setDate(newTrialEnd.getDate() + 7)
+  console.log('Tentative de réactivation pour hotelId:', hotelId)
   
-  const { error } = await supabase
+  const trialEnd = new Date()
+  trialEnd.setDate(trialEnd.getDate() + 30)
+  
+  const { data, error } = await supabase
     .from('hotels')
     .update({ 
-      subscription_status: 'trial',
-      trial_end: newTrialEnd.toISOString(),
-      status: 'active'
+      subscription_status: 'active',
+      trial_end: trialEnd.toISOString()
     })
     .eq('id', hotelId)
   
+  console.log('Réactiver result - Data:', JSON.stringify(data))
+  console.log('Réactiver result - Error:', JSON.stringify(error))
+  
   if (error) {
-    alert('Erreur: ' + error.message)
+    alert('Erreur lors de la réactivation: ' + error.message)
     return
   }
   
-  alert('Compte réactivé pour 7 jours !')
+  alert('Compte réactivé pour 30 jours !')
   fetchHotels()
 }
 
 const handleAction = async (hotelId: string, newStatus: string) => {
+  console.log('Tentative d\'action pour hotelId:', hotelId, 'newStatus:', newStatus)
+  
   const messages: any = {
     suspended: 'Suspendre ce compte ?',
     inactive: 'Désactiver définitivement ce compte ?',
@@ -336,13 +342,16 @@ const handleAction = async (hotelId: string, newStatus: string) => {
     updateData.trial_end = newTrialEnd.toISOString()
   }
   
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('hotels')
     .update(updateData)
     .eq('id', hotelId)
   
+  console.log('Action result - Data:', JSON.stringify(data))
+  console.log('Action result - Error:', JSON.stringify(error))
+  
   if (error) {
-    alert('Erreur: ' + error.message)
+    alert('Erreur lors de l\'action: ' + error.message)
     return
   }
   
@@ -350,18 +359,24 @@ const handleAction = async (hotelId: string, newStatus: string) => {
 }
 
 const handleDelete = async (hotelId: string) => {
+  console.log('Tentative de suppression pour hotelId:', hotelId)
+  
   if (!confirm('ATTENTION : Supprimer définitivement ce compte et toutes ses données ?')) return
   
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('hotels')
     .delete()
     .eq('id', hotelId)
   
+  console.log('Supprimer result - Data:', JSON.stringify(data))
+  console.log('Supprimer result - Error:', JSON.stringify(error))
+  
   if (error) {
-    alert('Erreur: ' + error.message)
+    alert('Erreur lors de la suppression: ' + error.message)
     return
   }
   
+  alert('Compte supprimé avec succès !')
   fetchHotels()
 }
 
