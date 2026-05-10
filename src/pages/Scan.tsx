@@ -75,6 +75,7 @@ async function prepareForOCR(base64: string): Promise<string> {
 
 export default function Scan({ onBack, onCapture }: ScanProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [capturedImageBase64, setCapturedImageBase64] = useState<string | null>(null)
   const [capturedMimeType, setCapturedMimeType] = useState<string | null>(null)
@@ -87,6 +88,33 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [showManualCapture, setShowManualCapture] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isMountedRef = useRef(true)
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+  }
+
+  const startCamera = async () => {
+    stopCamera()
+    await new Promise(resolve => setTimeout(resolve, 800))
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: 1280, height: 720 }
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+      }
+    } catch (err) {
+      console.error('Erreur caméra:', err)
+    }
+  }
 
   // Fonction alternative avec API sécurisée
   const analyzeWithSecureAPI = async (imageBase64: string, mimeType: string): Promise<OCRData | null> => {
@@ -241,47 +269,13 @@ Réponds UNIQUEMENT avec ce JSON :
     }
   }
 
-  // Fonction startCamera corrigée
-  const startCamera = async () => {
-    try {
-      // Arrêter complètement le stream existant
-      stopCameraStream()
-
-      // Attendre un peu pour que le stream soit bien arrêté
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      })
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        videoRef.current.setAttribute('playsinline', 'true')
-        videoRef.current.setAttribute('autoplay', 'true')
-        videoRef.current.muted = true
-        
-        // Attendre que la vidéo soit prête
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(console.error)
-        }
-      }
-    } catch (err) {
-      console.error('Erreur caméra:', err)
-      setError('Impossible d\'accéder à la caméra. Vérifiez les permissions.')
-    }
-  }
-
   useEffect(() => {
     startCamera()
     
     return () => {
       isMountedRef.current = false
       // Nettoyer complètement le stream vidéo
-      stopCameraStream()
+      stopCamera()
     }
   }, [])
 
@@ -291,7 +285,7 @@ Réponds UNIQUEMENT avec ce JSON :
     if (!showVersoPrompt && !capturedImage) {
       const restartCamera = async () => {
         // Arrêter le flux actuel
-        stopCameraStream()
+        stopCamera()
         
         // Réinitialiser la vidéo
         if (videoRef.current) {
@@ -416,18 +410,7 @@ Réponds UNIQUEMENT avec ce JSON :
     setCapturedImageBase64(null)
     setCapturedMimeType(null)
     
-    // Arrêter complètement le flux caméra avant de passer au verso
-    stopCameraStream()
-    
-    // Réinitialiser la vidéo
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
-    
-    // Attendre 500ms pour la réinitialisation complète
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Redémarrer la caméra pour le scan verso
+    // Démarrer la caméra pour le scan verso
     await startCamera()
   }
 
@@ -484,6 +467,9 @@ Réponds UNIQUEMENT avec ce JSON :
 
     // Laisser l'autofocus se stabiliser
     await waitMs(500)
+
+    // Arrêter la caméra après capture
+    stopCamera()
 
     const screenshot = await captureHighQuality()
     if (!screenshot) {
