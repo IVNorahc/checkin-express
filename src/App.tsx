@@ -15,6 +15,7 @@ import FichesControle from './pages/FichesControle'
 import Parametres from './pages/Parametres'
 import Support from './pages/Support'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('loading')
@@ -270,17 +271,19 @@ export default function App() {
 
   if (currentPage === 'scan') {
     return (
-      <Layout currentPage="scan" onNavigate={setCurrentPage} showNavigation={true}>
-        <div className="page-transition">
-          <Scan
-            onBack={() => setCurrentPage('dashboard')}
-            onCapture={(data) => {
-              setOcrData(data)
-              setCurrentPage('confirm')
-            }}
-          />
-        </div>
-      </Layout>
+      <ProtectedRoute>
+        <Layout currentPage="scan" onNavigate={setCurrentPage} showNavigation={true}>
+          <div className="page-transition">
+            <Scan
+              onBack={() => setCurrentPage('dashboard')}
+              onCapture={(data) => {
+                setOcrData(data)
+                setCurrentPage('confirm')
+              }}
+            />
+          </div>
+        </Layout>
+      </ProtectedRoute>
     )
   }
 
@@ -303,45 +306,53 @@ export default function App() {
 
   if (currentPage === 'historique') {
     return (
-      <Layout currentPage="historique" onNavigate={setCurrentPage} showNavigation={true}>
-        <div className="page-transition">
-          <Historique />
-        </div>
-      </Layout>
+      <ProtectedRoute>
+        <Layout currentPage="historique" onNavigate={setCurrentPage} showNavigation={true}>
+          <div className="page-transition">
+            <Historique />
+          </div>
+        </Layout>
+      </ProtectedRoute>
     )
   }
 
   if (currentPage === 'fiches') {
     return (
-      <Layout currentPage="fiches" onNavigate={setCurrentPage} showNavigation={true}>
-        <div className="page-transition">
-          <Fiches />
-        </div>
-      </Layout>
+      <ProtectedRoute>
+        <Layout currentPage="fiches" onNavigate={setCurrentPage} showNavigation={true}>
+          <div className="page-transition">
+            <Fiches />
+          </div>
+        </Layout>
+      </ProtectedRoute>
     )
   }
 
   if (currentPage === 'parametres') {
     return (
-      <Layout currentPage="parametres" onNavigate={setCurrentPage} showNavigation={true}>
-        <div className="page-transition">
-          <Parametres 
-            onBack={() => setCurrentPage('dashboard')} 
-          />
-        </div>
-      </Layout>
+      <ProtectedRoute>
+        <Layout currentPage="parametres" onNavigate={setCurrentPage} showNavigation={true}>
+          <div className="page-transition">
+            <Parametres 
+              onBack={() => setCurrentPage('dashboard')} 
+            />
+          </div>
+        </Layout>
+      </ProtectedRoute>
     )
   }
 
   if (currentPage === 'support') {
     return (
-      <Layout currentPage="support" onNavigate={setCurrentPage} showNavigation={true}>
-        <div className="page-transition">
-          <Support 
-            onBack={() => setCurrentPage('dashboard')} 
-          />
-        </div>
-      </Layout>
+      <ProtectedRoute>
+        <Layout currentPage="support" onNavigate={setCurrentPage} showNavigation={true}>
+          <div className="page-transition">
+            <Support 
+              onBack={() => setCurrentPage('dashboard')} 
+            />
+          </div>
+        </Layout>
+      </ProtectedRoute>
     )
   }
 
