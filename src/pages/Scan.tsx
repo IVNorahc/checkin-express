@@ -122,69 +122,36 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     setIsAnalyzing(true)
     try {
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 20000)
+      const timeout = setTimeout(() => controller.abort(), 30000) // 30 secondes pour l'Edge Function
 
-      const prompt = isVersoMode 
-        ? `Tu es un expert en lecture de CNI sénégalaise CEDEAO (verso). Sur le VERSO de cette CNI sénégalaise, extrais: NIN, adresse, profession, nom du père, nom de la mère. Retourne un JSON avec les champs: nom, prenoms, dateNaissance, lieuNaissance, nationalite, numeroDocument, documentType, dateDelivrance, dateExpiration, confidence, adresse, profession, nomPere, nomMere. Si info illisible, mets "".`
-        : `Tu es un expert en lecture de CNI sénégalaise CEDEAO (recto). Sur le RECTO de cette CNI sénégalaise, extrais: nom, prénoms, date de naissance, lieu de naissance, nationalité, numéro pièce, date délivrance, date expiration. Retourne un JSON avec les champs: nom, prenoms, dateNaissance, lieuNaissance, nationalite, numeroDocument, documentType, dateDelivrance, dateExpiration, confidence, adresse, profession, nomPere, nomMere. Si info illisible, mets "".`
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiService['apiKey'],
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: imageBase64
-                }
-              },
-              {
-                type: 'text',
-                text: prompt
-              }
-            ]
-          }]
-        })
-      })
+      const response = await fetch(
+        'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/ocr',
+        {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            imageBase64,
+            isVersoMode
+          })
+        }
+      )
 
       clearTimeout(timeout)
-      const data = await response.json()
-      const text = data.content[0].text
-      const clean = text.replace(/```json|```/g, '').trim()
-      const parsed = JSON.parse(clean)
+
+      if (!response.ok) {
+        throw new Error(`Edge Function error: ${response.status} ${response.statusText}`)
+      }
+
+      const parsed = await response.json()
       
-      const ocrData: OCRData = {
-        documentType: parsed.documentType || 'CNI',
-        needsVerso: isVersoMode ? false : true,
-        nom: parsed.nom || null,
-        prenoms: parsed.prenoms || null,
-        dateNaissance: parsed.dateNaissance || null,
-        lieuNaissance: parsed.lieuNaissance || null,
-        nationalite: parsed.nationalite || null,
-        numeroDocument: parsed.numeroDocument || null,
-        dateDelivrance: parsed.dateDelivrance || null,
-        dateExpiration: parsed.dateExpiration || null,
-        confidence: parsed.confidence || 0.8,
-        adresse: parsed.adresse || null,
-        profession: parsed.profession || null,
-        nomPere: parsed.nomPere || null,
-        nomMere: parsed.nomMere || null
+      // Vérifier si l'Edge Function a retourné une erreur
+      if (parsed.error) {
+        throw new Error(parsed.error)
       }
       
       if (!isMountedRef.current) return
-      handleScanResult(ocrData)
+      handleScanResult(parsed)
       return
 
     } catch (err: any) {
