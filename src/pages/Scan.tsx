@@ -119,6 +119,9 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   }
 
   const analyseImage = async (imageBase64: string) => {
+    console.log('imageBase64 length:', imageBase64?.length)
+    console.log('imageBase64 début:', imageBase64?.substring(0, 50))
+    
     const response = await fetch(
       'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/ocr',
       {
@@ -128,7 +131,10 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       }
     )
 
-    const parsed = await response.json()
+    console.log('response status:', response.status)
+    const text = await response.text()
+    console.log('response body:', text)
+    const parsed = JSON.parse(text)
     console.log('OCR result:', parsed)
     
     // Transformer les données pour correspondre au format OCRData
@@ -357,16 +363,15 @@ Réponds UNIQUEMENT avec ce JSON :
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(video, 0, 0)
       
-      const base64 = canvas.toDataURL('image/jpeg', 0.95)
-      const processedBase64 = await prepareForOCR(base64)
+      const base64 = canvas.toDataURL('image/jpeg', 0.8)
+      const imageBase64 = base64.replace(/^data:image\/\w+;base64,/, '')
       
       setCapturedImage(base64)
-      const { imageBase64, mimeType } = normalizeScreenshot(base64)
       setCapturedImageBase64(imageBase64)
-      setCapturedMimeType(mimeType)
+      setCapturedMimeType('image/jpeg')
       
-      // Utiliser la nouvelle fonction analyseImage avec l'API Anthropic
-      await analyseImage(processedBase64)
+      // Utiliser la nouvelle fonction analyseImage avec l'Edge Function
+      await analyseImage(imageBase64)
       return
     } catch (error) {
       console.error('Erreur capture:', error)
