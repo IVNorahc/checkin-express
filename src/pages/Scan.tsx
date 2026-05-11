@@ -1,11 +1,10 @@
   import { useEffect, useRef, useState, useCallback } from 'react'
-import { scanDocument } from '../utils/ocrService'
 import { apiService } from '../services/apiService'
 // import * as tf from '@tensorflow/tfjs'
 // import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
-// Vérifier que la clé API est bien chargée
-console.log('Mistral key:', !!import.meta.env.VITE_MISTRAL_API_KEY)
+// Vérifier que la clé API Anthropic est bien chargée
+console.log('Anthropic key:', !!apiService.isApiKeyAvailable())
 
 type ScanProps = {
   onBack: () => void
@@ -116,6 +115,87 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       }
     } catch (err) {
       console.error('Erreur caméra:', err)
+    }
+  }
+
+  const analyseImage = async (imageBase64: string) => {
+    setIsAnalyzing(true)
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 20000)
+
+      const prompt = isVersoMode 
+        ? `Tu es un expert en lecture de CNI sénégalaise CEDEAO (verso). Sur le VERSO de cette CNI sénégalaise, extrais: NIN, adresse, profession, nom du père, nom de la mère. Retourne un JSON avec les champs: nom, prenoms, dateNaissance, lieuNaissance, nationalite, numeroDocument, documentType, dateDelivrance, dateExpiration, confidence, adresse, profession, nomPere, nomMere. Si info illisible, mets "".`
+        : `Tu es un expert en lecture de CNI sénégalaise CEDEAO (recto). Sur le RECTO de cette CNI sénégalaise, extrais: nom, prénoms, date de naissance, lieu de naissance, nationalité, numéro pièce, date délivrance, date expiration. Retourne un JSON avec les champs: nom, prenoms, dateNaissance, lieuNaissance, nationalite, numeroDocument, documentType, dateDelivrance, dateExpiration, confidence, adresse, profession, nomPere, nomMere. Si info illisible, mets "".`
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiService['apiKey'],
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1024,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: imageBase64
+                }
+              },
+              {
+                type: 'text',
+                text: prompt
+              }
+            ]
+          }]
+        })
+      })
+
+      clearTimeout(timeout)
+      const data = await response.json()
+      const text = data.content[0].text
+      const clean = text.replace(/```json|```/g, '').trim()
+      const parsed = JSON.parse(clean)
+      
+      const ocrData: OCRData = {
+        documentType: parsed.documentType || 'CNI',
+        needsVerso: isVersoMode ? false : true,
+        nom: parsed.nom || null,
+        prenoms: parsed.prenoms || null,
+        dateNaissance: parsed.dateNaissance || null,
+        lieuNaissance: parsed.lieuNaissance || null,
+        nationalite: parsed.nationalite || null,
+        numeroDocument: parsed.numeroDocument || null,
+        dateDelivrance: parsed.dateDelivrance || null,
+        dateExpiration: parsed.dateExpiration || null,
+        confidence: parsed.confidence || 0.8,
+        adresse: parsed.adresse || null,
+        profession: parsed.profession || null,
+        nomPere: parsed.nomPere || null,
+        nomMere: parsed.nomMere || null
+      }
+      
+      if (!isMountedRef.current) return
+      handleScanResult(ocrData)
+      return
+
+    } catch (err: any) {
+      console.error('OCR error:', err)
+      if (!isMountedRef.current) return
+      
+      // Arrêter le spinner et afficher l'erreur
+      setIsAnalyzing(false)
+      setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
+      setShowManualCapture(true)
+      return
     }
   }
 
@@ -329,39 +409,9 @@ Réponds UNIQUEMENT avec ce JSON :
       setCapturedImageBase64(imageBase64)
       setCapturedMimeType(mimeType)
       
-      try {
-        const ocrResult = await scanDocument(processedBase64)
-        const completeResult: OCRData = {
-          documentType: ocrResult.documentType,
-          needsVerso: ocrResult.needsVerso,
-          nom: ocrResult.nom,
-          prenoms: ocrResult.prenoms,
-          dateNaissance: ocrResult.dateNaissance,
-          lieuNaissance: ocrResult.lieuNaissance,
-          nationalite: ocrResult.nationalite,
-          numeroDocument: ocrResult.numeroDocument,
-          dateDelivrance: ocrResult.dateDelivrance,
-          dateExpiration: ocrResult.dateExpiration,
-          confidence: ocrResult.confidence,
-          adresse: null,
-          profession: null,
-          nomPere: null,
-          nomMere: null
-        }
-
-        if (!isMountedRef.current) return
-        handleScanResult(completeResult)
-        return
-      } catch (err: any) {
-        console.error('OCR error:', err)
-        if (!isMountedRef.current) return
-        
-        // Arrêter le spinner et afficher l'erreur
-        setIsAnalyzing(false)
-        setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
-        setShowManualCapture(true)
-        return
-      }
+      // Utiliser la nouvelle fonction analyseImage avec l'API Anthropic
+      await analyseImage(processedBase64)
+      return
     } catch (error) {
       console.error('Erreur capture:', error)
       setError('Erreur lors de la capture. Veuillez réessayer.')
@@ -542,25 +592,11 @@ Réponds UNIQUEMENT avec ce JSON :
         return
       }
       
-      // Fallback sur Anthropic OCR si l'API sécurisée n'est pas disponible
-      console.log('Fallback sur Anthropic OCR')
+      // Utiliser l'API Anthropic directement
+      console.log('Analyse avec API Anthropic')
       if (enhanced.imageBase64 && enhanced.mimeType) {
-        try {
-          const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
-          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-          if (!isMountedRef.current) return
-          handleScanResult(data)
-          return
-        } catch (err: any) {
-          console.error('Fallback OCR error:', err)
-          if (!isMountedRef.current) return
-          
-          // Arrêter le spinner et afficher l'erreur
-          setIsAnalyzing(false)
-          setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
-          setShowManualCapture(true)
-          return
-        }
+        await analyseImage(enhanced.imageBase64)
+        return
       }
     } catch (e1) {
       if (!isMountedRef.current) return
@@ -571,12 +607,10 @@ Réponds UNIQUEMENT avec ce JSON :
         if (enhanced.imageBase64 && enhanced.mimeType) {
           try {
             const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
-            const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-            if (!isMountedRef.current) return
-            handleScanResult(data)
+            await analyseImage(compressedBase64)
             return
           } catch (err: any) {
-            console.error('Second fallback OCR error:', err)
+            console.error('Fallback OCR error:', err)
             if (!isMountedRef.current) return
             
             // Arrêter le spinner et afficher l'erreur
@@ -629,51 +663,13 @@ Réponds UNIQUEMENT avec ce JSON :
     try {
       if (capturedImageBase64 && capturedMimeType) {
         const compressedBase64 = await prepareForOCR(capturedImageBase64)
-        try {
-          const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-          if (!isMountedRef.current) return
-          handleScanResult(data)
-          return
-        } catch (err: any) {
-          console.error('OCR error:', err)
-          if (!isMountedRef.current) return
-          
-          // Arrêter le spinner et afficher l'erreur
-          setIsAnalyzing(false)
-          setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
-          setShowManualCapture(true)
-          return
-        }
+        await analyseImage(compressedBase64)
+        return
       }
     } catch (e1) {
       if (!isMountedRef.current) return
-      setAnalysisError(extractGeminiErrorMessage(e1))
-      await waitMs(2000)
-
-      try {
-        if (capturedImageBase64 && capturedMimeType) {
-          const compressedBase64 = await prepareForOCR(capturedImageBase64)
-          try {
-            const data = (await scanDocument(compressedBase64)) as unknown as OCRData
-            if (!isMountedRef.current) return
-            handleScanResult(data)
-            return
-          } catch (err: any) {
-            console.error('Second OCR error:', err)
-            if (!isMountedRef.current) return
-            
-            // Arrêter le spinner et afficher l'erreur
-            setIsAnalyzing(false)
-            setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
-            setShowManualCapture(true)
-            return
-          }
-        }
-      } catch (e2) {
-        if (!isMountedRef.current) return
-        setAnalysisError(extractGeminiErrorMessage(e2))
-        setCanRetry(true)
-      }
+      setAnalysisError('Erreur analyse - utilisez la saisie manuelle')
+      setCanRetry(true)
     } finally {
       if (isMountedRef.current) setIsAnalyzing(false)
     }
