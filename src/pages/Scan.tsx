@@ -119,51 +119,40 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   }
 
   const analyseImage = async (imageBase64: string) => {
-    setIsAnalyzing(true)
-    try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 30000) // 30 secondes pour l'Edge Function
-
-      const response = await fetch(
-        'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/ocr',
-        {
-          method: 'POST',
-          signal: controller.signal,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            imageBase64,
-            isVersoMode
-          })
-        }
-      )
-
-      clearTimeout(timeout)
-
-      if (!response.ok) {
-        throw new Error(`Edge Function error: ${response.status} ${response.statusText}`)
+    const response = await fetch(
+      'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/ocr',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: imageBase64 })
       }
+    )
 
-      const parsed = await response.json()
-      
-      // Vérifier si l'Edge Function a retourné une erreur
-      if (parsed.error) {
-        throw new Error(parsed.error)
-      }
-      
-      if (!isMountedRef.current) return
-      handleScanResult(parsed)
-      return
-
-    } catch (err: any) {
-      console.error('OCR error:', err)
-      if (!isMountedRef.current) return
-      
-      // Arrêter le spinner et afficher l'erreur
-      setIsAnalyzing(false)
-      setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
-      setShowManualCapture(true)
-      return
+    const parsed = await response.json()
+    console.log('OCR result:', parsed)
+    
+    // Transformer les données pour correspondre au format OCRData
+    const ocrData: OCRData = {
+      documentType: parsed.type_piece || 'CNI',
+      needsVerso: isVersoMode ? false : true,
+      nom: parsed.nom || null,
+      prenoms: parsed.prenom || null,
+      dateNaissance: parsed.date_naissance || null,
+      lieuNaissance: null,
+      nationalite: parsed.nationalite || null,
+      numeroDocument: parsed.numero_piece || null,
+      dateDelivrance: null,
+      dateExpiration: parsed.date_expiration || null,
+      confidence: 0.8,
+      adresse: null,
+      profession: null,
+      nomPere: null,
+      nomMere: null
     }
+    
+    if (!isMountedRef.current) return
+    handleScanResult(ocrData)
+    setIsAnalyzing(false)
   }
 
   // Fonction alternative avec API sécurisée
