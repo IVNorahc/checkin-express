@@ -3,8 +3,6 @@ import { apiService } from '../services/apiService'
 // import * as tf from '@tensorflow/tfjs'
 // import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
-// Vérifier que la clé API Anthropic est bien chargée
-console.log('Anthropic key:', !!apiService.isApiKeyAvailable())
 
 type ScanProps = {
   onBack: () => void
@@ -161,152 +159,6 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     setIsAnalyzing(false)
   }
 
-  // Fonction alternative avec API sécurisée
-  const analyzeWithSecureAPI = async (imageBase64: string, mimeType: string): Promise<OCRData | null> => {
-    if (!apiService.isApiKeyAvailable()) {
-      console.warn('API Key non disponible, utilisation de Gemini')
-      return null
-    }
-
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiService['apiKey']!,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mimeType,
-                  data: imageBase64
-                }
-              },
-              {
-                type: 'text',
-                text: isVersoMode ? `Tu es un expert en lecture de CNI sénégalaise CEDEAO (verso).
-Sur le VERSO de cette CNI sénégalaise :
-- Le NIN (Numéro d'Identification National) commence par "NIN" suivi de chiffres
-- L'adresse domicile
-- La profession
-- Le nom du père
-- Le nom de la mère
-
-Réponds UNIQUEMENT avec ce JSON :
-{
-  "numeroDocument": "NIN...",
-  "adresse": "",
-  "profession": "",
-  "nomPere": "",
-  "nomMere": "",
-  "confidence": 0.95
-}` : `Tu es un expert en lecture de CNI sénégalaise CEDEAO (recto).
-Lis TRÈS attentivement chaque chiffre et lettre.
-
-Sur le RECTO de cette CNI sénégalaise :
-- Les PRÉNOMS sont écrits en premier (souvent 2 mots)
-- Le NOM DE FAMILLE est en dessous des prénoms (souvent 1 mot)
-- La DATE DE NAISSANCE est au format JJ/MM/AAAA - lis chaque chiffre séparément
-- Le LIEU DE NAISSANCE est une ville sénégalaise
-- La DATE DE DÉLIVRANCE est la date d'émission de la carte
-- La DATE D'EXPIRATION est 10 ans après la délivrance
-
-IMPORTANT : 
-- Le numéro NIN est au VERSO, pas ici - laisse numeroDocument vide
-- Lis la ligne MRZ en bas pour vérifier les dates si illisibles
-- La ligne MRZ format : I<SEN[numéro]<<[date_naissance]...[date_expiration]
-
-Réponds UNIQUEMENT avec ce JSON :
-{
-  "documentType": "CNI",
-  "needsVerso": true,
-  "nom": "NOM_FAMILLE",
-  "prenoms": "PRENOM(S)",
-  "dateNaissance": "JJ/MM/AAAA",
-  "lieuNaissance": "VILLE",
-  "nationalite": "SENEGALAISE",
-  "numeroDocument": "",
-  "dateDelivrance": "JJ/MM/AAAA",
-  "dateExpiration": "JJ/MM/AAAA",
-  "confidence": 0.95
-}`
-              }
-            ]
-          }]
-        })
-      })
-
-      if (!response.ok) {
-        console.error('API sécurisée error:', response.status, response.statusText)
-        return null
-      }
-
-      const data = await response.json()
-      const content = data.content[0]?.text || ''
-      
-      // Parser le JSON de la réponse
-      let parsedData
-      try {
-        parsedData = JSON.parse(content)
-      } catch (e) {
-        console.error('Erreur parsing JSON API sécurisée:', e)
-        return null
-      }
-
-      // Mapper les champs selon le mode
-      if (isVersoMode) {
-        return {
-          documentType: 'CNI',
-          needsVerso: false,
-          nom: '',
-          prenoms: '',
-          dateNaissance: '',
-          lieuNaissance: '',
-          nationalite: '',
-          numeroDocument: parsedData.numeroDocument || '',
-          dateDelivrance: '',
-          dateExpiration: '',
-          confidence: parsedData.confidence || 0.95,
-          adresse: parsedData.adresse || '',
-          profession: parsedData.profession || '',
-          nomPere: parsedData.nomPere || '',
-          nomMere: parsedData.nomMere || ''
-        }
-      } else {
-        return {
-          documentType: parsedData.documentType || 'CNI',
-          needsVerso: parsedData.needsVerso !== false,
-          nom: parsedData.nom || '',
-          prenoms: parsedData.prenoms || '',
-          dateNaissance: parsedData.dateNaissance || '',
-          lieuNaissance: parsedData.lieuNaissance || '',
-          nationalite: parsedData.nationalite || '',
-          numeroDocument: parsedData.numeroDocument || '',
-          dateDelivrance: parsedData.dateDelivrance || '',
-          dateExpiration: parsedData.dateExpiration || '',
-          confidence: parsedData.confidence || 0.95,
-          adresse: '',
-          profession: '',
-          nomPere: '',
-          nomMere: ''
-        }
-      }
-    } catch (error) {
-      console.error('Erreur API sécurisée:', error)
-      return null
-    }
-  }
-
-  // Fonction pour arrêter complètement le flux caméra
   const stopCameraStream = () => {
     if (videoRef.current?.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
@@ -363,10 +215,10 @@ Réponds UNIQUEMENT avec ce JSON :
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(video, 0, 0)
       
-      const base64 = canvas.toDataURL('image/jpeg', 0.8)
-      const imageBase64 = base64.replace(/^data:image\/\w+;base64,/, '')
+      const capturedImage = canvas.toDataURL('image/jpeg', 0.8)
+      const imageBase64 = capturedImage.split(',')[1]
       
-      setCapturedImage(base64)
+      setCapturedImage(capturedImage)
       setCapturedImageBase64(imageBase64)
       setCapturedMimeType('image/jpeg')
       
@@ -545,16 +397,8 @@ Réponds UNIQUEMENT avec ce JSON :
     }
 
     try {
-      // Essayer d'abord avec l'API sécurisée
-      const secureApiData = await analyzeWithSecureAPI(enhanced.imageBase64, enhanced.mimeType)
-      
-      if (secureApiData && isMountedRef.current) {
-        handleScanResult(secureApiData)
-        return
-      }
-      
-      // Utiliser l'API Anthropic directement
-      console.log('Analyse avec API Anthropic')
+      // Utiliser directement l'Edge Function
+      console.log('Analyse avec Edge Function')
       if (enhanced.imageBase64 && enhanced.mimeType) {
         await analyseImage(enhanced.imageBase64)
         return
