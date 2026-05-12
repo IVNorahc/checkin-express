@@ -374,26 +374,56 @@ const handleAction = async (hotelId: string, newStatus: string) => {
   loadUsers()
 }
 
-const handleDelete = async (hotelId: string) => {
-  console.log('Tentative de suppression pour hotelId:', hotelId)
+const handleDelete = async (user: any) => {
+  const confirmation = window.confirm(
+    `⚠️ ATTENTION : Cela va supprimer DÉFINITIVEMENT le compte de ${user.hotel_name} (${user.email}).\n\nCette action est irréversible. Continuer ?` 
+  )
   
-  if (!confirm('ATTENTION : Supprimer définitivement ce compte et toutes ses données ?')) return
-  
-  const { data, error } = await supabaseAdmin
-    .from('hotels')
-    .delete()
-    .eq('id', hotelId)
-  
-  console.log('Supprimer result - Data:', JSON.stringify(data))
-  console.log('Supprimer result - Error:', JSON.stringify(error))
-  
-  if (error) {
-    alert('Erreur lors de la suppression: ' + error.message)
-    return
+  if (!confirmation) return
+
+  try {
+    // 1. Supprime les données clients de cet hôtel
+    const { error: clientsError } = await supabaseAdmin
+      .from('clients')
+      .delete()
+      .eq('hotel_id', user.id)
+    
+    if (clientsError) console.log('Erreur suppression clients:', clientsError)
+
+    // 2. Supprime le profil (si la table profiles existe)
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', user.user_id)
+    
+    if (profileError) console.log('Erreur suppression profile:', profileError)
+
+    // 3. Supprime l'hôtel
+    const { error: hotelError } = await supabaseAdmin
+      .from('hotels')
+      .delete()
+      .eq('id', user.id)
+    
+    if (hotelError) console.log('Erreur suppression hotel:', hotelError)
+
+    // 4. Supprime le compte auth.users (le plus important !)
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(
+      user.user_id
+    )
+    
+    if (authError) {
+      console.error('Erreur suppression auth:', authError)
+      alert('Erreur lors de la suppression du compte authentification : ' + authError.message)
+      return
+    }
+
+    alert(`Compte ${user.hotel_name} supprimé définitivement ✅`)
+    await loadUsers() // Rafraîchit la liste
+
+  } catch (err) {
+    console.error('Erreur complète:', err)
+    alert('Erreur lors de la suppression : ' + String(err))
   }
-  
-  alert('Compte supprimé avec succès !')
-  loadUsers()
 }
 
   const fetchAllData = async () => {
@@ -723,7 +753,7 @@ const handleDelete = async (hotelId: string) => {
                         
                         {/* Supprimer */}
                         <button
-                          onClick={() => handleDelete(hotel.id)}
+                          onClick={() => handleDelete(hotel)}
                           className="bg-red-600 hover:bg-red-700 text-white 
                                      px-2 py-1 rounded text-xs font-medium"
                         >
@@ -832,7 +862,7 @@ const handleDelete = async (hotelId: string) => {
                   
                   {/* Supprimer */}
                   <button
-                    onClick={() => handleDelete(hotel.id)}
+                    onClick={() => handleDelete(hotel)}
                     className="bg-red-600 hover:bg-red-700 text-white 
                                px-3 py-2 rounded text-xs font-medium flex-1"
                   >
