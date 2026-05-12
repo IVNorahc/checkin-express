@@ -331,109 +331,41 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     return "Erreur d'analyse"
   }
 
-  const handleCapture = async () => {
-    if (isAnalyzing) return
-
-    setIsAnalyzing(true)
-    setAnalysisError(null)
-    setCanRetry(false)
-    setCapturedImageBase64(null)
-
-    // Laisser l'autofocus se stabiliser
-    await waitMs(500)
-
-    // Arrêter la caméra après capture
-    stopCamera()
-
-    const screenshot = await captureHighQuality()
-    if (!screenshot) {
-      if (isMountedRef.current) {
-        setAnalysisError("Impossible de capturer la caméra")
-        setCanRetry(true)
-        setIsAnalyzing(false)
-      }
-      return
-    }
-
-    const normalized = normalizeScreenshot(screenshot, 'image/jpeg')
-
-    // Afficher rapidement un aperçu pendant la préparation/analysis.
-    if (isMountedRef.current) {
-      setCapturedImage(normalized.previewSrc)
-    }
-
-    // Re-coder en JPEG haute résolution pour améliorer la qualité d'OCR.
-    const enhanced = await (async () => {
-      const img = new Image()
-      img.src = normalized.previewSrc
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = () => reject(new Error('Image de capture invalide'))
-      })
-
-      const canvas = document.createElement('canvas')
-      canvas.width = 1920
-      canvas.height = 1080
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Canvas non supporté')
-
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.95)
-      const match = jpegDataUrl.match(/^data:image\/jpeg;base64,(.*)$/)
-      const base64 = match?.[1] ?? jpegDataUrl.split(',')[1]
-
-      return {
-        previewSrc: jpegDataUrl,
-        imageBase64: base64,
-        mimeType: 'image/jpeg',
-      }
-    })()
-
-    if (isMountedRef.current) {
-      setCapturedImage(enhanced.previewSrc)
-      setCapturedImageBase64(enhanced.imageBase64)
-      setCapturedMimeType(enhanced.mimeType)
-    }
-
-    try {
-      // Utiliser directement l'Edge Function
-      console.log('Analyse avec Edge Function')
-      if (enhanced.imageBase64 && enhanced.mimeType) {
-        await analyseImage(enhanced.imageBase64)
-        return
-      }
-    } catch (e1) {
-      if (!isMountedRef.current) return
-      
-      // Si l'API sécurisée échoue, essayer Anthropic OCR
-      try {
-        console.log('Fallback sur Anthropic OCR après erreur')
-        if (enhanced.imageBase64 && enhanced.mimeType) {
-          try {
-            const compressedBase64 = await prepareForOCR(enhanced.imageBase64)
-            await analyseImage(compressedBase64)
-            return
-          } catch (err: any) {
-            console.error('Fallback OCR error:', err)
-            if (!isMountedRef.current) return
-            
-            // Arrêter le spinner et afficher l'erreur
-            setIsAnalyzing(false)
-            setError(err.message || 'OCR indisponible - utilisez la saisie manuelle')
-            setShowManualCapture(true)
-            return
-          }
-        }
-      } catch (e2) {
-        if (!isMountedRef.current) return
-        setAnalysisError(extractGeminiErrorMessage(e2))
-        setCanRetry(true)
-      }
-    } finally {
-      if (isMountedRef.current) setIsAnalyzing(false)
-    }
+  const capturePhoto = async () => {
+  if (!videoRef.current) return
+  
+  const video = videoRef.current
+  
+  // Vérifier que la vidéo est bien en lecture
+  if (video.paused || video.ended || video.readyState < 2) {
+    console.error('Vidéo pas en lecture - état:', video.readyState)
+    setError('Vidéo pas prête. Réessayez.')
+    return
   }
+  
+  const canvas = document.createElement('canvas')
+  canvas.width = video.videoWidth || 1280
+  canvas.height = video.videoHeight || 720
+  
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  
+  const dataURL = canvas.toDataURL('image/jpeg', 0.8)
+  
+  if (!dataURL || dataURL === 'data:,') {
+    console.error('Capture échouée - canvas vide')
+    setError('Capture échouée. Réessayez.')
+    return
+  }
+  
+  const imageBase64 = dataURL.split(',')[1]
+  console.log('Image capturée, taille base64:', imageBase64.length)
+  
+  setCapturedImage(dataURL)
+  await analyseImage(imageBase64)
+}
 
   const handleRetry = async () => {
     setCapturedImage(null)
@@ -597,7 +529,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               <div className="mt-6 flex flex-col items-center gap-3">
                 <button
                   type="button"
-                  onClick={handleCapture}
+                  onClick={capturePhoto}
                   className="w-full md:w-auto px-8 h-12 rounded-full bg-blue-700 text-white hover:bg-blue-800 transition-colors font-medium"
                 >
                   Scanner le verso
@@ -656,7 +588,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 {!showManualCapture && (
                   <button
                     type="button"
-                    onClick={handleCapture}
+                    onClick={capturePhoto}
                     disabled={isAnalyzing}
                     className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
                   >
@@ -668,7 +600,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 {showManualCapture && (
                   <button
                     type="button"
-                    onClick={handleCapture}
+                    onClick={capturePhoto}
                     disabled={isAnalyzing}
                     className="w-full h-12 sm:h-14 rounded-xl bg-orange-600 text-white text-base sm:text-lg font-bold hover:bg-orange-700 transition-colors"
                   >
@@ -707,7 +639,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               {!showManualCapture && (
                 <button
                   type="button"
-                  onClick={handleCapture}
+                  onClick={capturePhoto}
                   disabled={isAnalyzing}
                   className="w-full h-12 sm:h-14 rounded-xl bg-blue-700 text-white text-base sm:text-lg font-bold hover:bg-blue-800 transition-colors"
                 >
@@ -719,7 +651,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               {showManualCapture && (
                 <button
                   type="button"
-                  onClick={handleCapture}
+                  onClick={capturePhoto}
                   disabled={isAnalyzing}
                   className="w-full h-12 sm:h-14 rounded-xl bg-orange-600 text-white text-base sm:text-lg font-bold hover:bg-orange-700 transition-colors"
                 >
