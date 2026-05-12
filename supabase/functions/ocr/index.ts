@@ -13,7 +13,25 @@ serve(async (req: Request) => {
   try {
     const { imageBase64 } = await req.json()
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const visionResponse = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${Deno.env.get('GOOGLE_VISION_API_KEY')}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: imageBase64 },
+            features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+          }]
+        })
+      }
+    )
+
+    const visionData = await visionResponse.json()
+    const rawText = visionData.responses?.[0]?.fullTextAnnotation?.text ?? ''
+
+    // Parse le texte extrait avec Claude
+    const parseResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -25,27 +43,19 @@ serve(async (req: Request) => {
         max_tokens: 1024,
         messages: [{
           role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: 'image/jpeg',
-                data: imageBase64
-              }
-            },
-            {
-              type: 'text',
-              text: 'Extrais les informations de cette pièce d\'identité en JSON uniquement, sans texte autour : {"nom":"","prenom":"","date_naissance":"","nationalite":"","numero_piece":"","type_piece":"","date_expiration":""}'
-            }
-          ]
+          content: `Voici le texte brut extrait d'une pièce d'identité :
+          
+${rawText}
+
+Extrais les informations en JSON uniquement, sans texte autour :
+{"nom":"","prenom":"","date_naissance":"","nationalite":"","numero_piece":"","type_piece":"","date_expiration":""}`
         }]
       })
     })
 
-    const data = await response.json()
-    const text = data.content?.[0]?.text ?? '{}'
-    const clean = text.replace(/```json|```/g, '').trim()
+    const parseData = await parseResponse.json()
+    const result = parseData.content?.[0]?.text ?? '{}'
+    const clean = result.replace(/```json|```/g, '').trim()
 
     return new Response(clean, {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -53,7 +63,7 @@ serve(async (req: Request) => {
 
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: String(error) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
