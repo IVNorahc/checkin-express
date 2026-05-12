@@ -5,6 +5,8 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
+import ConfirmEmail from './pages/ConfirmEmail'
+import SetupHotel from './pages/SetupHotel'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminAnalytics from './pages/AdminAnalytics'
 import AdminParametres from './pages/AdminParametres'
@@ -67,11 +69,30 @@ export default function App() {
           return  // STOP - ne pas vérifier le profil
         }
         
-        // Rediriger immédiatement vers dashboard sans attendre le profil
+        // Vérifier si l'email est confirmé
+        if (!sessionData.session.user.email_confirmed_at) {
+          setCurrentPage('confirm-email-pending')
+          setIsCheckingSession(false)
+          return
+        }
+        
+        // Vérifier si l'hôtel existe
+        const { data: hotel } = await supabase
+          .from('hotels')
+          .select('*')
+          .eq('user_id', sessionData.session.user.id)
+          .single()
+        
+        if (!hotel) {
+          setCurrentPage('setup-hotel')
+          setIsCheckingSession(false)
+          return
+        }
+        
+        // Rediriger vers dashboard si tout est OK
         setCurrentPage('dashboard')
         setIsCheckingSession(false)
         
-        // Le profil sera récupéré dans le composant Dashboard lui-même
       } catch (error) {
         console.error('Session error:', error)
         setCurrentPage('login')
@@ -138,6 +159,12 @@ export default function App() {
         setCurrentPage('login')
       } else if (path === '/register') {
         setCurrentPage('register')
+      } else if (path === '/confirm-email') {
+        setCurrentPage('confirm-email')
+      } else if (path === '/confirm-email-pending') {
+        setCurrentPage('confirm-email-pending')
+      } else if (path === '/setup-hotel') {
+        setCurrentPage('setup-hotel')
       } else if (path === '/subscribe') {
         setCurrentPage('subscribe')
       } else if (path === '/pricing') {
@@ -173,7 +200,10 @@ export default function App() {
       'login': '/login',
       'register': '/register',
       'subscribe': '/subscribe',
-      'pricing': '/pricing'
+      'pricing': '/pricing',
+      'confirm-email': '/confirm-email',
+      'confirm-email-pending': '/confirm-email-pending',
+      'setup-hotel': '/setup-hotel'
     }
 
     if (urlMap[currentPage] && window.location.pathname !== urlMap[currentPage]) {
@@ -299,6 +329,36 @@ export default function App() {
             }}
             onConfirm={() => setCurrentPage('dashboard')}
           />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'confirm-email') {
+    return (
+      <Layout currentPage="confirm-email" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <ConfirmEmail />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'confirm-email-pending') {
+    return (
+      <Layout currentPage="confirm-email-pending" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <ConfirmEmail />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (currentPage === 'setup-hotel') {
+    return (
+      <Layout currentPage="setup-hotel" onNavigate={setCurrentPage} showNavigation={true}>
+        <div className="page-transition">
+          <SetupHotel />
         </div>
       </Layout>
     )

@@ -28,13 +28,53 @@ export default function Login({ onRegisterClick }: LoginProps) {
       return
     }
 
+    // Vérifier si l'email est confirmé
+    if (data.session && !data.session.user.email_confirmed_at) {
+      setFeedback({ 
+        type: 'error', 
+        text: 'Veuillez d\'abord confirmer votre email avant de vous connecter.' 
+      })
+      setIsLoading(false)
+      return
+    }
+
     // Rediriger immédiatement sans attendre le profil hôtel
-    if (data.session) {
+    if (data.session && data.session.user.email_confirmed_at) {
       window.location.replace(window.location.origin + '/dashboard')
       return
     }
 
     setIsLoading(false)
+  }
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setFeedback({ type: 'error', text: 'Veuillez d\'abord entrer votre adresse email.' })
+      return
+    }
+
+    setIsLoading(true)
+    setFeedback(null)
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email
+      })
+
+      if (error) {
+        setFeedback({ type: 'error', text: 'Impossible d\'envoyer l\'email de confirmation.' })
+      } else {
+        setFeedback({ 
+          type: 'success', 
+          text: `Email de confirmation renvoyé à ${email}. Vérifiez votre boîte de réception.` 
+        })
+      }
+    } catch (err) {
+      setFeedback({ type: 'error', text: 'Une erreur est survenue.' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -201,11 +241,35 @@ export default function Login({ onRegisterClick }: LoginProps) {
                 marginTop: "16px",
                 fontSize: "14px",
                 textAlign: "center",
-                color: feedback.type === 'success' ? '#16a34a' : '#dc2626'
+                color: feedback.type === 'success' ? '#16a34a' : '#dc2626',
+                marginBottom: "12px"
               }}
             >
               {feedback.text}
             </p>
+          )}
+
+          {feedback && feedback.type === 'error' && feedback.text.includes('confirmer votre email') && (
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={isLoading}
+              style={{
+                background: "transparent",
+                color: "#1e3a8a",
+                border: "1px solid #1e3a8a",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                width: "100%",
+                marginTop: "8px"
+              }}
+              className="hover:bg-blue-800 hover:text-white"
+            >
+              {isLoading ? 'Envoi en cours...' : 'Renvoyer l\'email de confirmation'}
+            </button>
           )}
 
           <div style={{
