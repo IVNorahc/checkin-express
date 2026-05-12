@@ -13,49 +13,36 @@ serve(async (req: Request) => {
   try {
     const { imageBase64 } = await req.json()
 
-    const visionResponse = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${Deno.env.get('GOOGLE_VISION_API_KEY')}`,
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requests: [{
-            image: { content: imageBase64 },
-            features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+          contents: [{
+            parts: [
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: imageBase64
+                }
+              },
+              {
+                text: `Analyse cette pièce d'identité et extrais les informations en JSON uniquement, sans texte autour, sans balises markdown :
+{"nom":"","prenom":"","date_naissance":"","nationalite":"","numero_piece":"","type_piece":"CIN ou Passeport ou Titre de séjour","date_expiration":""}
+Si une information est illisible ou absente, laisse le champ vide.`
+              }
+            ]
           }]
         })
       }
     )
 
-    const visionData = await visionResponse.json()
-    const rawText = visionData.responses?.[0]?.fullTextAnnotation?.text ?? ''
-
-    // Parse le texte extrait avec Claude
-    const parseResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY') ?? '',
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: `Voici le texte brut extrait d'une pièce d'identité :
-          
-${rawText}
-
-Extrais les informations en JSON uniquement, sans texte autour :
-{"nom":"","prenom":"","date_naissance":"","nationalite":"","numero_piece":"","type_piece":"","date_expiration":""}`
-        }]
-      })
-    })
-
-    const parseData = await parseResponse.json()
-    const result = parseData.content?.[0]?.text ?? '{}'
-    const clean = result.replace(/```json|```/g, '').trim()
+    const geminiData = await geminiResponse.json()
+    console.log('Gemini response:', JSON.stringify(geminiData))
+    
+    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
+    const clean = text.replace(/```json|```/g, '').trim()
 
     return new Response(clean, {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
