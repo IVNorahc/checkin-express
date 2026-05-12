@@ -23,7 +23,22 @@ export default function Login({ onRegisterClick }: LoginProps) {
     })
 
     if (error) {
-      setFeedback({ type: 'error', text: 'Email ou mot de passe incorrect' })
+      // Gestion spécifique des erreurs pour les comptes supprimés
+      let errorMessage = 'Email ou mot de passe incorrect'
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Email ou mot de passe incorrect'
+      } else if (error.message?.includes('User not found')) {
+        errorMessage = 'Ce compte n\'existe pas ou a été supprimé'
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Veuillez d\'abord confirmer votre email avant de vous connecter'
+      } else if (error.status === 400) {
+        errorMessage = 'Identifiants invalides. Vérifiez votre email et mot de passe.'
+      } else if (error.status === 422) {
+        errorMessage = 'Ce compte a été désactivé ou supprimé. Contactez le support.'
+      }
+      
+      setFeedback({ type: 'error', text: errorMessage })
       setIsLoading(false)
       return
     }
