@@ -39,6 +39,91 @@ function AppContent() {
     nomMere: string | null
   } | null>(null)
 
+  // Guard spécifique pour /setup-hotel
+  const SetupHotelRoute = ({ children }: { children: React.ReactNode }) => {
+    const [session, setSession] = useState<any>(null)
+    const [hasHotel, setHasHotel] = useState<boolean | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+      const checkAuthAndHotel = async () => {
+        try {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+          
+          if (sessionError || !sessionData.session) {
+            window.location.href = '/login'
+            return
+          }
+          
+          setSession(sessionData.session)
+          
+          if (!sessionData.session.user.email_confirmed_at) {
+            window.location.href = '/confirm-email-pending'
+            return
+          }
+          
+          // Vérifie si l'utilisateur a déjà un hôtel
+          const { data: hotel } = await supabase
+            .from('hotels')
+            .select('id')
+            .eq('user_id', sessionData.session.user.id)
+            .single()
+          
+          if (hotel) {
+            window.location.href = '/dashboard' // Déjà un hôtel, va au dashboard
+          } else {
+            setHasHotel(false)
+          }
+          
+        } catch (error) {
+          console.error('SetupHotelRoute error:', error)
+          window.location.href = '/login'
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      checkAuthAndHotel()
+    }, [])
+
+    if (loading) {
+      return (
+        <div style={{
+          minHeight: "100vh",
+          background: "#e8f4fd",
+          backgroundImage: "url('/hotel-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          <div style={{
+            background: "rgba(255,255,255,0.95)",
+            borderRadius: "20px",
+            padding: "48px",
+            textAlign: "center",
+            boxShadow: "0 20px 60px rgba(30,58,138,0.15)"
+          }}>
+            <div style={{
+              width: "40px",
+              height: "40px",
+              border: "4px solid #bfdbfe",
+              borderTop: "4px solid #1e3a8a",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto"
+            }}></div>
+            <p style={{ color: "#1e3a8a", marginTop: "16px" }}>Vérification...</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (!session?.user || hasHotel === null) return null
+    return <>{children}</>
+  }
+
   // Middleware de protection - vérification session
   const ProtectedRouteWrapper = ({ children }: { children: React.ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true)
@@ -154,16 +239,32 @@ function AppContent() {
       <Route path="/register" element={<Register onLoginClick={() => window.location.href = '/login'} />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
       <Route path="/confirm-email-pending" element={<ConfirmEmail />} />
-      <Route path="/setup-hotel" element={<SetupHotel />} />
+      <Route path="/setup-hotel" element={
+        <SetupHotelRoute>
+          <SetupHotel />
+        </SetupHotelRoute>
+      } />
       
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/analytics" element={<AdminAnalytics />} />
-      <Route path="/admin/parametres" element={<AdminParametres />} />
+      <Route path="/admin" element={
+        <ProtectedRouteWrapper>
+          <AdminDashboard />
+        </ProtectedRouteWrapper>
+      } />
+      <Route path="/admin/analytics" element={
+        <ProtectedRouteWrapper>
+          <AdminAnalytics />
+        </ProtectedRouteWrapper>
+      } />
+      <Route path="/admin/parametres" element={
+        <ProtectedRouteWrapper>
+          <AdminParametres />
+        </ProtectedRouteWrapper>
+      } />
       
       <Route path="/subscribe" element={<Subscribe />} />
       <Route path="/pricing" element={<Subscribe />} />
       
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
       
       <Route path="/dashboard" element={
         <ProtectedRouteWrapper>
@@ -243,7 +344,7 @@ function AppContent() {
         </ProtectedRouteWrapper>
       } />
       
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }
