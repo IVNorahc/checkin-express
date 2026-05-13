@@ -9,8 +9,6 @@ type DashboardProps = {
   onSubscribeClick?: () => void
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000
-
 export default function Dashboard({ onRequireLogin, onSubscribeClick }: DashboardProps) {
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
@@ -70,6 +68,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           subscription_id: null,
         })
         setHotelInfo(hotelData)
+        setNow(Date.now())
         // Vérifier si les informations de base sont manquantes
         if (!hotelData.hotel_name || !hotelData.phone) {
           setNeedsOnboarding(true)
@@ -141,47 +140,36 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
-  const daysRemaining = useMemo(() => {
-    if (!profile?.trial_end) return 0
-    const trialEnd = new Date(profile.trial_end).getTime()
-    const diff = trialEnd - now
-    return Math.max(0, Math.ceil(diff / DAY_MS))
+  const daysLeft = useMemo(() => {
+    const te = profile?.trial_end ? new Date(profile.trial_end) : null
+    if (!te) return 0
+    return Math.max(0, Math.ceil((te.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
   }, [profile, now])
 
   const trialBanner = useMemo(() => {
     if (profile?.status === 'active') {
       return null // Cacher le bandeau d'essai pour les abonnés
     }
-    
+
     if (profile?.status === 'trial') {
-      if (daysRemaining >= 3) {
+      if (daysLeft > 0) {
+        const jourLabel = daysLeft > 1 ? 'jours' : 'jour'
+        const restantLabel = daysLeft > 1 ? 'restants' : 'restant'
         return {
           className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
-          text: `Essai gratuit — ${daysRemaining} jours restants`,
+          text: `Essai gratuit — ${daysLeft} ${jourLabel} ${restantLabel}`,
         }
       }
-      if (daysRemaining === 2) {
-        return {
-          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
-          text: 'Votre essai se termine bientôt !',
-        }
-      }
-      if (daysRemaining === 1) {
-        return {
-          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
-          text: "Dernier jour d'essai !",
-        }
-      }
-      if (daysRemaining === 0) {
+      if (daysLeft === 0) {
         return {
           className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
           text: 'Votre essai est terminé.',
         }
       }
     }
-    
+
     return null
-  }, [profile, daysRemaining])
+  }, [profile, daysLeft])
 
   const handleSubscribe = () => {
     window.open('https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02', '_blank')
@@ -265,7 +253,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   }
 
   // If trial is expired, show blocking page
-  if (profile?.status === 'trial' && daysRemaining === 0) {
+  if (profile?.status === 'trial' && daysLeft === 0) {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
