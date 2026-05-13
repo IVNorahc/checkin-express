@@ -45,44 +45,38 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
       backgroundPosition: "center",
       backgroundAttachment: "fixed"
     }}>
-      <div style={{
-        minHeight: "100vh",
-        background: "rgba(232,244,253,0.60)",
-        backdropFilter: "blur(1px)",
-        padding: "16px 16px"
-      }} className="min-h-screen w-full px-4 py-4 pb-12 overflow-x-hidden">
-        <div style={{maxWidth: "1200px", margin: "0 auto"}}>
+      <div
+        className="min-h-screen w-full overflow-x-hidden p-4 md:p-8 pb-12"
+        style={{
+          minHeight: '100vh',
+          background: 'rgba(232,244,253,0.60)',
+          backdropFilter: 'blur(1px)',
+        }}
+      >
+        <div className="mx-auto max-w-6xl">
           {/* En-tête */}
-          <div style={{textAlign: "center", marginBottom: "24px"}}>
-            <div className="flex justify-center mb-4">
-              <img 
-                src="/percepta-logo.png" 
+          <div className="mb-6 text-center md:mb-8">
+            <div className="mb-4 flex justify-center">
+              <img
+                src="/percepta-logo.png"
                 alt="Percepta"
                 className="h-12 w-auto object-contain"
               />
             </div>
-            <h1 style={{color: "#1e3a8a", fontSize: "32px", fontWeight: "800", margin: "0 0 16px"}}>
+            <h1 className="mb-4 text-2xl font-extrabold text-[#1e3a8a] md:text-4xl">
               Choisissez votre formule
             </h1>
-            <p style={{color: "#64748b", fontSize: "16px", margin: 0}}>
+            <p className="text-base text-slate-500 md:text-lg">
               Sans engagement - Annulation à tout moment
             </p>
           </div>
 
           {/* Bannière de bienvenue */}
           {showWelcome && (
-            <div style={{
-              marginBottom: "16px",
-              background: "rgba(30,58,138,0.15)",
-              backdropFilter: "blur(1px)",
-              border: "1px solid rgba(134,239,172,0.5)",
-              borderRadius: "12px",
-              padding: "16px",
-              textAlign: "center",
-              maxWidth: "600px",
-              margin: "0 auto 16px"
-            }}>
-              <p style={{color: "#166534", fontWeight: "600", margin: 0}}>
+            <div
+              className="mx-auto mb-4 max-w-2xl rounded-xl border border-green-200/50 bg-[rgba(30,58,138,0.15)] p-4 text-center backdrop-blur-sm md:mb-6 md:p-8"
+            >
+              <p className="m-0 font-semibold text-green-800">
                 Votre compte a été créé avec succès ! Complétez votre inscription.
               </p>
             </div>
@@ -90,32 +84,16 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
 
           {/* Message de paiement */}
           {showRefresh && (
-            <div style={{
-              marginBottom: "16px",
-              background: "rgba(219,234,254,0.9)",
-              backdropFilter: "blur(1px)",
-              border: "1px solid rgba(147,197,253,0.5)",
-              borderRadius: "12px",
-              padding: "16px",
-              textAlign: "center",
-              maxWidth: "600px",
-              margin: "0 auto 16px"
-            }}>
-              <p style={{color: "#1e3a8a", fontWeight: "600", marginBottom: "16px"}}>
+            <div
+              className="mx-auto mb-4 max-w-2xl rounded-xl border border-blue-200/50 bg-blue-50/90 p-4 text-center backdrop-blur-sm md:mb-6 md:p-8"
+            >
+              <p className="mb-4 font-semibold text-[#1e3a8a]">
                 Une fois votre paiement effectué, cliquez ci-dessous.
               </p>
               <button
+                type="button"
                 onClick={handleRefresh}
-                style={{
-                  background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
-                  color: "white",
-                  borderRadius: "10px",
-                  padding: "12px 24px",
-                  fontWeight: "600",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "14px"
-                }}
+                className="cursor-pointer rounded-lg bg-gradient-to-br from-[#1e3a8a] to-[#4a90d9] px-6 py-3 text-sm font-semibold text-white"
               >
                 Actualiser mon accès
               </button>
@@ -123,258 +101,158 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
           )}
 
           {/* Social Proof */}
-          <div style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "32px",
-            marginBottom: "16px",
-            flexWrap: "wrap"
-          }}>
-            <div style={{textAlign: "center"}}>
-              <p style={{
-                color: "#1e3a8a",
-                fontSize: "28px",
-                fontWeight: "800",
-                margin: "0 0 4px"
-              }}>30s</p>
-              <p style={{
-                color: "#64748b",
-                fontSize: "13px",
-                margin: 0
-              }}>Temps de check-in</p>
+          <div className="mx-auto mb-8 grid max-w-4xl grid-cols-2 gap-4 text-center md:grid-cols-4 md:gap-6">
+            <div>
+              <p className="mb-1 text-2xl font-extrabold text-[#1e3a8a] md:text-3xl">30s</p>
+              <p className="text-xs text-slate-500 md:text-sm">Temps de check-in</p>
             </div>
-            <div style={{textAlign: "center"}}>
-              <p style={{
-                color: "#1e3a8a",
-                fontSize: "28px",
-                fontWeight: "800",
-                margin: "0 0 4px"
-              }}>100%</p>
-              <p style={{
-                color: "#64748b",
-                fontSize: "13px",
-                margin: 0
-              }}>Conforme RGPD</p>
+            <div>
+              <p className="mb-1 text-2xl font-extrabold text-[#1e3a8a] md:text-3xl">100%</p>
+              <p className="text-xs text-slate-500 md:text-sm">Conforme RGPD</p>
             </div>
-            <div style={{textAlign: "center"}}>
-              <p style={{
-                color: "#1e3a8a",
-                fontSize: "28px",
-                fontWeight: "800",
-                margin: "0 0 4px"
-              }}>7j</p>
-              <p style={{
-                color: "#64748b",
-                fontSize: "13px",
-                margin: 0
-              }}>Essai gratuit</p>
+            <div>
+              <p className="mb-1 text-2xl font-extrabold text-[#1e3a8a] md:text-3xl">7j</p>
+              <p className="text-xs text-slate-500 md:text-sm">Essai gratuit</p>
             </div>
-            <div style={{textAlign: "center"}}>
-              <p style={{
-                color: "#1e3a8a",
-                fontSize: "28px",
-                fontWeight: "800",
-                margin: "0 0 4px"
-              }}>0€</p>
-              <p style={{
-                color: "#64748b",
-                fontSize: "13px",
-                margin: 0
-              }}>Sans engagement</p>
+            <div>
+              <p className="mb-1 text-2xl font-extrabold text-[#1e3a8a] md:text-3xl">0€</p>
+              <p className="text-xs text-slate-500 md:text-sm">Sans engagement</p>
             </div>
           </div>
 
           {/* Cartes de tarification */}
-          <div className="flex flex-col md:flex-row gap-8 justify-center items-center max-w-5xl mx-auto px-4 w-full mt-8">
-            
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 px-4 md:grid-cols-2">
             {/* STARTER */}
-            <div style={{
-              background: "rgba(255,255,255,0.95)",
-              backdropFilter: "blur(1px)",
-              border: "2px solid rgba(191,219,254,0.5)",
-              borderRadius: "20px",
-              boxShadow: "0 8px 32px rgba(30,58,138,0.1)",
-              padding: "24px",
-              display: "flex",
-              flexDirection: "column"
-            }} className="w-full max-w-sm mx-auto flex-1">
-              <div style={{textAlign: "center", flex: 1}}>
-                <h3 style={{color: "#1e3a8a", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
-                  Starter
-                </h3>
-                <p style={{color: "#64748b", marginBottom: "16px"}}>
-                  Idéal pour les petits hôtels
-                </p>
-                
-                <div style={{fontSize: "32px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "16px"}}>
-                  49,99{'€'}
-                  <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
+            <div
+              className="flex w-full flex-col rounded-[20px] border-2 border-blue-200/50 bg-white/95 p-4 shadow-lg shadow-blue-900/10 backdrop-blur-sm md:p-8"
+            >
+              <div className="flex flex-1 flex-col text-center">
+                <h3 className="mb-2 text-xl font-bold text-[#1e3a8a] md:text-2xl">Starter</h3>
+                <p className="mb-4 text-slate-500">Idéal pour les petits hôtels</p>
+
+                <div className="mb-4 text-3xl font-bold text-[#1e3a8a] md:text-5xl">
+                  49,99€
+                  <span className="text-sm font-normal md:text-base">/mois</span>
                 </div>
-                
-                <ul style={{listStyle: "none", padding: 0, margin: "0 0 16px", textAlign: "left"}}>
+
+                <ul className="mb-4 flex flex-1 list-none flex-col gap-0 p-0 text-left">
                   {[
-                    "200 scans inclus/mois",
-                    "Fiches de police PDF", 
-                    "Signature électronique",
-                    "Historique clients",
-                    "Support email"
+                    '200 scans inclus/mois',
+                    'Fiches de police PDF',
+                    'Signature électronique',
+                    'Historique clients',
+                    'Support email',
                   ].map((feature) => (
-                    <li key={feature} style={{
-                      color: "#1e293b", 
-                      fontSize: "14px", 
-                      padding: "6px 0",
-                      borderBottom: "1px solid rgba(191,219,254,0.3)",
-                      display: "flex",
-                      alignItems: "center"
-                    }}>
-                      <svg className="w-5 h-5 text-green-500 flex-shrink-0" 
-                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" 
-                              strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <li
+                      key={feature}
+                      className="flex items-center border-b border-blue-200/30 py-1.5 text-sm text-slate-800 md:text-[15px]"
+                    >
+                      <svg
+                        className="h-5 w-5 flex-shrink-0 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span style={{marginLeft: "8px"}}>{feature}</span>
+                      <span className="ml-2">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                
+
                 <button
-                  onClick={() => handlePlan("starter")}
-                  disabled={loading === "starter"}
-                  style={{
-                    background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
-                    color: "white",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 16px rgba(30,58,138,0.3)",
-                    border: "none",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    width: "100%",
-                    opacity: loading === "starter" ? 0.7 : 1
-                  }}
+                  type="button"
+                  onClick={() => handlePlan('starter')}
+                  disabled={loading === 'starter'}
+                  className="w-full cursor-pointer rounded-xl bg-gradient-to-br from-[#1e3a8a] to-[#4a90d9] py-4 text-base font-bold text-white shadow-md shadow-blue-900/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {loading === "starter" ? "Redirection..." : "Choisir Starter"}
+                  {loading === 'starter' ? 'Redirection...' : 'Choisir Starter'}
                 </button>
-                
-                <p style={{fontSize: "12px", color: "#94a3b8", marginTop: "12px", textAlign: "center"}}>
-                  0,25{'€'}/scan au-delà de 200
+
+                <p className="mt-3 text-center text-xs text-slate-400 md:text-sm">
+                  0,25€/scan au-delà de 200
                 </p>
               </div>
             </div>
 
             {/* BUSINESS */}
-            <div style={{
-              background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
-              border: "2px solid #4a90d9",
-              borderRadius: "20px",
-              boxShadow: "0 16px 48px rgba(30,58,138,0.4)",
-              padding: "16px 24px",
-              display: "flex",
-              flexDirection: "column",
-              transform: "scale(1.05)",
-              maxHeight: "75vh",
-              overflowY: "auto"
-            }} className="w-full max-w-sm mx-auto flex-1 flex flex-col">
-              <div className="flex justify-center mb-4">
-                <span className="bg-yellow-400 text-blue-900 font-bold 
-                                 px-5 py-2 rounded-full text-sm flex items-center gap-1">
-              <span>Plus populaire</span>
+            <div
+              className="relative flex w-full flex-col overflow-y-auto rounded-[20px] border-2 border-[#4a90d9] bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] p-4 shadow-xl shadow-blue-900/40 md:max-h-none md:p-8"
+              style={{ maxHeight: 'min(75vh, 900px)' }}
+            >
+              <div className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 -translate-y-1/2 justify-center">
+                <span className="flex items-center gap-1 rounded-full bg-yellow-400 px-5 py-2 text-sm font-bold text-blue-900 shadow-md">
+                  Plus populaire
                 </span>
               </div>
-              
-              <div style={{textAlign: "center", flex: 1}}>
-                <h3 style={{color: "white", fontSize: "24px", fontWeight: "bold", marginBottom: "8px"}}>
-                  Business
-                </h3>
-                <p style={{color: "#bfdbfe", marginBottom: "16px"}}>
-                  Pour les hôtels actifs
-                </p>
-                
-                <div style={{fontSize: "32px", fontWeight: "bold", color: "white", marginBottom: "16px"}}>
-                  89,99{'€'}
-                  <span style={{fontSize: "14px", fontWeight: "normal"}}>/mois</span>
+
+              <div className="mt-6 flex flex-1 flex-col text-center md:mt-8">
+                <h3 className="mb-2 text-xl font-bold text-white md:text-2xl">Business</h3>
+                <p className="mb-4 text-blue-200">Pour les hôtels actifs</p>
+
+                <div className="mb-4 text-3xl font-bold text-white md:text-5xl">
+                  89,99€
+                  <span className="text-sm font-normal text-blue-100 md:text-base">/mois</span>
                 </div>
-                
-                <ul style={{listStyle: "none", padding: 0, margin: "0 0 16px", textAlign: "left"}} 
-                  className="flex flex-col gap-2 flex-1">
+
+                <ul className="mb-4 flex list-none flex-col gap-2 p-0 text-left">
                   {[
-                    "500 scans inclus/mois",
-                    "Fiches de police PDF", 
-                    "Signature électronique",
-                    "Historique clients",
-                    "Support prioritaire",
-                    "0,25{'€'}/scan suppl&eacute;mentaire",
-                    "Dashboard statistiques"
+                    '500 scans inclus/mois',
+                    'Fiches de police PDF',
+                    'Signature électronique',
+                    'Historique clients',
+                    'Support prioritaire',
+                    '0,25€/scan supplémentaire',
+                    'Dashboard statistiques',
                   ].map((feature) => (
-                    <li key={feature} style={{
-                      color: "#bfdbfe", 
-                      fontSize: "14px", 
-                      padding: "4px 0",
-                      borderBottom: "1px solid rgba(255,255,255,0.1)",
-                      display: "flex",
-                      alignItems: "center"
-                    }}>
-                      <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" 
-                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" 
-                              strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <li
+                      key={feature}
+                      className="flex items-center border-b border-white/10 py-1 text-sm text-blue-100 md:text-[15px]"
+                    >
+                      <svg
+                        className="h-5 w-5 flex-shrink-0 text-yellow-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span style={{marginLeft: "8px"}}>{feature}</span>
+                      <span className="ml-2">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                
+
                 <button
-                  onClick={() => handlePlan("business")}
-                  disabled={loading === "business"}
-                  style={{
-                    background: "white",
-                    color: "#1e3a8a",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    fontWeight: "700",
-                    border: "none",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    width: "100%",
-                    opacity: loading === "business" ? 0.7 : 1
-                  }}
+                  type="button"
+                  onClick={() => handlePlan('business')}
+                  disabled={loading === 'business'}
+                  className="w-full cursor-pointer rounded-xl bg-white py-4 text-base font-bold text-[#1e3a8a] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {loading === "business" ? "Redirection..." : "Choisir Business"}
+                  {loading === 'business' ? 'Redirection...' : 'Choisir Business'}
                 </button>
-                
-                <p style={{fontSize: "12px", color: "#bfdbfe", marginTop: "12px", textAlign: "center"}}>
-                  0,25{'€'}/scan au-delà de 500
+
+                <p className="mt-3 text-center text-xs text-blue-200 md:text-sm">
+                  0,25€/scan au-delà de 500
                 </p>
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div style={{textAlign: "center", fontSize: "14px", color: "#64748b", lineHeight: "1.6"}} 
-               className="mt-6 text-center pb-8">
+          <div className="mt-6 space-y-2 pb-8 text-center text-sm leading-relaxed text-slate-500 md:text-base">
             <p>Sécurisé Paiement sécurisé via Lemon Squeezy</p>
             <p>Annulation à tout moment - Sans engagement</p>
             <p>
               Des questions ?{" "}
-              <a href="mailto:contact@percepta.io" style={{color: "#4a90d9", textDecoration: "none"}}>
+            <a href="mailto:contact@percepta.io" className="text-[#4a90d9] no-underline hover:underline">
                 contact@percepta.io
               </a>
             </p>
             {onBack && (
               <button
+                type="button"
                 onClick={onBack}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#4a90d9",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                  marginTop: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600"
-                }}
+                className="mt-2 border-none bg-transparent text-sm font-semibold text-[#4a90d9] underline hover:text-blue-800"
               >
                 Essayer gratuitement 7 jours ?
               </button>
