@@ -197,7 +197,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
 
                 <ul className="mb-4 flex list-none flex-col gap-2 p-0 text-left">
                   {[
-                    '500 scans inclus/mois',
+                    'Illimité',
                     'Fiches de police PDF',
                     'Signature électronique',
                     'Historique clients',
