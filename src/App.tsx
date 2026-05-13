@@ -14,11 +14,9 @@ import AdminParametres from './pages/AdminParametres'
 import Subscribe from './pages/Subscribe'
 import Historique from './pages/Historique'
 import Fiches from './pages/Fiches'
-import FichesControle from './pages/FichesControle'
 import Parametres from './pages/Parametres'
 import Support from './pages/Support'
 import Layout from './components/Layout'
-import ProtectedRoute from './components/ProtectedRoute'
 
 function AppContent() {
   const [ocrData, setOcrData] = useState<{
@@ -245,21 +243,9 @@ function AppContent() {
         </SetupHotelRoute>
       } />
       
-      <Route path="/admin" element={
-        <ProtectedRouteWrapper>
-          <AdminDashboard />
-        </ProtectedRouteWrapper>
-      } />
-      <Route path="/admin/analytics" element={
-        <ProtectedRouteWrapper>
-          <AdminAnalytics />
-        </ProtectedRouteWrapper>
-      } />
-      <Route path="/admin/parametres" element={
-        <ProtectedRouteWrapper>
-          <AdminParametres />
-        </ProtectedRouteWrapper>
-      } />
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/analytics" element={<AdminAnalytics />} />
+      <Route path="/admin/parametres" element={<AdminParametres />} />
       
       <Route path="/subscribe" element={<Subscribe />} />
       <Route path="/pricing" element={<Subscribe />} />
@@ -271,8 +257,6 @@ function AppContent() {
           <Layout currentPage="dashboard">
             <Dashboard
               onRequireLogin={() => window.location.href = '/login'}
-              onScanComplete={() => setOcrData(null)}
-              onAdminClick={() => window.location.href = '/admin'}
               onSubscribeClick={() => window.location.href = '/pricing'}
             />
           </Layout>
@@ -280,6 +264,19 @@ function AppContent() {
       } />
       
       <Route path="/scan" element={
+        <ProtectedRouteWrapper>
+          <Layout currentPage="scan">
+            <Scan
+              onBack={() => window.location.href = '/dashboard'}
+              onCapture={(data) => {
+                setOcrData(data)
+                window.location.href = '/confirm'
+              }}
+            />
+          </Layout>
+        </ProtectedRouteWrapper>
+      } />
+      <Route path="/scanner" element={
         <ProtectedRouteWrapper>
           <Layout currentPage="scan">
             <Scan

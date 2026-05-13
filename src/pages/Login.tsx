@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 type LoginProps = {
@@ -6,6 +7,7 @@ type LoginProps = {
 }
 
 export default function Login({ onRegisterClick }: LoginProps) {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -55,7 +57,13 @@ export default function Login({ onRegisterClick }: LoginProps) {
 
     // Rediriger immédiatement sans attendre le profil hôtel
     if (data.session && data.session.user.email_confirmed_at) {
-      window.location.replace(window.location.origin + '/dashboard')
+      const isAdmin = data.session.user.user_metadata?.is_admin === true
+      if (isAdmin) {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
+      setIsLoading(false)
       return
     }
 

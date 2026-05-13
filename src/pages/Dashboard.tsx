@@ -1,20 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
-import { generateFicheControle, saveFicheToSupabase } from '../utils/generateFicheControle'
-import FichesControle from './FichesControle'
 
 type DashboardProps = {
   onRequireLogin: () => void
-  onScanComplete: () => void
-  onAdminClick?: () => void
   onSubscribeClick?: () => void
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick, onSubscribeClick }: DashboardProps) {
+export default function Dashboard({ onRequireLogin, onSubscribeClick }: DashboardProps) {
+  const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<{ status: string; trial_end: string | null; subscription_id: string | null } | null>(null)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
@@ -23,7 +21,6 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const [lastClients, setLastClients] = useState<Client[]>([])
   const [scansToday, setScansToday] = useState(0)
   const [scansThisMonth, setScansThisMonth] = useState(0)
-  const [showFiches, setShowFiches] = useState(false)
   const [hotelInfo, setHotelInfo] = useState<any>(null)
 
   const handleSignOut = async () => {
@@ -42,7 +39,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
       // Check if user is admin FIRST
       const isAdmin = data.session.user?.user_metadata?.is_admin === true
       if (isAdmin) {
-        onAdminClick?.()
+        navigate('/admin', { replace: true })
         return
       }
       
@@ -84,7 +81,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
     }
 
     void loadSession()
-  }, [onRequireLogin])
+  }, [onRequireLogin, navigate])
 
   useEffect(() => {
     const loadClients = async () => {
@@ -142,26 +139,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }, [])
   const email = session?.user.email ?? ''
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
-  const hotelPhone = (session?.user.user_metadata?.phone as string | undefined) || '+221 33 000 00 00'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
-
-  const handleGenerateFiche = async () => {
-    const guestName = prompt('Entrez le nom du client:')
-    if (!guestName?.trim()) return
-    
-    try {
-      // Generate PDF blob
-      const blob = await generateFicheControle(hotelName, hotelPhone, guestName.trim())
-
-      // Save to Supabase
-      const signedUrl = await saveFicheToSupabase(blob, guestName.trim(), session!.user.id)
-
-      alert('Fiche de contrôle générée et sauvegardée!')
-    } catch (error) {
-      console.error('Erreur génération fiche:', error)
-      alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
-    }
-  }
 
   const daysRemaining = useMemo(() => {
     if (!profile?.trial_end) return 0
@@ -434,15 +412,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   }
 
   return (
-    <>
-      {showFiches && session && (
-        <FichesControle 
-          session={session} 
-          onBack={() => setShowFiches(false)} 
-        />
-      )}
-      {!showFiches && (
-        <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <header className="flex items-center justify-between px-4 md:px-8 py-2 bg-white shadow-sm">
             {/* Logo + titre sur fond blanc arrondi */}
             <div className="flex items-center gap-2">
@@ -458,10 +428,10 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
             {/* Bouton déconnexion sans fond blanc */}
             <div className="flex items-center gap-3">
-              {isAdmin && onAdminClick && (
+              {isAdmin && (
                 <button
                   type="button"
-                  onClick={onAdminClick}
+                  onClick={() => navigate('/admin')}
                   className="w-full md:w-auto px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Admin
@@ -503,7 +473,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
-            onClick={onScanComplete}
+            onClick={() => navigate('/scanner')}
             style={{
               background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
               borderRadius: "16px",
@@ -534,7 +504,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
-            onClick={handleGenerateFiche}
+            onClick={() => navigate('/fiches')}
             className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold"
           >
             Fiche de contrôle
@@ -586,7 +556,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
                 pour commencer
               </p>
               <button
-                onClick={onScanComplete}
+                type="button"
+                onClick={() => navigate('/scanner')}
                 style={{
                   background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
                   color: "white",
@@ -641,14 +612,16 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
         <div className="flex gap-4 justify-center mt-4">
           <button
-            onClick={() => setShowFiches(true)}
+            type="button"
+            onClick={() => navigate('/fiches')}
             className="text-blue-600 hover:underline text-sm"
           >
             Fiches de contrôle
           </button>
           <span className="text-gray-300">|</span>
           <button
-            onClick={() => window.location.href = '/historique'}
+            type="button"
+            onClick={() => navigate('/historique')}
             className="text-blue-600 hover:underline text-sm"
           >
             Voir l'historique complet
@@ -656,7 +629,5 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         </div>
       </main>
     </div>
-      )}
-    </>
   )
 }
