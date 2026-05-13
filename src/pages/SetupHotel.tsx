@@ -60,9 +60,8 @@ export default function SetupHotel() {
         throw new Error('Utilisateur non connecté')
       }
 
-      // Créer l'hôtel avec essai de 30 jours
-      const trialEnd = new Date()
-      trialEnd.setDate(trialEnd.getDate() + 30)
+      // Créer l'hôtel avec essai de 7 jours
+      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
       const { error } = await supabase
         .from('hotels')
@@ -134,7 +133,7 @@ export default function SetupHotel() {
               fontSize: "14px",
               margin: "8px 0 0"
             }}>
-              🎁 30 jours d'essai gratuit • Sans engagement
+              🎁 7 jours d'essai gratuit • Sans engagement
             </p>
           </div>
 
@@ -387,7 +386,7 @@ export default function SetupHotel() {
               fontSize: "13px",
               margin: 0
             }}>
-              ✅ 30 jours d'essai gratuit<br />
+              ✅ 7 jours d'essai gratuit<br />
               ✅ Accès complet à toutes les fonctionnalités<br />
               ✅ Annulation à tout moment<br />
               ✅ Support technique 7j/7

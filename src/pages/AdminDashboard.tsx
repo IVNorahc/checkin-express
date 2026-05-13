@@ -138,7 +138,7 @@ export const AdminDashboard: React.FC = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [supportEmail, setSupportEmail] = useState('support@percepta.tech');
   const [supportWhatsApp, setSupportWhatsApp] = useState('+33612345678');
-  const [defaultTrialDays, setDefaultTrialDays] = useState(30);
+  const [defaultTrialDays, setDefaultTrialDays] = useState(7);
 
   const exportCSV = () => {
   const headers = ['Hôtel', 'Email', 'Abonnement', 'Statut', 'Créé le', 'Fin essai', 'Scans']
@@ -316,7 +316,7 @@ const handleReactivate = async (hotelId: string) => {
   console.log('Tentative de réactivation pour hotelId:', hotelId)
   
   const trialEnd = new Date()
-  trialEnd.setDate(trialEnd.getDate() + 30)
+  trialEnd.setDate(trialEnd.getDate() + 7)
   
   const { data, error } = await supabaseAdmin
     .from('hotels')
@@ -334,7 +334,7 @@ const handleReactivate = async (hotelId: string) => {
     return
   }
   
-  alert('Compte réactivé pour 30 jours !')
+  alert('Compte réactivé pour 7 jours !')
   loadUsers()
 }
 
@@ -353,7 +353,7 @@ const handleAction = async (hotelId: string, newStatus: string) => {
   
   if (newStatus === 'active') {
     const newTrialEnd = new Date()
-    newTrialEnd.setDate(newTrialEnd.getDate() + 30)
+    newTrialEnd.setDate(newTrialEnd.getDate() + 7)
     updateData.subscription_status = 'trial'
     updateData.trial_end = newTrialEnd.toISOString()
   }
@@ -1013,7 +1013,7 @@ const handleDelete = async (user: any) => {
                 <input
                   type="number"
                   value={defaultTrialDays}
-                  onChange={(e) => setDefaultTrialDays(parseInt(e.target.value) || 30)}
+                  onChange={(e) => setDefaultTrialDays(parseInt(e.target.value) || 7)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   min="1"
                   max="365"
