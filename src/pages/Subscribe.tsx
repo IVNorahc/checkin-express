@@ -180,7 +180,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
               className="relative flex w-full flex-col overflow-y-auto rounded-[20px] border-2 border-[#4a90d9] bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] p-4 shadow-xl shadow-blue-900/40 md:max-h-none md:p-8"
               style={{ maxHeight: 'min(75vh, 900px)' }}
             >
-              <div className="absolute left-1/2 -top-4 z-10 flex -translate-x-1/2 justify-center">
+              <div className="absolute left-1/2 -top-5 z-10 flex -translate-x-1/2 justify-center">
                 <span className="flex items-center gap-1 rounded-full bg-yellow-400 px-5 py-2 text-sm font-bold text-gray-900 shadow-lg">
                   Plus populaire
                 </span>
