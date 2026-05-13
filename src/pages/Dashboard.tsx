@@ -140,11 +140,12 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
-  const daysLeft = useMemo(() => {
-    const te = profile?.trial_end ? new Date(profile.trial_end) : null
-    if (!te) return 0
-    return Math.max(0, Math.ceil((te.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-  }, [profile, now])
+  const trialEnd = profile?.trial_end ? new Date(profile.trial_end) : null
+  const daysLeft = trialEnd
+    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0
+
+  const trialText = `Essai gratuit — ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`
 
   const trialBanner = useMemo(() => {
     if (profile?.status === 'active') {
@@ -153,11 +154,9 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
 
     if (profile?.status === 'trial') {
       if (daysLeft > 0) {
-        const jourLabel = daysLeft > 1 ? 'jours' : 'jour'
-        const restantLabel = daysLeft > 1 ? 'restants' : 'restant'
         return {
           className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
-          text: `Essai gratuit — ${daysLeft} ${jourLabel} ${restantLabel}`,
+          text: trialText,
         }
       }
       if (daysLeft === 0) {
@@ -169,7 +168,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     }
 
     return null
-  }, [profile, daysLeft])
+  }, [profile, daysLeft, trialText])
 
   const handleSubscribe = () => {
     window.open('https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02', '_blank')
