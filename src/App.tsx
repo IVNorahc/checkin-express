@@ -324,9 +324,7 @@ function AppContent() {
       <Route path="/parametres" element={
         <ProtectedRouteWrapper>
           <Layout currentPage="parametres">
-            <Parametres 
-              onBack={() => window.location.href = '/dashboard'} 
-            />
+            <Parametres />
           </Layout>
         </ProtectedRouteWrapper>
       } />
@@ -334,9 +332,7 @@ function AppContent() {
       <Route path="/support" element={
         <ProtectedRouteWrapper>
           <Layout currentPage="support">
-            <Support 
-              onBack={() => window.location.href = '/dashboard'} 
-            />
+            <Support />
           </Layout>
         </ProtectedRouteWrapper>
       } />

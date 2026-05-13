@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import BackButton from '../components/BackButton'
 
 export default function SetupHotel() {
   const navigate = useNavigate()
@@ -111,7 +112,8 @@ export default function SetupHotel() {
           boxShadow: "0 20px 60px rgba(30,58,138,0.15)",
           border: "1px solid rgba(191,219,254,0.5)"
         }} className="sm:p-8 sm:mx-auto sm:max-w-md">
-          
+          <BackButton />
+
           {/* Logo centré */}
           <div className="flex flex-col items-center mb-6">
             <img

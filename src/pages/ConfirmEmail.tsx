@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import BackButton from '../components/BackButton'
 
 const ConfirmEmail = () => {
   const [searchParams] = useSearchParams()
@@ -88,6 +89,9 @@ const ConfirmEmail = () => {
           textAlign: "center",
           boxShadow: "0 20px 60px rgba(30,58,138,0.15)"
         }}>
+          <div style={{ textAlign: 'left' }}>
+            <BackButton />
+          </div>
           {status === 'loading' && (
             <>
               <div style={{

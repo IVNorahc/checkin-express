@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import BackButton from '../components/BackButton'
 import jsPDF from 'jspdf'
 
 interface Client {
@@ -345,16 +346,7 @@ export default function Fiches() {
 
       {/* CONTENU */}
       <div className="p-6">
-        {/* Bouton retour */}
-        <button
-          onClick={() => window.location.href = '/dashboard'}
-          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-medium mb-6"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour
-        </button>
+        <BackButton />
 
         {/* En-tête avec bouton nouvelle fiche */}
         <div className="flex justify-between items-center mb-8">

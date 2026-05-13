@@ -1,5 +1,6 @@
-  import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { apiService } from '../services/apiService'
+import BackButton from '../components/BackButton'
 // import * as tf from '@tensorflow/tfjs'
 // import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
@@ -449,6 +450,9 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       </header>
 
       <main className="px-4 md:px-8 pb-8 flex flex-col items-center gap-3 md:gap-6">
+        <div className="w-full max-w-xl self-start">
+          <BackButton />
+        </div>
         {showVersoPrompt ? (
           // Écran intermédiaire après détection CNI
           <div className="w-full max-w-xl flex flex-col items-center justify-center min-h-[60vh]">

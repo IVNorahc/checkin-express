@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import BackButton from '../components/BackButton'
 
 interface User {
   id: string
@@ -12,7 +13,7 @@ interface FAQ {
   reponse: string
 }
 
-export default function Support({ onBack }: { onBack: () => void }) {
+export default function Support() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -161,16 +162,7 @@ ${formData.message}
 
       {/* CONTENU */}
       <div className="p-6">
-        {/* Bouton retour */}
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-medium mb-6"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour
-        </button>
+        <BackButton />
 
         {/* Messages d'erreur/succès */}
         {error && (
