@@ -24,6 +24,7 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
   const [scansToday, setScansToday] = useState(0)
   const [scansThisMonth, setScansThisMonth] = useState(0)
   const [showFiches, setShowFiches] = useState(false)
+  const [hotelInfo, setHotelInfo] = useState<any>(null)
 
   const handleSignOut = async () => {
   await supabase.auth.signOut()
@@ -69,8 +70,9 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
         setProfile({
           status: hotelData.subscription_status,
           trial_end: hotelData.trial_end,
-          subscription_id: null
+          subscription_id: null,
         })
+        setHotelInfo(hotelData)
         // Vérifier si les informations de base sont manquantes
         if (!hotelData.hotel_name || !hotelData.phone) {
           setNeedsOnboarding(true)
@@ -138,9 +140,8 @@ export default function Dashboard({ onRequireLogin, onScanComplete, onAdminClick
 
     return () => window.clearInterval(timer)
   }, [])
-
   const email = session?.user.email ?? ''
-  const hotelName = (session?.user.user_metadata?.hotel_name as string | undefined) || email || 'Mon hôtel'
+  const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const hotelPhone = (session?.user.user_metadata?.phone as string | undefined) || '+221 33 000 00 00'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
