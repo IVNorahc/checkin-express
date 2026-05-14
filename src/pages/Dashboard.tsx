@@ -20,6 +20,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [scansToday, setScansToday] = useState(0)
   const [scansThisMonth, setScansThisMonth] = useState(0)
   const [hotelInfo, setHotelInfo] = useState<any>(null)
+  const [daysLeft, setDaysLeft] = useState(0)
 
   const handleSignOut = async () => {
   await supabase.auth.signOut()
@@ -136,14 +137,32 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
 
     return () => window.clearInterval(timer)
   }, [])
+
+  // Correction 1: Real-time trial countdown update
+  useEffect(() => {
+    const updateCountdown = () => {
+      const trialEnd = profile?.trial_end ? new Date(profile.trial_end) : null
+      const daysLeftCalc = trialEnd
+        ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : 0
+      setDaysLeft(daysLeftCalc)
+    }
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 3600000) // toutes les heures
+    return () => clearInterval(interval)
+  }, [profile])
+
+  // Correction 2: Auto-redirect to subscription if trial expired
+  useEffect(() => {
+    if (daysLeft <= 0 && profile?.status === 'trial') {
+      navigate('/subscription')
+      return
+    }
+  }, [daysLeft, profile?.status, navigate])
+
   const email = session?.user.email ?? ''
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
-
-  const trialEnd = profile?.trial_end ? new Date(profile.trial_end) : null
-  const daysLeft = trialEnd
-    ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0
 
   const trialText = `Essai gratuit — ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`
 
