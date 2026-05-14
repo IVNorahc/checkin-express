@@ -177,7 +177,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
 
             {/* BUSINESS */}
             <div
-              className="relative flex w-full flex-col overflow-y-auto rounded-[20px] border-2 border-[#4a90d9] bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] p-4 shadow-xl shadow-blue-900/40 md:max-h-none md:p-8"
+              className="relative flex w-full flex-col rounded-[20px] border-2 border-[#4a90d9] bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] p-4 shadow-xl shadow-blue-900/40 md:max-h-none md:p-8"
               style={{ maxHeight: 'min(75vh, 900px)' }}
             >
               <div className="absolute left-1/2 -top-5 z-10 flex -translate-x-1/2 justify-center">
