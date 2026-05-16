@@ -145,6 +145,16 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       const daysLeftCalc = trialEnd
         ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
         : 0
+
+      console.log('[Dashboard] DEBUG trial countdown:', {
+        subscription_status: profile?.status,
+        trial_end_raw: profile?.trial_end,
+        trial_end_parsed: trialEnd ? trialEnd.toISOString() : null,
+        now: new Date().toISOString(),
+        daysLeft: daysLeftCalc,
+        willRedirect: daysLeftCalc <= 0 && profile?.status === 'trial',
+      })
+
       setDaysLeft(daysLeftCalc)
     }
     updateCountdown()
@@ -152,13 +162,20 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     return () => clearInterval(interval)
   }, [profile])
 
-  // Correction 2: Auto-redirect to subscription if trial expired
+  // Redirect check — calcul direct depuis trial_end pour éviter la race condition avec daysLeft
   useEffect(() => {
-    if (daysLeft <= 0 && profile?.status === 'trial') {
+    if (profile?.status !== 'trial') return
+    const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null
+    const expired = !trialEnd || trialEnd <= new Date()
+    console.log('[Dashboard] REDIRECT check:', {
+      trial_end: profile.trial_end,
+      expired,
+      status: profile.status,
+    })
+    if (expired) {
       navigate('/subscribe')
-      return
     }
-  }, [daysLeft, profile?.status, navigate])
+  }, [profile, navigate])
 
   const email = session?.user.email ?? ''
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
