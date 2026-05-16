@@ -155,7 +155,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   // Correction 2: Auto-redirect to subscription if trial expired
   useEffect(() => {
     if (daysLeft <= 0 && profile?.status === 'trial') {
-      navigate('/subscription')
+      navigate('/subscribe')
       return
     }
   }, [daysLeft, profile?.status, navigate])
@@ -164,29 +164,21 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
-  const trialText = `Essai gratuit — ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`
+  const trialText = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} d'essai gratuit`
 
   const trialBanner = useMemo(() => {
-    if (profile?.status === 'active') {
-      return null // Cacher le bandeau d'essai pour les abonnés
+    if (profile?.status !== 'trial' || daysLeft <= 0) return null
+
+    let className: string
+    if (daysLeft > 3) {
+      className = 'border rounded-lg px-4 py-3 text-center text-sm font-medium mb-4 bg-green-50 border-green-200 text-green-700'
+    } else if (daysLeft >= 2) {
+      className = 'border rounded-lg px-4 py-3 text-center text-sm font-medium mb-4 bg-orange-50 border-orange-200 text-orange-700'
+    } else {
+      className = 'border rounded-lg px-4 py-3 text-center text-sm font-medium mb-4 bg-red-50 border-red-200 text-red-700'
     }
 
-    if (profile?.status === 'trial') {
-      if (daysLeft > 0) {
-        return {
-          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
-          text: trialText,
-        }
-      }
-      if (daysLeft === 0) {
-        return {
-          className: 'bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center text-sm text-blue-700 mb-4',
-          text: 'Votre essai est terminé.',
-        }
-      }
-    }
-
-    return null
+    return { className, text: trialText }
   }, [profile, daysLeft, trialText])
 
   const handleSubscribe = () => {
