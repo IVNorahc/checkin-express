@@ -82,6 +82,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [capturedMimeType, setCapturedMimeType] = useState<string | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [canRetry, setCanRetry] = useState(false)
+  const [isServiceError, setIsServiceError] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [rectoResult, setRectoResult] = useState<OCRData | null>(null)
   const [isVersoMode, setIsVersoMode] = useState(false)
@@ -127,8 +128,9 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     console.log('OCR result:', data, 'error:', fnError)
 
     if (fnError) {
-      setAnalysisError("Erreur d'analyse — réessayez ou utilisez la saisie manuelle.")
-      setCanRetry(true)
+      setAnalysisError("Service OCR temporairement indisponible. Veuillez utiliser la saisie manuelle.")
+      setIsServiceError(true)
+      setCanRetry(false)
       setIsAnalyzing(false)
       return
     }
@@ -136,8 +138,10 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     const parsed = data
 
     if (parsed.error) {
+      const serviceErr = (parsed.error as string).includes('temporairement indisponible')
       setAnalysisError(parsed.error)
-      setCanRetry(true)
+      setIsServiceError(serviceErr)
+      setCanRetry(!serviceErr)
       setIsAnalyzing(false)
       return
     }
@@ -308,18 +312,19 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     setCapturedMimeType(null)
     setAnalysisError(null)
     setCanRetry(false)
-    
+    setIsServiceError(false)
+
     // Arrêter complètement le flux caméra
     stopCameraStream()
-    
+
     // Réinitialiser la vidéo
     if (videoRef.current) {
       videoRef.current.srcObject = null
     }
-    
+
     // Attendre 500ms pour la réinitialisation complète
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // Redémarrer la caméra pour le scan recto
     await startCamera()
   }
@@ -380,6 +385,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     setAnalysisError(null)
     setIsAnalyzing(false)
     setCanRetry(false)
+    setIsServiceError(false)
     
     // Arrêter complètement le flux caméra
     stopCameraStream()
@@ -403,6 +409,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     setIsAnalyzing(true)
     setAnalysisError(null)
     setCanRetry(false)
+    setIsServiceError(false)
 
     try {
       if (capturedImageBase64 && capturedMimeType) {
@@ -519,19 +526,33 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 <p className="text-lg font-medium">{analysisError ? 'Analyse terminée' : 'Prêt pour confirmation'}</p>
               )}
             </div>
-            {analysisError && <p className="mt-3 text-sm text-red-500 text-center">{analysisError}</p>}
-
-            {canRetry && (
-              <div className="mt-4 flex justify-center">
+            {isServiceError ? (
+              <div className="mt-4 rounded-xl bg-red-50 border border-red-300 p-4 text-center">
+                <p className="text-red-700 font-medium mb-4">{analysisError}</p>
                 <button
                   type="button"
-                  onClick={handleRetryAnalysis}
-                  className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
-                  disabled={isAnalyzing}
+                  onClick={handleManualInput}
+                  className="w-full h-12 rounded-full bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors"
                 >
-                  Réessayer
+                  ✏️ Saisie manuelle
                 </button>
               </div>
+            ) : (
+              <>
+                {analysisError && <p className="mt-3 text-sm text-red-500 text-center">{analysisError}</p>}
+                {canRetry && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleRetryAnalysis}
+                      className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
+                      disabled={isAnalyzing}
+                    >
+                      Réessayer
+                    </button>
+                  </div>
+                )}
+              </>
             )}
             
             {/* Boutons spécifiques au mode verso */}

@@ -48,8 +48,22 @@ Leave a field empty if unreadable.`
 
     const geminiData = await geminiResponse.json()
     console.log('Gemini response:', JSON.stringify(geminiData))
-    
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
+
+    if (!geminiResponse.ok || geminiData.error || !geminiData.candidates) {
+      console.error('Gemini API error:', JSON.stringify(geminiData.error ?? 'no candidates'))
+      return new Response(
+        JSON.stringify({ error: 'Service OCR temporairement indisponible. Veuillez utiliser la saisie manuelle.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const text = geminiData.candidates[0]?.content?.parts?.[0]?.text ?? ''
+    if (!text.trim()) {
+      return new Response(
+        JSON.stringify({ error: 'Service OCR temporairement indisponible. Veuillez utiliser la saisie manuelle.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     const clean = text.replace(/```json|```/g, '').trim()
 
     return new Response(clean, {
