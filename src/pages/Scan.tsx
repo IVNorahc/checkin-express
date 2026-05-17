@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import BackButton from '../components/BackButton'
+import { supabase } from '../lib/supabase'
 // import * as tf from '@tensorflow/tfjs'
 // import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
@@ -118,22 +119,21 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
   const analyseImage = async (imageBase64: string) => {
     console.log('imageBase64 length:', imageBase64?.length)
-    console.log('imageBase64 début:', imageBase64?.substring(0, 50))
-    
-    const response = await fetch(
-      'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/ocr',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: imageBase64 })
-      }
-    )
 
-    console.log('response status:', response.status)
-    const text = await response.text()
-    console.log('response body:', text)
-    const parsed = JSON.parse(text)
-    console.log('OCR result:', parsed)
+    const { data, error: fnError } = await supabase.functions.invoke('ocr', {
+      body: { imageBase64 }
+    })
+
+    console.log('OCR result:', data, 'error:', fnError)
+
+    if (fnError) {
+      setAnalysisError("Erreur d'analyse — réessayez ou utilisez la saisie manuelle.")
+      setCanRetry(true)
+      setIsAnalyzing(false)
+      return
+    }
+
+    const parsed = data
 
     if (parsed.error) {
       setAnalysisError(parsed.error)
