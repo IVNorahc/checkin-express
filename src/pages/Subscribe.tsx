@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 interface SubscribeProps {
@@ -6,34 +7,39 @@ interface SubscribeProps {
   showWelcome?: boolean;
 }
 
+const LEMON_STARTER_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02";
+const LEMON_BUSINESS_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02";
+
 export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState<string | null>(null);
   const [showRefresh, setShowRefresh] = useState(false);
 
-  const LEMON_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02";
-
-  const handlePlan = (plan: string) => {
+  const handlePlan = (plan: 'starter' | 'business') => {
     setLoading(plan);
+    const url = plan === 'business' ? LEMON_BUSINESS_URL : LEMON_STARTER_URL;
     setTimeout(() => {
-      window.open(LEMON_URL, "_blank");
+      window.open(url, "_blank");
       setLoading(null);
       setShowRefresh(true);
-    }, 1000);
+    }, 300);
   };
 
   const handleRefresh = async () => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("status")
-        .eq("id", data.session.user.id)
-        .single();
-      if (profile?.status === "active" && onBack) {
-        onBack();
-      } else {
-        alert("Paiement non détecté. Réessayez dans quelques secondes.");
-      }
+    if (!data.session) {
+      navigate('/login');
+      return;
+    }
+    const { data: hotel } = await supabase
+      .from("hotels")
+      .select("subscription_status")
+      .eq("user_id", data.session.user.id)
+      .single();
+    if (hotel?.subscription_status === "active") {
+      navigate('/dashboard');
+    } else {
+      alert("Paiement non détecté. Réessayez dans quelques secondes.");
     }
   };
 
@@ -163,7 +169,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 <button
                   type="button"
                   onClick={() => handlePlan('starter')}
-                  disabled={loading === 'starter'}
+                  disabled={loading === 'starter' || loading === 'business'}
                   className="w-full cursor-pointer rounded-xl bg-gradient-to-br from-[#1e3a8a] to-[#4a90d9] py-4 text-base font-bold text-white shadow-md shadow-blue-900/30 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading === 'starter' ? 'Redirection...' : 'Choisir Starter'}
@@ -224,7 +230,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 <button
                   type="button"
                   onClick={() => handlePlan('business')}
-                  disabled={loading === 'business'}
+                  disabled={loading === 'starter' || loading === 'business'}
                   className="w-full cursor-pointer rounded-xl bg-white py-4 text-base font-bold text-[#1e3a8a] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading === 'business' ? 'Redirection...' : 'Choisir Business'}

@@ -2,8 +2,8 @@ name: Daily Trial Notifications
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Chaque jour à 8h UTC
-  workflow_dispatch:      # Déclenchement manuel possible
+    - cron: '0 8 * * *'   # Chaque jour à 8h00 UTC
+  workflow_dispatch:       # Déclenchement manuel depuis GitHub Actions
 
 jobs:
   send-notifications:
@@ -11,8 +11,11 @@ jobs:
     steps:
       - name: Send trial notifications
         run: |
-          curl -X POST \
+          response=$(curl --fail --silent --show-error --location \
+            --request POST \
             'https://kcrwbjhtofyoojjamoaz.supabase.co/functions/v1/send-notifications' \
-            -H 'Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' \
-            -H 'Content-Type: application/json' \
-            -d '{}'
+            --header 'Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' \
+            --header 'Content-Type: application/json' \
+            --data '{}')
+          echo "Response: $response"
+          echo "$response" | grep -q '"success":true' && echo "✅ Notifications sent" || echo "⚠️ Check response above"

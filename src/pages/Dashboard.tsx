@@ -21,6 +21,14 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [scansThisMonth, setScansThisMonth] = useState(0)
   const [hotelInfo, setHotelInfo] = useState<any>(null)
   const [daysLeft, setDaysLeft] = useState(0)
+  const [welcomeDismissed, setWelcomeDismissed] = useState(
+    () => localStorage.getItem('checkin_welcome_v1') === 'dismissed'
+  )
+
+  const dismissWelcome = () => {
+    localStorage.setItem('checkin_welcome_v1', 'dismissed')
+    setWelcomeDismissed(true)
+  }
 
   const handleSignOut = async () => {
   await supabase.auth.signOut()
@@ -181,10 +189,10 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
-  const trialText = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} d'essai gratuit`
-
   const trialBanner = useMemo(() => {
     if (profile?.status !== 'trial' || daysLeft <= 0) return null
+
+    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} d'essai gratuit · 10 scans · Fiches PDF incluses`
 
     let className: string
     if (daysLeft > 3) {
@@ -195,8 +203,8 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       className = 'border rounded-lg px-4 py-3 text-center text-sm font-medium mb-4 bg-red-50 border-red-200 text-red-700'
     }
 
-    return { className, text: trialText }
-  }, [profile, daysLeft, trialText])
+    return { className, text }
+  }, [profile, daysLeft])
 
   const handleSubscribe = () => {
     window.open('https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02', '_blank')
@@ -480,10 +488,65 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         </div>
 
         {trialBanner && (
-        <div className={trialBanner.className}>
-          {trialBanner.text}
-        </div>
-      )}
+          <div className={trialBanner.className}>
+            {trialBanner.text}
+          </div>
+        )}
+
+        {/* Carte de bienvenue — visible au premier login, disparaît après dismiss */}
+        {!welcomeDismissed && lastClients.length === 0 && profile !== null && (
+          <div className="bg-white border border-blue-100 rounded-xl shadow-sm p-5 mb-6">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-blue-900">
+                  Bienvenue sur Check-in Express ! 👋
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  3 étapes pour faire votre premier check-in en 30 secondes
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={dismissWelcome}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none flex-shrink-0"
+                aria-label="Fermer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              {[
+                { step: '1', icon: '📸', title: 'Scannez le document', desc: "Photographiez la pièce d'identité du client avec la caméra arrière" },
+                { step: '2', icon: '✏️', title: 'Vérifiez les données', desc: "L'OCR remplit le formulaire automatiquement — corrigez si besoin" },
+                { step: '3', icon: '🖊️', title: 'Faites signer & générez', desc: 'Le client signe sur l\'écran, la fiche PDF est créée instantanément' },
+              ].map(({ step, icon, title, desc }) => (
+                <div key={step} className="flex gap-3 bg-slate-50 rounded-lg p-3">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-800 text-white text-xs font-bold flex items-center justify-center">
+                    {step}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-sm">{icon} {title}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <p className="text-xs text-slate-400">
+                💡 Besoin d'aide ? <a href="mailto:contact@percepta.io" className="text-blue-600 hover:underline">contact@percepta.io</a>
+              </p>
+              <button
+                type="button"
+                onClick={() => { dismissWelcome(); navigate('/scanner') }}
+                className="w-full sm:w-auto bg-blue-800 text-white text-sm font-bold px-5 py-2.5 rounded-lg hover:bg-blue-900 transition-colors"
+              >
+                📸 Faire mon premier scan
+              </button>
+            </div>
+          </div>
+        )}
 
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
@@ -548,41 +611,34 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
             Derniers clients scannés
           </h2>
           {lastClients.length === 0 ? (
-            <div style={{
-              textAlign: "center",
-              padding: "40px 20px"
-            }}>
-              <div style={{fontSize: "48px", marginBottom: "12px"}}>
-                📋
-              </div>
-              <h3 style={{
-                color: "#1e3a8a",
-                fontWeight: "700",
-                margin: "0 0 8px"
-              }}>
-                Prêt pour votre premier check-in !
+            <div className="py-8 px-4 text-center">
+              <div className="text-5xl mb-3">🏨</div>
+              <h3 className="text-base font-bold text-blue-900 mb-1">
+                Aucun check-in pour l'instant
               </h3>
-              <p style={{
-                color: "#64748b",
-                fontSize: "14px",
-                margin: "0 0 20px"
-              }}>
-                Scannez votre première pièce d'identité 
-                pour commencer
+              <p className="text-sm text-slate-500 mb-6">
+                Votre historique apparaîtra ici après votre premier scan
               </p>
+
+              <div className="flex flex-col sm:flex-row justify-center gap-2 text-left max-w-md mx-auto mb-6">
+                {[
+                  { n: '1', label: 'Scannez la pièce d\'identité' },
+                  { n: '2', label: 'Vérifiez et faites signer' },
+                  { n: '3', label: 'La fiche PDF est générée' },
+                ].map(({ n, label }) => (
+                  <div key={n} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 flex-1">
+                    <span className="w-6 h-6 rounded-full bg-blue-800 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                      {n}
+                    </span>
+                    <span className="text-xs text-slate-700 font-medium">{label}</span>
+                  </div>
+                ))}
+              </div>
+
               <button
                 type="button"
                 onClick={() => navigate('/scanner')}
-                style={{
-                  background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "12px",
-                  padding: "12px 24px",
-                  fontSize: "14px",
-                  fontWeight: "700",
-                  cursor: "pointer"
-                }}
+                className="bg-gradient-to-br from-blue-800 to-blue-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-shadow"
               >
                 📸 Démarrer mon premier scan
               </button>

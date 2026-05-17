@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BackButton from '../components/BackButton'
 
@@ -31,6 +32,7 @@ interface Hotel {
 }
 
 export default function Historique() {
+  const navigate = useNavigate()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -262,7 +264,7 @@ export default function Historique() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button 
-                        onClick={() => window.location.href = `/fiches/${client.id}`}
+                        onClick={() => navigate('/fiches')}
                         className="text-blue-600 hover:text-blue-900 font-medium"
                       >
                         Voir fiche
@@ -282,7 +284,7 @@ export default function Historique() {
                 Commencez à scanner des documents pour voir l'historique
               </p>
               <button
-                onClick={() => window.location.href = '/scanner'}
+                onClick={() => navigate('/scanner')}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
               >
                 Scanner un document
@@ -332,7 +334,7 @@ export default function Historique() {
                   
                   <div className="pt-3 border-t border-gray-200">
                     <button 
-                      onClick={() => window.location.href = `/fiches/${client.id}`}
+                      onClick={() => navigate('/fiches')}
                       className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                     >
                       Voir fiche
@@ -351,7 +353,7 @@ export default function Historique() {
                 Commencez à scanner des documents pour voir l'historique
               </p>
               <button
-                onClick={() => window.location.href = '/scanner'}
+                onClick={() => navigate('/scanner')}
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
               >
                 Scanner un document

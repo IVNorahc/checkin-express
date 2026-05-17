@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { apiService } from '../services/apiService'
 import BackButton from '../components/BackButton'
 // import * as tf from '@tensorflow/tfjs'
 // import * as cocoSsd from '@tensorflow-models/coco-ssd'
@@ -135,7 +134,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     console.log('response body:', text)
     const parsed = JSON.parse(text)
     console.log('OCR result:', parsed)
-    
+
+    if (parsed.error) {
+      setAnalysisError(parsed.error)
+      setCanRetry(true)
+      setIsAnalyzing(false)
+      return
+    }
+
     // Transformer les données pour correspondre au format OCRData
     const ocrData: OCRData = {
       documentType: parsed.type_piece || 'CNI',

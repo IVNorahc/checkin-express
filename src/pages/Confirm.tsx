@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { jsPDF } from 'jspdf'
 import { supabase } from '../lib/supabase'
-import { getDB } from '../lib/db'
+import { getDB, initDB } from '../lib/db'
 
 const mockData = {
   documentType: 'passport',
@@ -129,8 +129,25 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [signatureEmpty, setSignatureEmpty] = useState(true)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const isDrawingRef = useRef(false)
+
+  // Garantit que la DB est initialisée même après un rechargement de page (window.location.href).
+  // La DB est un singleton module : elle est null si la page a été rechargée sans passer par Dashboard.
+  useEffect(() => {
+    const ensureDB = async () => {
+      try {
+        getDB()
+      } catch {
+        const { data: sessionData } = await supabase.auth.getSession()
+        if (sessionData.session) {
+          initDB(sessionData.session.user.id)
+        }
+      }
+    }
+    void ensureDB()
+  }, [])
 
   const confidenceValue = data && typeof data.confidence === 'number' ? data.confidence : mockData.confidence
   const confidencePercent = useMemo(() => Math.round(confidenceValue * 100), [confidenceValue])
@@ -293,6 +310,66 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       roomNumber,
       printed,
     })
+
+    // Sync vers Supabase pour que le check-in apparaisse dans l'historique.
+    // Non-bloquant : si le réseau est coupé, les données restent dans IndexedDB.
+    setSyncError(null)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      console.log('[Confirm] user_id:', sessionData.session?.user.id ?? 'PAS DE SESSION')
+
+      if (!sessionData.session) {
+        setSyncError('Session expirée — check-in sauvegardé localement uniquement.')
+      } else {
+        const { data: hotelData, error: hotelError } = await supabase
+          .from('hotels')
+          .select('id')
+          .eq('user_id', sessionData.session.user.id)
+          .single()
+
+        console.log('[Confirm] hotel lookup →', { hotel_id: hotelData?.id ?? null, hotelError })
+
+        if (hotelError || !hotelData) {
+          const msg = hotelError?.message ?? 'hôtel introuvable'
+          console.error('[Confirm] Impossible de récupérer l\'hôtel:', hotelError)
+          setSyncError(`Hôtel introuvable (${msg}) — check-in sauvegardé localement.`)
+        } else {
+          console.log('[Confirm] INSERT clients → hotel_id:', hotelData.id)
+          const { error: insertError } = await supabase.from('clients').insert({
+            hotel_id: hotelData.id,
+            nom: formData.surname,
+            prenoms: formData.givenNames,
+            date_naissance: formData.dateOfBirth,
+            lieu_naissance: '',
+            nationalite: formData.nationality,
+            document_type: formData.documentType,
+            numero_document: formData.documentNumber,
+            date_delivrance: formData.dateDelivrance,
+            date_expiration: formData.expiryDate,
+            chambre: roomNumber,
+            profession: formData.profession,
+            domicile: formData.address,
+            venant_de: formData.venantDe,
+            allant_a: formData.allantA,
+            objet_voyage: '',
+            nb_enfants: '',
+            immatriculation: '',
+          })
+
+          if (insertError) {
+            // Log complet : message + code (ex. 42501 = RLS violation, 23503 = FK violation)
+            console.error('[Confirm] Supabase insert error:', insertError)
+            console.error('[Confirm] code:', insertError.code, '| hint:', insertError.hint, '| details:', insertError.details)
+            setSyncError(`Erreur enregistrement Supabase (code ${insertError.code}) : ${insertError.message}`)
+          } else {
+            console.log('[Confirm] ✓ Check-in synchronisé dans Supabase')
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Confirm] Supabase sync exception:', err)
+      setSyncError('Erreur réseau — check-in sauvegardé localement uniquement.')
+    }
 
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
     
@@ -748,6 +825,11 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           </div>
 
           {successMessage && <p className="text-sm text-green-600 font-medium">{successMessage}</p>}
+          {syncError && (
+            <p className="text-sm text-orange-600 font-medium bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+              ⚠️ {syncError}
+            </p>
+          )}
         </form>
       </div>
     </div>
