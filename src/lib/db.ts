@@ -21,7 +21,8 @@ export interface FichePolice {
   generatedAt: string
   roomNumber: string
   printed: boolean
-  pdfData?: string
+  pdfData?: string      // legacy: base64 data URI (v1)
+  ficheParams?: string  // JSON.stringify(FicheParams) pour régénération PDF
 }
 
 class HotelDatabase extends Dexie {
@@ -33,6 +34,11 @@ class HotelDatabase extends Dexie {
     this.version(1).stores({
       clients: '++id, surname, documentNumber, scanDate, roomNumber',
       fichesPolice: '++id, clientId, generatedAt, roomNumber'
+    })
+    // v2 : index 'printed' pour requêtes efficaces sur fiches non imprimées
+    this.version(2).stores({
+      clients: '++id, surname, documentNumber, scanDate, roomNumber',
+      fichesPolice: '++id, clientId, generatedAt, roomNumber, printed'
     })
   }
 }
@@ -48,4 +54,3 @@ export function getDB() {
   if (!db) throw new Error('DB non initialisée')
   return db
 }
-

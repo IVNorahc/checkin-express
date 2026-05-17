@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
+import { generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
 
 type DashboardProps = {
   onRequireLogin: () => void
@@ -24,6 +25,9 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [welcomeDismissed, setWelcomeDismissed] = useState(
     () => localStorage.getItem('checkin_welcome_v1') === 'dismissed'
   )
+  const [pendingFichesCount, setPendingFichesCount] = useState(0)
+  const [printReady, setPrintReady] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false)
 
   const dismissWelcome = () => {
     localStorage.setItem('checkin_welcome_v1', 'dismissed')
@@ -118,8 +122,16 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         .between(startOfMonth.toISOString(), endOfMonth.toISOString())
         .count()
 
+      // Fiches non encore imprimées du jour (pour le badge et l'impression groupée)
+      const pendingCount = await db.fichesPolice
+        .where('generatedAt')
+        .between(startOfToday.toISOString(), endOfToday.toISOString())
+        .filter(f => !f.printed)
+        .count()
+
       setScansToday(todayCount)
       setScansThisMonth(monthCount)
+      setPendingFichesCount(pendingCount)
     }
 
     void loadClients()
@@ -145,6 +157,30 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
 
     return () => window.clearInterval(timer)
   }, [])
+
+  // Demander la permission de notification au premier chargement
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
+
+  // Déclencheur 20h00 Dakar (Africa/Dakar = UTC+0, pas de DST)
+  useEffect(() => {
+    const dakarHour = new Date().getUTCHours()
+    const today = new Date().toISOString().split('T')[0]
+    const lastTriggered = localStorage.getItem('checkin_print_trigger_date')
+
+    if (dakarHour === 20 && lastTriggered !== today && pendingFichesCount > 0) {
+      setPrintReady(true)
+      localStorage.setItem('checkin_print_trigger_date', today)
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Check-in Express', {
+          body: `Vos ${pendingFichesCount} fiche(s) du jour sont prêtes à imprimer`,
+        })
+      }
+    }
+  }, [now, pendingFichesCount])
 
   // Correction 1: Real-time trial countdown update
   useEffect(() => {
@@ -215,6 +251,55 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       onSubscribeClick()
     } else {
       handleSubscribe()
+    }
+  }
+
+  const handlePrintNow = async () => {
+    setIsPrinting(true)
+    try {
+      const db = getDB()
+      const nowDate = new Date()
+      const startOfToday = new Date(nowDate)
+      startOfToday.setUTCHours(0, 0, 0, 0)
+      const endOfToday = new Date(nowDate)
+      endOfToday.setUTCHours(23, 59, 59, 999)
+
+      const unprintedFiches = await db.fichesPolice
+        .where('generatedAt')
+        .between(startOfToday.toISOString(), endOfToday.toISOString())
+        .filter(f => !f.printed && !!f.ficheParams)
+        .toArray()
+
+      if (unprintedFiches.length === 0) {
+        alert('Aucune fiche à imprimer pour aujourd\'hui.')
+        setIsPrinting(false)
+        return
+      }
+
+      const fichesList: FicheParams[] = unprintedFiches.map(f => JSON.parse(f.ficheParams!))
+      const blob = generateFichesGroupees(fichesList)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 15_000)
+
+      // Marquer comme imprimées
+      const ficheIds = unprintedFiches.map(f => f.id!)
+      const clientIds = unprintedFiches.map(f => f.clientId)
+      await Promise.all([
+        ...ficheIds.map(id => db.fichesPolice.update(id, { printed: true })),
+        ...clientIds.map(id => db.clients.update(id, { printed: true })),
+      ])
+
+      // Recharger l'état local
+      const updatedClients = await db.clients.orderBy('scanDate').reverse().limit(10).toArray()
+      setLastClients(updatedClients)
+      setPendingFichesCount(0)
+      setPrintReady(false)
+    } catch (err) {
+      console.error('Erreur impression:', err)
+      alert('Erreur lors de la génération du PDF.')
+    } finally {
+      setIsPrinting(false)
     }
   }
 
@@ -568,6 +653,39 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
             📸 SCANNER UN DOCUMENT
           </button>
         </section>
+
+        {/* Badge fiches en attente + bouton impression */}
+        {pendingFichesCount > 0 && (
+          <section style={{display: "flex", justifyContent: "center", marginBottom: "16px"}}>
+            <div className={`w-full sm:max-w-sm rounded-xl p-4 flex items-center justify-between gap-3 ${
+              printReady
+                ? 'bg-green-50 border-2 border-green-400'
+                : 'bg-amber-50 border border-amber-300'
+            }`}>
+              <div>
+                <p className={`font-bold text-sm ${printReady ? 'text-green-800' : 'text-amber-800'}`}>
+                  {printReady ? '🖨️ Prêtes à imprimer !' : '⏳ Fiches en attente'}
+                </p>
+                <p className={`text-xs mt-0.5 ${printReady ? 'text-green-700' : 'text-amber-700'}`}>
+                  {pendingFichesCount} fiche{pendingFichesCount > 1 ? 's' : ''} du jour
+                  {!printReady && ' · impression prévue à 20h'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handlePrintNow}
+                disabled={isPrinting}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
+                  printReady
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-amber-500 hover:bg-amber-600 text-white'
+                }`}
+              >
+                {isPrinting ? '...' : 'Imprimer maintenant'}
+              </button>
+            </div>
+          </section>
+        )}
 
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
