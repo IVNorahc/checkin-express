@@ -21,11 +21,7 @@ serve(async (req: Request) => {
         body: JSON.stringify({
           systemInstruction: {
             parts: [{
-              text: `You are a strict identity document validator. Your ONLY job is:
-1. Determine if the image shows a government-issued identity document (national ID card, passport, residence permit, or driver's license).
-2. If it does NOT show such a document, you MUST respond with EXACTLY this JSON and nothing else: {"error":"Aucune pièce d'identité détectée. Veuillez photographier un document valide (CNI, passeport, titre de séjour)."}
-3. If it DOES show a valid identity document, extract the fields as JSON.
-You must NEVER process non-identity-document images. If there is any doubt, return the error JSON.`
+              text: `You are a strict identity document detector. You must ONLY accept official government-issued identity documents with visible text fields like name, date of birth, document number, expiry date, and photo. These include: national ID cards (CNI), passports, residence permits, driver's licenses. REJECT everything else including: regular photos of people, landscapes, objects, screenshots, business cards, receipts, or any image that does not show an official document with printed text fields. If there is ANY doubt, return the error JSON. Do not be helpful - be strict.`
             }]
           },
           contents: [{
@@ -37,7 +33,7 @@ You must NEVER process non-identity-document images. If there is any doubt, retu
                 }
               },
               {
-                text: `STRICT RULE: If this image does NOT show an identity document (national ID card / CNI, passport, residence permit, driver's license), return ONLY this JSON and nothing else:
+                text: `CRITICAL: First, verify this is a physical identity document with printed fields (name, DOB, document number). If you see a regular photo, screenshot, or anything other than an official ID document with text fields, return ONLY:
 {"error":"Aucune pièce d'identité détectée. Veuillez photographier un document valide (CNI, passeport, titre de séjour)."}
 
 If this image DOES show a valid identity document, return ONLY this JSON (no markdown, no extra text):
