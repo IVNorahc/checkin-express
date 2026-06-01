@@ -28,10 +28,44 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [pendingFichesCount, setPendingFichesCount] = useState(0)
   const [printReady, setPrintReady] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
+  const [syncCount, setSyncCount] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const dismissWelcome = () => {
     localStorage.setItem('checkin_welcome_v1', 'dismissed')
     setWelcomeDismissed(true)
+  }
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    setRefreshKey(k => k + 1)
+    setTimeout(() => setIsRefreshing(false), 1500)
+  }
+
+  const syncOfflineData = async () => {
+    if (isSyncing || !session) return
+    setIsSyncing(true)
+    try {
+      const db = getDB()
+      const pending = await db.clients.where('syncStatus').equals('pending_sync').toArray()
+      let synced = 0
+      for (const client of pending) {
+        if (!client.pendingSyncData) continue
+        const payload = JSON.parse(client.pendingSyncData)
+        const { error } = await supabase.from('clients').insert(payload)
+        if (!error) {
+          await db.clients.update(client.id!, { syncStatus: 'synced' })
+          synced++
+        }
+      }
+      if (synced > 0) setRefreshKey(k => k + 1)
+    } catch (e) {
+      console.error('[Dashboard] sync error:', e)
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   const handleSignOut = async () => {
@@ -132,10 +166,13 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       setScansToday(todayCount)
       setScansThisMonth(monthCount)
       setPendingFichesCount(pendingCount)
+
+      const pendingSyncs = await db.clients.where('syncStatus').equals('pending_sync').count()
+      setSyncCount(pendingSyncs)
     }
 
     void loadClients()
-  }, [session])
+  }, [session, refreshKey])
 
   useEffect(() => {
     const onOnline = () => setIsOnline(true)
@@ -534,21 +571,48 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
               </span>
             </div>
 
-            {/* Bouton déconnexion sans fond blanc */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Indicateur réseau */}
+              <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                isOnline
+                  ? 'text-green-700 bg-green-50 border border-green-200'
+                  : 'text-red-700 bg-red-50 border border-red-200'
+              }`}>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isOnline ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
+                <span className="text-xs">{isOnline ? 'En ligne' : 'Hors ligne'}</span>
+              </span>
+              {/* Actualiser */}
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                title="Actualiser"
+                className="text-slate-500 hover:text-blue-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <span className={isRefreshing ? 'animate-spin inline-block' : 'inline-block'}>↻</span>
+              </button>
               {isAdmin && (
                 <button
                   type="button"
                   onClick={() => navigate('/admin')}
-                  className="w-full md:w-auto px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Admin
                 </button>
               )}
+              {/* Paramètres */}
+              <button
+                type="button"
+                onClick={() => navigate('/parametres')}
+                title="Paramètres"
+                className="text-slate-600 hover:text-blue-700 px-2 py-1.5 rounded-lg text-sm hover:bg-slate-100 transition-colors"
+              >
+                ⚙️
+              </button>
               <button
                 onClick={handleSignOut}
                 type="button"
-                className="w-full md:w-auto bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
+                className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
                 Déconnexion
               </button>
@@ -575,6 +639,13 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         {trialBanner && (
           <div className={trialBanner.className}>
             {trialBanner.text}
+          </div>
+        )}
+
+        {!isOnline && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-orange-800 font-medium mb-4 flex items-center gap-2">
+            <span>📵</span>
+            <span>Mode hors ligne — vos check-ins sont sauvegardés localement.</span>
           </div>
         )}
 
@@ -687,6 +758,27 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           </section>
         )}
 
+        {syncCount > 0 && (
+          <section style={{display: "flex", justifyContent: "center", marginBottom: "16px"}}>
+            <div className="w-full sm:max-w-sm bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-bold text-sm text-amber-800">⏳ Données en attente</p>
+                <p className="text-xs mt-0.5 text-amber-700">
+                  {syncCount} fiche{syncCount > 1 ? 's' : ''} en attente de synchronisation
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={syncOfflineData}
+                disabled={isSyncing || !isOnline}
+                className="flex-shrink-0 px-4 py-2 rounded-lg font-bold text-sm bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-50 transition-colors"
+              >
+                {isSyncing ? '...' : 'Synchroniser'}
+              </button>
+            </div>
+          </section>
+        )}
+
         <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
@@ -707,7 +799,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           </button>
         </section>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-white/80 rounded-xl px-6 py-4 text-center shadow-sm">
             <p className="text-3xl font-bold text-blue-700">{scansToday}</p>
             <p className="text-sm text-gray-500">Scans aujourd'hui</p>
@@ -775,7 +867,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
                 return (
                   <div
                     key={client.id}
-                    className="border border-[#e2e8f0] rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3"
+                    className="border border-[#e2e8f0] rounded-lg p-3 sm:p-4 flex flex-row items-center justify-between gap-2"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-[#1e293b] text-sm sm:text-base truncate">
@@ -786,7 +878,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
                       </div>
                     </div>
                     <div
-                      className={`text-xs sm:text-sm font-semibold rounded-full px-2 sm:px-3 py-1 flex-shrink-0 ${
+                      className={`text-xs font-semibold rounded-full px-2 py-1 flex-shrink-0 whitespace-nowrap ${
                         client.printed ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[#fef3c7] text-[#92400e]'
                       }`}
                     >
@@ -799,7 +891,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           )}
         </section>
 
-        <div className="flex gap-4 justify-center mt-4">
+        <div className="flex gap-4 justify-center mt-4 flex-wrap">
           <button
             type="button"
             onClick={() => navigate('/fiches')}
@@ -814,6 +906,14 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
             className="text-blue-600 hover:underline text-sm"
           >
             Voir l'historique complet
+          </button>
+          <span className="text-gray-300">|</span>
+          <button
+            type="button"
+            onClick={() => navigate('/stats')}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            📊 Statistiques
           </button>
         </div>
       </main>
