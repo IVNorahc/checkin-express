@@ -37,7 +37,7 @@ serve(async (req: Request) => {
 {"error":"Aucune pièce d'identité détectée. Veuillez photographier un document valide (CNI, passeport, titre de séjour)."}
 
 If this image DOES show a valid identity document, return ONLY this JSON (no markdown, no extra text):
-{"nom":"","prenom":"","date_naissance":"","nationalite":"","numero_piece":"","type_piece":"CNI ou Passeport ou Titre de séjour ou Permis de conduire","date_expiration":""}
+{"nom":"","prenom":"","date_naissance":"","lieu_naissance":"","sexe":"M ou F","nationalite":"","numero_piece":"","type_piece":"CNI ou Passeport ou Titre de séjour ou Permis de conduire","date_expiration":"","date_delivrance":"","adresse":"","profession":"","nom_pere":"","nom_mere":""}
 Leave a field empty if unreadable.`
               }
             ]
@@ -47,7 +47,6 @@ Leave a field empty if unreadable.`
     )
 
     const geminiData = await geminiResponse.json()
-    console.log('Gemini response:', JSON.stringify(geminiData))
 
     if (!geminiResponse.ok || geminiData.error || !geminiData.candidates) {
       console.error('Gemini API error:', JSON.stringify(geminiData.error ?? 'no candidates'))

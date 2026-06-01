@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ReactElement } from 'react'
+import { useHotel } from '../contexts/HotelContext'
 
 interface NavigationProps {
   currentPage?: string
@@ -10,6 +11,7 @@ interface NavItem {
   to: string
   label: string
   icon: string
+  ownerOnly?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -17,7 +19,7 @@ const navItems: NavItem[] = [
   { to: 'scan', label: 'Scanner', icon: 'camera' },
   { to: 'historique', label: 'Historique', icon: 'list' },
   { to: 'fiches', label: 'Fiches', icon: 'document' },
-  { to: 'parametres', label: 'Paramètres', icon: 'settings' },
+  { to: 'parametres', label: 'Paramètres', icon: 'settings', ownerOnly: true },
   { to: 'support', label: 'Support', icon: 'help' }
 ]
 
@@ -57,6 +59,8 @@ const icons: Record<string, ReactElement> = {
 }
 
 export default function Navigation({ currentPage = 'dashboard', onNavigate }: NavigationProps) {
+  const { isEmployee } = useHotel()
+  const visibleItems = navItems.filter(item => !(item.ownerOnly && isEmployee))
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -83,13 +87,13 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
     // Navigation mobile - barre en bas
     return (
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 z-50">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <button
             key={item.to}
             onClick={() => handleNavClick(item.to)}
             className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
-              currentPage === item.to 
-                ? 'text-blue-600' 
+              currentPage === item.to
+                ? 'text-blue-600'
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
@@ -120,13 +124,13 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
       </div>
 
       <div className="flex-1">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <button
             key={item.to}
             onClick={() => handleNavClick(item.to)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
-              currentPage === item.to 
-                ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' 
+              currentPage === item.to
+                ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
                 : 'text-gray-700 hover:bg-gray-50'
             }`}
           >

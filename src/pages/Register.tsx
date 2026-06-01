@@ -12,6 +12,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -27,9 +28,24 @@ export default function Register({ onLoginClick }: RegisterProps) {
       return
     }
 
+    if (!/[A-Z]/.test(password)) {
+      setFeedback({ type: 'error', text: 'Le mot de passe doit contenir au moins une lettre majuscule.' })
+      return
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setFeedback({ type: 'error', text: 'Le mot de passe doit contenir au moins un chiffre.' })
+      return
+    }
+
+    if (!acceptedTerms) {
+      setFeedback({ type: 'error', text: 'Vous devez accepter les CGU et la politique de confidentialité pour continuer.' })
+      return
+    }
+
     setIsLoading(true)
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         emailRedirectTo: 'https://checkinexpress.app/confirm-email'
@@ -201,7 +217,7 @@ export default function Register({ onLoginClick }: RegisterProps) {
                   />
                 </div>
 
-                <div style={{marginBottom:"24px"}}>
+                <div style={{marginBottom:"20px"}}>
                   <input
                     type="password"
                     placeholder="Confirmer le mot de passe"
@@ -228,20 +244,68 @@ export default function Register({ onLoginClick }: RegisterProps) {
                   />
                 </div>
 
+                {/* Case à cocher CGU obligatoire */}
+                <div style={{
+                  marginBottom: "16px",
+                  padding: "12px 14px",
+                  background: acceptedTerms ? "rgba(22,163,74,0.06)" : "rgba(232,244,253,0.60)",
+                  border: `1.5px solid ${acceptedTerms ? "rgba(22,163,74,0.3)" : "#bfdbfe"}`,
+                  borderRadius: "10px",
+                }}>
+                  <label style={{display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer"}}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      style={{
+                        marginTop: "2px",
+                        width: "16px",
+                        height: "16px",
+                        accentColor: "#1e3a8a",
+                        flexShrink: 0,
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span style={{fontSize: "13px", color: "#334155", lineHeight: "1.4"}}>
+                      J'ai lu et j'accepte les{' '}
+                      <a
+                        href="/cgu"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{color: "#1e3a8a", fontWeight: "600", textDecoration: "underline"}}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Conditions Générales d'Utilisation
+                      </a>
+                      {' '}et la{' '}
+                      <a
+                        href="/confidentialite"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{color: "#1e3a8a", fontWeight: "600", textDecoration: "underline"}}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Politique de Confidentialité
+                      </a>
+                      , y compris le traitement de données à caractère personnel.
+                    </span>
+                  </label>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !acceptedTerms}
                   style={{
-                    background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+                    background: (!acceptedTerms || isLoading) ? "#94a3b8" : "linear-gradient(135deg, #1e3a8a, #4a90d9)",
                     color: "white",
                     borderRadius: "10px",
                     padding: "14px",
                     fontWeight: "700",
-                    boxShadow: "0 4px 16px rgba(30,58,138,0.3)",
+                    boxShadow: (!acceptedTerms || isLoading) ? "none" : "0 4px 16px rgba(30,58,138,0.3)",
                     width: "100%",
                     border: "none",
                     fontSize: "15px",
-                    cursor: "pointer",
+                    cursor: (!acceptedTerms || isLoading) ? "not-allowed" : "pointer",
                     transition: "all 0.3s ease"
                   }}
                 >

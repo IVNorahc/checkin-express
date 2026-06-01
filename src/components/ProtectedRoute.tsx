@@ -47,18 +47,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         const isTrial = hotelData.subscription_status === 'trial' && !trialExpired
 
         const accessGranted = isActive || isTrial
-
-        console.log('[ProtectedRoute] DEBUG subscription check:', {
-          subscription_status: hotelData.subscription_status,
-          trial_end: hotelData.trial_end,
-          trial_end_parsed: hotelData.trial_end ? new Date(hotelData.trial_end).toISOString() : null,
-          now: new Date().toISOString(),
-          trialExpired,
-          isActive,
-          isTrial,
-          accessGranted,
-        })
-
         setHasAccess(accessGranted)
         
       } catch (error) {

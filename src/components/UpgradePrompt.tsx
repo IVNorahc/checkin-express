@@ -80,8 +80,8 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
         {getUpgradeButton()}
         <p className="text-sm text-yellow-600">
           Contactez-nous à{' '}
-          <a href="mailto:contact@percepta.io" className="underline hover:text-yellow-800">
-            contact@percepta.io
+          <a href="mailto:perceptasn@gmail.com" className="underline hover:text-yellow-800">
+            perceptasn@gmail.com
           </a>{' '}
           pour plus d'informations
         </p>

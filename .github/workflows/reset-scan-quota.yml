@@ -1,0 +1,44 @@
+name: Réinitialisation mensuelle des quotas de scans
+
+on:
+  # Le 1er de chaque mois à 00h05 UTC (5 minutes après minuit pour éviter les conflits)
+  schedule:
+    - cron: '5 0 1 * *'
+  # Déclenchement manuel depuis GitHub Actions pour les tests
+  workflow_dispatch:
+
+jobs:
+  reset-quota:
+    name: Reset ocr_scans_used → 0 pour tous les hôtels
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Réinitialiser ocr_scans_used via l'API Supabase (service role)
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            -X PATCH \
+            "${SUPABASE_URL}/rest/v1/hotels?ocr_scans_used=gte.0" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d '{"ocr_scans_used": 0}')
+
+          echo "HTTP status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" != "204" ]; then
+            echo "Erreur — réponse :"
+            cat /tmp/response.txt
+            exit 1
+          fi
+
+          echo "✅ Quotas réinitialisés avec succès (HTTP 204)"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Log de confirmation
+        run: |
+          echo "Réinitialisation exécutée le $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Prochain reset : 1er $(date -u -d 'next month' '+%B %Y')"

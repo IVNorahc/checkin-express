@@ -28,10 +28,8 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [pendingFichesCount, setPendingFichesCount] = useState(0)
   const [printReady, setPrintReady] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
-  const [syncCount, setSyncCount] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [isSyncing, setIsSyncing] = useState(false)
 
   const dismissWelcome = () => {
     localStorage.setItem('checkin_welcome_v1', 'dismissed')
@@ -42,30 +40,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     setIsRefreshing(true)
     setRefreshKey(k => k + 1)
     setTimeout(() => setIsRefreshing(false), 1500)
-  }
-
-  const syncOfflineData = async () => {
-    if (isSyncing || !session) return
-    setIsSyncing(true)
-    try {
-      const db = getDB()
-      const pending = await db.clients.where('syncStatus').equals('pending_sync').toArray()
-      let synced = 0
-      for (const client of pending) {
-        if (!client.pendingSyncData) continue
-        const payload = JSON.parse(client.pendingSyncData)
-        const { error } = await supabase.from('clients').insert(payload)
-        if (!error) {
-          await db.clients.update(client.id!, { syncStatus: 'synced' })
-          synced++
-        }
-      }
-      if (synced > 0) setRefreshKey(k => k + 1)
-    } catch (e) {
-      console.error('[Dashboard] sync error:', e)
-    } finally {
-      setIsSyncing(false)
-    }
   }
 
   const handleSignOut = async () => {
@@ -168,7 +142,38 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       setPendingFichesCount(pendingCount)
 
       const pendingSyncs = await db.clients.where('syncStatus').equals('pending_sync').count()
-      setSyncCount(pendingSyncs)
+
+      // Synchronisation automatique si en ligne
+      if (pendingSyncs > 0 && navigator.onLine && session) {
+        const db2 = getDB()
+        const { data: hotelData } = await supabase
+          .from('hotels')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .single()
+
+        if (hotelData?.id) {
+          const pendingClients = await db2.clients.where('syncStatus').equals('pending_sync').toArray()
+          for (const client of pendingClients) {
+            const payload = {
+              hotel_id: hotelData.id,
+              nom: client.surname ?? null,
+              prenoms: client.givenNames ?? null,
+              date_naissance: client.dateOfBirth ?? null,
+              nationalite: client.nationality ?? null,
+              document_type: client.documentType ?? null,
+              numero_document: client.documentNumber ?? null,
+              date_expiration: client.expiryDate ?? null,
+              chambre: client.roomNumber ?? null,
+              created_at: client.scanDate ?? null,
+            }
+            const { error } = await supabase.from('clients').insert(payload)
+            if (!error) {
+              await db2.clients.update(client.id!, { syncStatus: 'synced' })
+            }
+          }
+        }
+      }
     }
 
     void loadClients()
@@ -758,55 +763,34 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           </section>
         )}
 
-        {syncCount > 0 && (
-          <section style={{display: "flex", justifyContent: "center", marginBottom: "16px"}}>
-            <div className="w-full sm:max-w-sm bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center justify-between gap-3">
-              <div>
-                <p className="font-bold text-sm text-amber-800">⏳ Données en attente</p>
-                <p className="text-xs mt-0.5 text-amber-700">
-                  {syncCount} fiche{syncCount > 1 ? 's' : ''} en attente de synchronisation
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={syncOfflineData}
-                disabled={isSyncing || !isOnline}
-                className="flex-shrink-0 px-4 py-2 rounded-lg font-bold text-sm bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-50 transition-colors"
-              >
-                {isSyncing ? '...' : 'Synchroniser'}
-              </button>
-            </div>
-          </section>
-        )}
 
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
+        <section className="flex gap-3 mb-6">
           <button
             type="button"
             onClick={handleSubscribeClick}
-            className="w-full md:w-auto border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white/80 py-3 px-6 rounded-lg font-semibold transition-colors sm:max-w-sm"
+            className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white py-3 px-4 rounded-xl font-semibold transition-colors text-sm"
           >
             {profile?.status === 'active' ? 'Gérer mon abonnement' : 'Passer à l\'abonnement'}
           </button>
-        </section>
-
-        <section style={{display: "flex", justifyContent: "center", marginBottom: "24px"}} className="sm:mb-8 gap-3 md:gap-6">
           <button
             type="button"
             onClick={() => navigate('/fiches')}
-            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-sm"
           >
             Fiche de contrôle
           </button>
         </section>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-white/80 rounded-xl px-6 py-4 text-center shadow-sm">
+          <div className="bg-white rounded-xl px-4 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
+            <span className="text-2xl mb-1">📅</span>
             <p className="text-3xl font-bold text-blue-700">{scansToday}</p>
-            <p className="text-sm text-gray-500">Scans aujourd'hui</p>
+            <p className="text-xs text-gray-500 mt-1">Scans aujourd'hui</p>
           </div>
-          <div className="bg-white/80 rounded-xl px-6 py-4 text-center shadow-sm">
+          <div className="bg-white rounded-xl px-4 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
+            <span className="text-2xl mb-1">📊</span>
             <p className="text-3xl font-bold text-blue-700">{scansThisMonth}</p>
-            <p className="text-sm text-gray-500">Scans ce mois</p>
+            <p className="text-xs text-gray-500 mt-1">Scans ce mois</p>
           </div>
         </div>
 
@@ -891,7 +875,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           )}
         </section>
 
-        <div className="flex gap-4 justify-center mt-4 flex-wrap">
+        <div className="flex gap-4 justify-center mt-4 flex-nowrap items-center">
           <button
             type="button"
             onClick={() => navigate('/fiches')}

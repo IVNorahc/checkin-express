@@ -13,6 +13,9 @@ export interface Client {
   roomNumber: string
   scanDate: string
   printed: boolean
+  numero_registre?: string
+  syncStatus?: 'synced' | 'pending_sync'
+  pendingSyncData?: string
 }
 
 export interface FichePolice {
@@ -23,6 +26,7 @@ export interface FichePolice {
   printed: boolean
   pdfData?: string      // legacy: base64 data URI (v1)
   ficheParams?: string  // JSON.stringify(FicheParams) pour régénération PDF
+  numero_registre?: string
 }
 
 class HotelDatabase extends Dexie {
@@ -38,6 +42,11 @@ class HotelDatabase extends Dexie {
     // v2 : index 'printed' pour requêtes efficaces sur fiches non imprimées
     this.version(2).stores({
       clients: '++id, surname, documentNumber, scanDate, roomNumber',
+      fichesPolice: '++id, clientId, generatedAt, roomNumber, printed'
+    })
+    // v3 : index 'syncStatus' pour le mode offline (pending_sync → synced)
+    this.version(3).stores({
+      clients: '++id, surname, documentNumber, scanDate, roomNumber, syncStatus',
       fichesPolice: '++id, clientId, generatedAt, roomNumber, printed'
     })
   }

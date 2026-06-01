@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import BackButton from '../components/BackButton'
 import { supabase } from '../lib/supabase'
-// import * as tf from '@tensorflow/tfjs'
-// import * as cocoSsd from '@tensorflow-models/coco-ssd'
 
 
 type ScanProps = {
@@ -119,13 +117,9 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   }
 
   const analyseImage = async (imageBase64: string) => {
-    console.log('imageBase64 length:', imageBase64?.length)
-
     const { data, error: fnError } = await supabase.functions.invoke('ocr', {
       body: { imageBase64 }
     })
-
-    console.log('OCR result:', data, 'error:', fnError)
 
     if (fnError) {
       setAnalysisError("Service OCR temporairement indisponible. Veuillez utiliser la saisie manuelle.")
@@ -147,22 +141,23 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
 
     // Transformer les données pour correspondre au format OCRData
-    const ocrData: OCRData = {
+    const ocrData: OCRData & { sex?: string | null } = {
       documentType: parsed.type_piece || 'CNI',
       needsVerso: isVersoMode ? false : true,
       nom: parsed.nom || null,
       prenoms: parsed.prenom || null,
       dateNaissance: parsed.date_naissance || null,
-      lieuNaissance: null,
+      lieuNaissance: parsed.lieu_naissance || null,
       nationalite: parsed.nationalite || null,
       numeroDocument: parsed.numero_piece || null,
-      dateDelivrance: null,
+      dateDelivrance: parsed.date_delivrance || null,
       dateExpiration: parsed.date_expiration || null,
       confidence: 0.8,
-      adresse: null,
-      profession: null,
-      nomPere: null,
-      nomMere: null
+      sex: parsed.sexe || null,
+      adresse: parsed.adresse || null,
+      profession: parsed.profession || null,
+      nomPere: parsed.nom_pere || null,
+      nomMere: parsed.nom_mere || null,
     }
     
     if (!isMountedRef.current) return
@@ -365,15 +360,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
   
   const dataURL = canvas.toDataURL('image/jpeg', 0.8)
-  
+
   if (!dataURL || dataURL === 'data:,') {
     console.error('Capture échouée - canvas vide')
     setError('Capture échouée. Réessayez.')
     return
   }
-  
+
   const imageBase64 = dataURL.split(',')[1]
-  console.log('Image capturée, taille base64:', imageBase64.length)
   
   setCapturedImage(dataURL)
   await analyseImage(imageBase64)
@@ -428,7 +422,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
   const handleManualInput = () => {
     const manualData: OCRData = {
-      documentType: "id_card",
+      documentType: "",
       needsVerso: false,
       nom: "",
       prenoms: "",

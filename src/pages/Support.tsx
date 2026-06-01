@@ -5,6 +5,7 @@ import BackButton from '../components/BackButton'
 interface User {
   id: string
   email: string
+  hotelPhone?: string
 }
 
 interface FAQ {
@@ -38,7 +39,17 @@ export default function Support() {
         const { data: { user: userData } } = await supabase.auth.getUser()
         if (!userData) return
 
-        setUser({ id: userData.id, email: userData.email || '' })
+        const { data: hotelData } = await supabase
+          .from('hotels')
+          .select('phone')
+          .eq('user_id', userData.id)
+          .single()
+
+        setUser({
+          id: userData.id,
+          email: userData.email || '',
+          hotelPhone: hotelData?.phone || '',
+        })
 
       } catch (err) {
         console.error('Erreur:', err)
@@ -56,7 +67,7 @@ export default function Support() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmitContact = async (e: React.FormEvent) => {
+  const handleSubmitContact = async (e: { preventDefault(): void }) => {
     e.preventDefault()
     setSending(true)
     setError(null)
@@ -68,26 +79,18 @@ export default function Support() {
         return
       }
 
-      // Préparer le contenu de l'email
-      const emailSubject = `[Check-in Express] ${formData.sujet} - ${user.email}`
-      const emailBody = `
-De: ${user.email}
-Sujet: ${formData.sujet}
-Date: ${new Date().toLocaleString('fr-FR')}
+      const { error: insertError } = await supabase
+        .from('support_messages')
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          sujet: formData.sujet,
+          message: formData.message.trim(),
+        })
 
-Message:
-${formData.message}
-      `.trim()
+      if (insertError) throw insertError
 
-      // Créer un mailto: link comme fallback
-      const mailtoLink = `mailto:support@percepta.app?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
-      
-      // Ouvrir le client email par défaut
-      window.open(mailtoLink, '_blank')
-      
-      setSuccess('Client email ouvert. Veuillez envoyer votre message.')
-
-      // Réinitialiser le formulaire
+      setSuccess('Message envoyé avec succès. Notre équipe vous répondra sous 24h.')
       setFormData({ sujet: '', message: '' })
 
     } catch (err) {
@@ -161,7 +164,7 @@ ${formData.message}
       </header>
 
       {/* CONTENU */}
-      <div className="p-6">
+      <div className="px-4 py-6 sm:px-6">
         <BackButton />
 
         {/* Messages d'erreur/succès */}
@@ -279,8 +282,9 @@ ${formData.message}
           {/* Section 3 - Contact direct */}
           <div className="bg-white/90 rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Contact direct</h2>
-            
+
             <div className="space-y-4">
+              {/* Email */}
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -292,31 +296,33 @@ ${formData.message}
                 <div>
                   <h3 className="font-medium text-gray-900">Email</h3>
                   <a
-                    href="mailto:support@percepta.app"
+                    href="mailto:perceptasn@gmail.com"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
-                    support@percepta.app
+                    perceptasn@gmail.com
                   </a>
                 </div>
               </div>
 
+              {/* WhatsApp */}
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    <svg className="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.118 1.529 5.845L0 24l6.335-1.502A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.88 9.88 0 01-5.031-1.374l-.36-.214-3.762.892.948-3.663-.235-.374A9.86 9.86 0 012.118 12C2.118 6.533 6.533 2.118 12 2.118S21.882 6.533 21.882 12 17.467 21.882 12 21.882z"/>
                     </svg>
                   </div>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">WhatsApp</h3>
                   <a
-                    href="https://wa.me/221770000000"
+                    href="https://wa.me/221711279503?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20avec%20Check-in%20Express"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-green-600 hover:text-green-800 underline"
+                    className="inline-flex items-center gap-2 mt-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
-                    +221 77 000 00 00
+                    Contacter via WhatsApp
                   </a>
                 </div>
               </div>

@@ -22,9 +22,55 @@ export interface FicheParams {
   dateDepart: string
   signatureDataUrl?: string
   registrationNumber?: string
+  logoUrl?: string  // data URL base64 (converti avant appel)
+  signatureTimestamp?: string  // ISO UTC — horodatage de signature
+  documentHash?: string        // SHA-256 hex — empreinte du document
 }
 
 // ── Helpers internes ───────────────────────────────────────────────────────────
+
+function renderCertificationBloc(doc: jsPDF, p: FicheParams, yStart: number) {
+  if (!p.signatureTimestamp && !p.documentHash) return
+  const W = doc.internal.pageSize.getWidth()
+  const m = 5
+  const xi = m + 2
+  const maxR = W - m - 1
+  let y = yStart + 3
+
+  doc.setLineWidth(0.15)
+  doc.line(xi, y, maxR, y)
+  y += 2.5
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.5)
+  doc.text('SIGNATURE ÉLECTRONIQUE CERTIFIÉE', W / 2, y, { align: 'center' })
+  y += 3
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(4)
+  const parts: string[] = []
+  if (p.signatureTimestamp) {
+    const d = new Date(p.signatureTimestamp)
+    const dd = d.toLocaleDateString('fr-FR', {
+      timeZone: 'Africa/Dakar', day: '2-digit', month: '2-digit', year: 'numeric',
+    })
+    const tt = d.toLocaleTimeString('fr-FR', {
+      timeZone: 'Africa/Dakar', hour: '2-digit', minute: '2-digit',
+    })
+    parts.push(`Signé le ${dd} à ${tt} (WAT)`)
+  }
+  if (p.documentHash) {
+    parts.push(`Code : ${p.documentHash.substring(0, 8).toUpperCase()}`)
+  }
+  if (parts.length > 0) {
+    doc.text(parts.join('  ·  '), W / 2, y, { align: 'center' })
+    y += 3
+  }
+
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(3.5)
+  doc.text('Généré par Check-in Express by Percepta SUARL', W / 2, y, { align: 'center' })
+}
 
 function drawDots(doc: jsPDF, x1: number, y: number, x2: number) {
   const dash = 1, gap = 1
@@ -83,16 +129,37 @@ function renderRecto(doc: jsPDF, p: FicheParams) {
   doc.line(midX, m, midX, m + 16)
   doc.line(m, m + 16, m + cw, m + 16)
 
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7)
-  const nameLines = doc.splitTextToSize(p.hotelName, cw / 2 - 4)
-  doc.text(nameLines[0] ?? '', xi, m + 7)
-  if (nameLines[1]) doc.text(nameLines[1], xi, m + 12)
+  // Logo ou nom texte dans la moitié gauche de l'en-tête
+  if (p.logoUrl && p.logoUrl.startsWith('data:')) {
+    try {
+      const match = p.logoUrl.match(/^data:image\/(\w+)/)
+      const fmt = match ? match[1].toUpperCase().replace('JPG', 'JPEG') : 'JPEG'
+      doc.addImage(p.logoUrl, fmt, xi, m + 1.5, 38, 13)
+    } catch {
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(7)
+      const nameLines = doc.splitTextToSize(p.hotelName, cw / 2 - 4)
+      doc.text(nameLines[0] ?? '', xi, m + 7)
+      if (nameLines[1]) doc.text(nameLines[1], xi, m + 12)
+    }
+  } else {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7)
+    const nameLines = doc.splitTextToSize(p.hotelName, cw / 2 - 4)
+    doc.text(nameLines[0] ?? '', xi, m + 7)
+    if (nameLines[1]) doc.text(nameLines[1], xi, m + 12)
+  }
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
   doc.text('FICHE DE', midX + 2, m + 7)
   doc.text('CONTRÔLE', midX + 2, m + 13)
+
+  if (p.registrationNumber) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6)
+    doc.text(`N° ${p.registrationNumber}`, W / 2, m + 19.5, { align: 'center' })
+  }
 
   let y = m + 22
 
@@ -255,18 +322,26 @@ function renderVerso(doc: jsPDF, p: FicheParams) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(5.5)
     doc.text(`N° registre : ${p.registrationNumber}`, xi, y)
+    y += 4
   }
+
+  renderCertificationBloc(doc, p, y)
 }
 
 // ── Exports publics ────────────────────────────────────────────────────────────
 
-/** Génère une fiche A6 recto-verso (2 pages) à partir des données d'un check-in. */
-export function generateFicheA6(params: FicheParams): Blob {
+/** Retourne l'instance jsPDF A6 recto-verso (utile pour doc.save() ou doc.output('bloburl')). */
+export function generateFicheA6Doc(params: FicheParams): jsPDF {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a6' })
   renderRecto(doc, params)
   doc.addPage()
   renderVerso(doc, params)
-  return doc.output('blob')
+  return doc
+}
+
+/** Génère une fiche A6 recto-verso (2 pages) à partir des données d'un check-in. */
+export function generateFicheA6(params: FicheParams): Blob {
+  return generateFicheA6Doc(params).output('blob')
 }
 
 /**

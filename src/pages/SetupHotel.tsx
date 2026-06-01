@@ -83,8 +83,13 @@ export default function SetupHotel() {
         throw error
       }
 
+      // Email de bienvenue — fire-and-forget, n'est pas bloquant
+      supabase.functions.invoke('send-welcome-email', {
+        body: { hotel_name: hotelName.trim(), email: user.email },
+      }).catch((err) => console.error('[SetupHotel] Welcome email error:', err))
+
       setFeedback({ type: 'success', text: '✅ Hôtel enregistré avec succès ! Redirection vers le tableau de bord...' })
-      
+
       // Rediriger vers le dashboard après 2 secondes
       setTimeout(() => {
         navigate('/dashboard')

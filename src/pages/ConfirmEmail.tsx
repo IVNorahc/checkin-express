@@ -60,7 +60,15 @@ const ConfirmEmail = () => {
           return
         }
 
-        // Aucun token trouvé
+        // Aucun token trouvé dans l'URL — Supabase PKCE a peut-être déjà échangé
+        // le code automatiquement (detectSessionInUrl: true). Vérifier la session.
+        const { data: { session: existingSession } } = await supabase.auth.getSession()
+        if (existingSession?.user?.email_confirmed_at) {
+          setStatus('success')
+          setTimeout(() => navigate('/setup-hotel'), 1500)
+          return
+        }
+
         setStatus('error')
         setErrorMsg('Lien de confirmation invalide ou expiré')
 

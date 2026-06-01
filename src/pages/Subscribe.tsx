@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -7,22 +7,29 @@ interface SubscribeProps {
   showWelcome?: boolean;
 }
 
-const LEMON_STARTER_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02";
-const LEMON_BUSINESS_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02";
+const LEMON_STARTER_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02?checkout[custom][plan]=starter";
+const LEMON_BUSINESS_URL = "https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02?checkout[custom][plan]=business";
 
 export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState<string | null>(null);
   const [showRefresh, setShowRefresh] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Pré-charger l'email au montage (getSession lit le cache local, pas de réseau)
+  // pour que handlePlan soit synchrone et ne soit pas bloqué par le popup blocker.
+  useEffect(() => {
+    supabase.auth.getSession()
+      .then(({ data }) => setUserEmail(data.session?.user.email ?? null))
+      .catch(() => {})
+  }, []);
 
   const handlePlan = (plan: 'starter' | 'business') => {
-    setLoading(plan);
-    const url = plan === 'business' ? LEMON_BUSINESS_URL : LEMON_STARTER_URL;
-    setTimeout(() => {
-      window.open(url, "_blank");
-      setLoading(null);
-      setShowRefresh(true);
-    }, 300);
+    const base = plan === 'business' ? LEMON_BUSINESS_URL : LEMON_STARTER_URL;
+    const url = userEmail
+      ? `${base}&checkout[email]=${encodeURIComponent(userEmail)}`
+      : base;
+    window.open(url, '_blank');
+    setShowRefresh(true);
   };
 
   const handleRefresh = async () => {
@@ -60,6 +67,20 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
         }}
       >
         <div className="mx-auto max-w-6xl">
+          {/* Bouton retour */}
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1 text-blue-600 font-medium py-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Retour
+            </button>
+          </div>
+
           {/* En-tête */}
           <div className="mb-6 text-center md:mb-8">
             <div className="mb-4 flex justify-center">
@@ -143,7 +164,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
 
                 <ul className="mb-4 flex flex-1 list-none flex-col gap-0 p-0 text-left">
                   {[
-                    '200 scans inclus/mois',
+                    '500 scans inclus/mois',
                     'Fiches de police PDF',
                     'Signature électronique',
                     'Historique clients',
@@ -169,22 +190,20 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 <button
                   type="button"
                   onClick={() => handlePlan('starter')}
-                  disabled={loading === 'starter' || loading === 'business'}
-                  className="w-full cursor-pointer rounded-xl bg-gradient-to-br from-[#1e3a8a] to-[#4a90d9] py-4 text-base font-bold text-white shadow-md shadow-blue-900/30 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full cursor-pointer rounded-xl bg-gradient-to-br from-[#1e3a8a] to-[#4a90d9] py-4 text-base font-bold text-white shadow-md shadow-blue-900/30"
                 >
-                  {loading === 'starter' ? 'Redirection...' : 'Choisir Starter'}
+                  Choisir Starter
                 </button>
 
                 <p className="mt-3 text-center text-xs text-slate-400 md:text-sm">
-                  0,25€/scan au-delà de 200
+                  0,25€/scan au-delà de 500
                 </p>
               </div>
             </div>
 
             {/* BUSINESS */}
             <div
-              className="relative flex w-full flex-col rounded-[20px] border-2 border-[#4a90d9] bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] p-4 shadow-xl shadow-blue-900/40 md:max-h-none md:p-8"
-              style={{ maxHeight: 'min(75vh, 900px)' }}
+              className="relative flex w-full flex-col rounded-[20px] border-2 border-[#4a90d9] bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] p-4 shadow-xl shadow-blue-900/40 md:p-8"
             >
               <div className="absolute left-1/2 -top-5 z-10 flex -translate-x-1/2 justify-center">
                 <span className="flex items-center gap-1 rounded-full bg-yellow-400 px-5 py-2 text-sm font-bold text-gray-900 shadow-lg">
@@ -230,10 +249,9 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
                 <button
                   type="button"
                   onClick={() => handlePlan('business')}
-                  disabled={loading === 'starter' || loading === 'business'}
-                  className="w-full cursor-pointer rounded-xl bg-white py-4 text-base font-bold text-[#1e3a8a] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full cursor-pointer rounded-xl bg-white py-4 text-base font-bold text-[#1e3a8a]"
                 >
-                  {loading === 'business' ? 'Redirection...' : 'Choisir Business'}
+                  Choisir Business
                 </button>
 
                 <p className="mt-3 text-center text-xs text-blue-200 md:text-sm">
@@ -248,8 +266,8 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
             <p>Annulation à tout moment - Sans engagement</p>
             <p>
               Des questions ?{" "}
-            <a href="mailto:contact@percepta.io" className="text-[#4a90d9] no-underline hover:underline">
-                contact@percepta.io
+            <a href="mailto:perceptasn@gmail.com" className="text-[#4a90d9] no-underline hover:underline">
+                perceptasn@gmail.com
               </a>
             </p>
             {onBack && (

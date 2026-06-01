@@ -1,308 +1,457 @@
-import { useState, useEffect } from 'react'
-import type { Session } from '@supabase/supabase-js'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { generateFicheControle, saveFicheToSupabase } from '../utils/generateFicheControle'
+import BackButton from '../components/BackButton'
+import { getDB, initDB, type FichePolice } from '../lib/db'
+import { generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
 
-type FicheControle = {
-  id: string
-  hotel_id: string
-  guest_name: string
-  created_at: string
-  file_path: string
-  file_url: string
+type FicheWithParams = FichePolice & { params: FicheParams }
+
+function todayRange() {
+  const start = new Date()
+  start.setUTCHours(0, 0, 0, 0)
+  const end = new Date()
+  end.setUTCHours(23, 59, 59, 999)
+  return { start, end }
 }
 
-type FichesControleProps = {
-  session?: Session
-  onBack: () => void
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="block text-[10px] text-[#94a3b8] uppercase tracking-wide leading-none mb-0.5">{label}</span>
+      <span className="text-[#1e3a8a] font-medium text-sm truncate block">{value || '—'}</span>
+    </div>
+  )
 }
 
-export default function FichesControle({ session, onBack }: FichesControleProps) {
-  const [fiches, setFiches] = useState<FicheControle[]>([])
+export default function FichesControle() {
+  const [fiches, setFiches] = useState<FicheWithParams[]>([])
   const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [guestName, setGuestName] = useState('')
-  const [generating, setGenerating] = useState(false)
+  const [printing, setPrinting] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [minutesUntil20h, setMinutesUntil20h] = useState<number | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadFiches()
+  const autoFiredRef = useRef(false)
+  const printAllRef = useRef<((auto: boolean) => Promise<void>) | null>(null)
+
+  const loadFiches = useCallback(async (uid: string) => {
+    const { start, end } = todayRange()
+    initDB(uid)
+    const db = getDB()
+
+    const raw = await db.fichesPolice
+      .where('generatedAt')
+      .between(start.toISOString(), end.toISOString())
+      .reverse()
+      .toArray()
+
+    setFiches(
+      raw
+        .filter(f => !!f.ficheParams)
+        .map(f => ({ ...f, params: JSON.parse(f.ficheParams!) as FicheParams }))
+    )
+    setLoading(false)
   }, [])
 
-  const loadFiches = async () => {
-    try {
-      if (!session) return
-      
-      const { data, error } = await supabase
-        .from('fiches_controle')
-        .select('*')
-        .eq('hotel_id', session.user.id)
-        .order('created_at', { ascending: false })
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUserId(session.user.id)
+        void loadFiches(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+  }, [loadFiches])
 
-      if (error) {
-        console.error('Erreur chargement fiches:', error)
+  const handlePrintAll = useCallback(async (auto: boolean) => {
+    if (printing || !userId) return
+    setPrinting(true)
+
+    // Ouvrir la fenêtre PDF de façon synchrone (avant tout await) pour contourner
+    // le bloqueur de popups iOS/Android qui refuse window.open après des awaits.
+    const pdfWin = auto ? null : window.open('', '_blank')
+    if (pdfWin) {
+      pdfWin.document.write(
+        '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;color:#1e3a8a">' +
+        '<p>⏳ Génération du PDF en cours…</p></body></html>'
+      )
+    }
+
+    try {
+      const { start, end } = todayRange()
+      const db = getDB()
+
+      const unprintedFiches = await db.fichesPolice
+        .where('generatedAt')
+        .between(start.toISOString(), end.toISOString())
+        .filter(f => !f.printed && !!f.ficheParams)
+        .toArray()
+
+      if (unprintedFiches.length === 0) {
+        if (!auto) alert("Aucune fiche non imprimée pour aujourd'hui.")
+        pdfWin?.close()
         return
       }
 
-      setFiches(data || [])
+      // Charger le logo de l'hôtel
+      let logoDataUrl: string | undefined
+      try {
+        const { data: hotelRow } = await supabase
+          .from('hotels')
+          .select('logo_url')
+          .eq('user_id', userId)
+          .single()
+        if (hotelRow?.logo_url) {
+          const resp = await fetch(hotelRow.logo_url)
+          const imgBlob = await resp.blob()
+          logoDataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(imgBlob)
+          })
+        }
+      } catch { /* logo indisponible — on continue sans */ }
+
+      const fichesList: FicheParams[] = unprintedFiches.map(f => ({
+        ...JSON.parse(f.ficheParams!),
+        logoUrl: logoDataUrl,
+      }))
+
+      // Générer le PDF groupé
+      const blob = generateFichesGroupees(fichesList)
+      const url = URL.createObjectURL(blob)
+
+      if (pdfWin) {
+        // Affichage interactif : naviguer la fenêtre déjà ouverte vers le PDF
+        pdfWin.location.href = url
+      } else {
+        // Déclenchement automatique (20h) : téléchargement classique
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `fiches-police-${new Date().toISOString().split('T')[0]}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 15_000)
+
+      // Marquer comme imprimées dans IndexedDB
+      await Promise.all([
+        ...unprintedFiches.map(f => db.fichesPolice.update(f.id!, { printed: true })),
+        ...unprintedFiches.map(f => db.clients.update(f.clientId, { printed: true })),
+      ])
+
+      localStorage.setItem('checkin_print_trigger_date', new Date().toISOString().split('T')[0])
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Check-in Express', {
+          body: `${unprintedFiches.length} fiche(s) prêtes. Ouvrez le PDF pour imprimer.`,
+        })
+      }
+
+      await loadFiches(userId)
     } catch (err) {
-      console.error('Erreur:', err)
+      console.error('Erreur impression groupée:', err)
+      pdfWin?.close()
+      alert('Erreur lors de la génération du PDF.')
     } finally {
-      setLoading(false)
+      setPrinting(false)
     }
-  }
+  }, [printing, userId, loadFiches])
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const handleGenerateFiche = async () => {
-    if (!guestName.trim()) {
-      alert('Veuillez entrer le nom du client')
-      return
-    }
-
-    if (!session) {
-      alert('Session non trouvée')
-      return
-    }
-
-    setGenerating(true)
+  const handleViewSingle = useCallback((fiche: FicheWithParams) => {
     try {
-      // Get hotel info
-      const hotelName = (session.user.user_metadata?.hotel_name as string | undefined) || session.user.email || 'Mon hôtel'
-      const hotelPhone = (session.user.user_metadata?.phone as string | undefined) || '+221 33 000 00 00'
+      const blob = generateFichesGroupees([fiche.params])
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 15_000)
+    } catch (err) {
+      console.error('Erreur affichage fiche:', err)
+      alert('Erreur lors de la génération du PDF.')
+    }
+  }, [])
 
-      // Generate PDF blob
-      const blob = await generateFicheControle(hotelName, hotelPhone, guestName.trim())
+  const handleExportSynexie = async (mode: 'today' | 'all') => {
+    if (!userId || exporting) return
+    setExporting(true)
+    try {
+      const db = getDB()
+      let rawFiches: FichePolice[]
 
-      // Save to Supabase
-      const signedUrl = await saveFicheToSupabase(blob, guestName.trim(), session.user.id)
+      if (mode === 'today') {
+        const { start, end } = todayRange()
+        rawFiches = await db.fichesPolice
+          .where('generatedAt')
+          .between(start.toISOString(), end.toISOString())
+          .reverse()
+          .toArray()
+      } else {
+        rawFiches = await db.fichesPolice.orderBy('generatedAt').reverse().toArray()
+      }
 
-      // Refresh list
-      await loadFiches()
+      const withParams = rawFiches
+        .filter(f => !!f.ficheParams)
+        .map(f => ({ ...f, params: JSON.parse(f.ficheParams!) as FicheParams }))
 
-      // Close modal and reset
-      setShowModal(false)
-      setGuestName('')
+      if (withParams.length === 0) {
+        alert(mode === 'today' ? "Aucune fiche pour aujourd'hui." : 'Aucune fiche dans l\'historique.')
+        return
+      }
 
-      alert('Fiche de contrôle générée avec succès!')
-    } catch (error) {
-      console.error('Erreur génération fiche:', error)
-      alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+      const SEP = ';'
+      const esc = (v: string) => {
+        const s = String(v ?? '')
+        return (s.includes(SEP) || s.includes('"') || s.includes('\n'))
+          ? '"' + s.replace(/"/g, '""') + '"'
+          : s
+      }
+
+      const HEADERS = [
+        'NUMERO_REGISTRE',
+        'NOM', 'PRENOMS', 'DATE_NAISSANCE', 'LIEU_NAISSANCE', 'NATIONALITE',
+        'TYPE_PIECE', 'NUMERO_PIECE', 'DATE_EXPIRATION',
+        'ADRESSE', 'PROFESSION', 'VENANT_DE', 'ALLANT_A',
+        'NUMERO_CHAMBRE', 'DATE_ARRIVEE', 'DATE_DEPART',
+        'NOM_HOTEL', 'DATE_ENREGISTREMENT',
+      ]
+
+      const rows = withParams.map(({ params: p, generatedAt }) => [
+        p.registrationNumber ?? '',
+        p.nom, p.prenoms, p.dateNaissance, p.lieuNaissance, p.nationalite,
+        p.typePiece, p.numeroPiece, p.dateExpiration,
+        p.adresse, p.profession, p.venantDe, p.allantA,
+        p.numeroChambre, p.dateArrivee, p.dateDepart,
+        p.hotelName,
+        new Date(generatedAt).toLocaleDateString('fr-FR'),
+      ].map(esc).join(SEP))
+
+      // UTF-8 BOM pour compatibilité Excel/Windows
+      const csv = '﻿' + [HEADERS.join(SEP), ...rows].join('\r\n')
+
+      const hotelName = withParams[0]?.params.hotelName ?? 'HOTEL'
+      const hotelSlug = hotelName.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 20)
+      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '')
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `SYNEXIE_${hotelSlug}_${dateStr}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 15_000)
+    } catch (err) {
+      console.error('Erreur export SYNEXIE:', err)
+      alert('Erreur lors de la génération du fichier SYNEXIE.')
     } finally {
-      setGenerating(false)
+      setExporting(false)
     }
   }
 
-  const handleView = (signedUrl: string) => {
-    // Generate fresh signed URL
-    supabase.storage
-      .from('fiches-controle')
-      .createSignedUrl(signedUrl.split('/').pop() || '', 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          window.open(data.signedUrl, '_blank')
-        }
-      })
-      .catch(console.error)
-  }
+  // Synchroniser la ref pour que l'interval accède toujours à la dernière version
+  useEffect(() => {
+    printAllRef.current = handlePrintAll
+  })
 
-  const handleDownload = (fiche: FicheControle) => {
-    // Generate fresh signed URL
-    supabase.storage
-      .from('fiches-controle')
-      .createSignedUrl(fiche.file_path.split('/').pop() || '', 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          const link = document.createElement('a')
-          link.href = data.signedUrl
-          link.download = `fiche-controle-${fiche.guest_name}.pdf`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-        }
-      })
-      .catch(console.error)
-  }
+  // Vérification 20h Dakar (Africa/Dakar = UTC+0)
+  useEffect(() => {
+    const check = () => {
+      const now = new Date()
+      const totalMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
+      const todayKey = now.toISOString().split('T')[0]
+      const alreadyDone = localStorage.getItem('checkin_print_trigger_date') === todayKey
 
-  const handlePrint = (fiche: FicheControle) => {
-    // Generate fresh signed URL
-    supabase.storage
-      .from('fiches-controle')
-      .createSignedUrl(fiche.file_path.split('/').pop() || '', 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          window.open(data.signedUrl, '_blank')
-          setTimeout(() => {
-            window.print()
-          }, 1000)
-        }
-      })
-      .catch(console.error)
-  }
+      if (alreadyDone || autoFiredRef.current) {
+        setMinutesUntil20h(null)
+        return
+      }
+
+      if (totalMinutes >= 20 * 60) {
+        autoFiredRef.current = true
+        setMinutesUntil20h(null)
+        printAllRef.current?.(true)
+      } else if (totalMinutes >= 19 * 60 + 30) {
+        setMinutesUntil20h(20 * 60 - totalMinutes)
+      } else {
+        setMinutesUntil20h(null)
+      }
+    }
+
+    check()
+    const timer = window.setInterval(check, 60_000)
+    return () => window.clearInterval(timer)
+  }, []) // refs uniquement — pas de dépendances d'état
+
+  const unprintedCount = fiches.filter(f => !f.printed).length
+  const alreadyPrinted = localStorage.getItem('checkin_print_trigger_date') === new Date().toISOString().split('T')[0]
+
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
   return (
     <div className="min-h-screen bg-slate-50 py-4 sm:py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] mb-2">
-              📋 Mes Fiches de Contrôle
-            </h1>
-            <p className="text-[#64748b]">
-              Gérez vos fiches de contrôle hôtelière
-            </p>
-          </div>
-          <button
-            onClick={onBack}
-            className="px-4 py-2 text-[#1e3a8a] hover:text-[#1e40af] font-medium"
-          >
-            ← Retour
-          </button>
+      <div className="max-w-3xl mx-auto">
+
+        <BackButton />
+
+        {/* En-tête */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#1e3a8a]">Fiches du jour</h1>
+          <p className="text-[#64748b] mt-1 capitalize">
+            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
         </div>
 
-        {/* Add new fiche button */}
-        <div className="mb-8">
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#16a34a] to-[#22c55e] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
-          >
-            ➕ Nouvelle fiche
-          </button>
-        </div>
-
-        {/* Loading state */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]"></div>
-            <p className="mt-4 text-[#64748b]">Chargement des fiches...</p>
+        {/* Bannière compte à rebours (après 19h30) */}
+        {minutesUntil20h !== null && (
+          <div className="mb-5 bg-amber-50 border border-amber-300 rounded-xl px-5 py-4 flex items-start gap-3">
+            <span className="text-2xl mt-0.5">⏰</span>
+            <div>
+              <p className="font-semibold text-amber-800">
+                Impression automatique dans {minutesUntil20h} minute{minutesUntil20h > 1 ? 's' : ''}
+              </p>
+              <p className="text-sm text-amber-600 mt-0.5">
+                Le PDF groupé sera généré automatiquement à 20h00 Dakar
+              </p>
+            </div>
           </div>
         )}
 
-        {/* Empty state */}
-        {!loading && fiches.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-[#e2e8f0]">
-            <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-semibold text-[#1e3a8a] mb-2">
-              Aucune fiche générée pour le moment
-            </h3>
-            <p className="text-[#64748b] mb-6">
-              Commencez par créer votre première fiche de contrôle
-            </p>
+        {/* Boutons actions */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => void handlePrintAll(false)}
+            disabled={printing || unprintedCount === 0}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white font-semibold rounded-xl shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {printing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Génération en cours…
+              </>
+            ) : (
+              <>🖨 Imprimer toutes les fiches du jour</>
+            )}
+          </button>
+
+          {/* Split-button Export SYNEXIE */}
+          <div className="flex rounded-xl overflow-hidden shadow-sm border border-[#15803d]">
             <button
-              onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-[#16a34a] to-[#22c55e] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+              onClick={() => void handleExportSynexie('today')}
+              disabled={exporting || fiches.length === 0}
+              className="flex items-center gap-2 px-4 py-3 bg-[#16a34a] text-white text-sm font-semibold hover:bg-[#15803d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Exporter les fiches du jour au format SYNEXIE (gendarmerie)"
             >
-              Créer ma première fiche
+              {exporting
+                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : <span>📤</span>
+              }
+              Export SYNEXIE
+            </button>
+            <button
+              onClick={() => void handleExportSynexie('all')}
+              disabled={exporting}
+              className="px-3 py-3 bg-[#15803d] text-white text-xs font-medium hover:bg-[#166534] transition-colors border-l border-[#166534] disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Exporter toutes les fiches (historique complet)"
+            >
+              Tout
             </button>
           </div>
+
+          {unprintedCount > 0 && !printing && (
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-700 border border-red-200">
+              {unprintedCount} non imprimée{unprintedCount > 1 ? 's' : ''}
+            </span>
+          )}
+          {alreadyPrinted && (
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-700 border border-green-200">
+              ✓ Imprimées aujourd'hui
+            </span>
+          )}
+        </div>
+
+        {/* Chargement */}
+        {loading && (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]" />
+          </div>
         )}
 
-        {/* Fiches list */}
-        {!loading && fiches.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {fiches.map((fiche) => (
-              <div
-                key={fiche.id}
-                className="bg-white rounded-xl shadow-sm border border-[#e2e8f0] p-6 hover:shadow-md transition-shadow duration-300"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-[#1e3a8a] text-lg mb-1">
-                      {fiche.guest_name}
-                    </h3>
-                    <p className="text-sm text-[#64748b]">
-                      {formatDate(fiche.created_at)}
-                    </p>
-                  </div>
-                  <div className="text-2xl">📋</div>
-                </div>
+        {/* Vide */}
+        {!loading && fiches.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-xl border border-[#e2e8f0]">
+            <p className="text-5xl mb-3">📋</p>
+            <h3 className="text-lg font-semibold text-[#1e3a8a] mb-1">Aucune fiche pour aujourd'hui</h3>
+            <p className="text-[#64748b] text-sm">Scannez des documents via l'onglet Scanner</p>
+          </div>
+        )}
 
-                <div className="flex gap-2">
+        {/* Liste des fiches */}
+        {!loading && fiches.length > 0 && (
+          <div className="space-y-3">
+            {fiches.map((fiche) => {
+              const p = fiche.params
+              return (
+                <div
+                  key={fiche.id}
+                  className={`bg-white rounded-xl border px-5 py-4 transition-colors ${
+                    fiche.printed
+                      ? 'border-green-200 bg-green-50/30'
+                      : 'border-[#e2e8f0]'
+                  }`}
+                >
+                  {/* Ligne 1 : nom + statut + heure */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-bold text-[#1e3a8a] text-base leading-tight">
+                        {p.nom} {p.prenoms}
+                      </h3>
+                      <p className="text-xs text-[#94a3b8] mt-0.5">
+                        Enregistré à {formatTime(fiche.generatedAt)}
+                      </p>
+                      {p.registrationNumber && (
+                        <p className="text-xs font-mono font-semibold text-[#1e3a8a] mt-0.5">
+                          N° {p.registrationNumber}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 ml-3 text-xs px-2.5 py-1 rounded-full font-medium ${
+                        fiche.printed
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-orange-100 text-orange-700'
+                      }`}
+                    >
+                      {fiche.printed ? '✓ Imprimée' : 'En attente'}
+                    </span>
+                  </div>
+
+                  {/* Grille détails */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2.5">
+                    <Field label="Nationalité" value={p.nationalite} />
+                    <Field label="Chambre" value={p.numeroChambre} />
+                    <Field label="Date arrivée" value={p.dateArrivee} />
+                    <Field label="Venant de" value={p.venantDe} />
+                    <Field label="Allant à" value={p.allantA} />
+                    <Field label={p.typePiece || 'N° pièce'} value={p.numeroPiece} />
+                  </div>
+
+                  {/* Bouton voir PDF individuel */}
                   <button
-                    onClick={() => handleView(fiche.file_url)}
-                    className="flex-1 px-3 py-2 bg-[#1e3a8a] text-white text-sm font-medium rounded-lg hover:bg-[#1e40af] transition-colors duration-200 flex items-center justify-center gap-1"
+                    onClick={() => handleViewSingle(fiche)}
+                    className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#1e3a8a] border border-[#1e3a8a]/40 rounded-lg hover:bg-blue-50 transition-colors"
                   >
-                    👁 Visualiser
-                  </button>
-                  <button
-                    onClick={() => handleDownload(fiche)}
-                    className="flex-1 px-3 py-2 bg-[#16a34a] text-white text-sm font-medium rounded-lg hover:bg-[#15803d] transition-colors duration-200 flex items-center justify-center gap-1"
-                  >
-                    ⬇ Télécharger
-                  </button>
-                  <button
-                    onClick={() => handlePrint(fiche)}
-                    className="flex-1 px-3 py-2 bg-[#64748b] text-white text-sm font-medium rounded-lg hover:bg-[#475569] transition-colors duration-200 flex items-center justify-center gap-1"
-                  >
-                    🖨 Imprimer
+                    📄 Voir la fiche PDF
                   </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-[#1e3a8a] mb-4">
-              Nouvelle fiche de contrôle
-            </h2>
-            
-            <div className="mb-6">
-              <label htmlFor="guestName" className="block text-sm font-medium text-[#1e3a8a] mb-2">
-                Nom du client
-              </label>
-              <input
-                id="guestName"
-                type="text"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                placeholder="Entrez le nom complet du client"
-                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none"
-                autoFocus
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowModal(false)
-                  setGuestName('')
-                }}
-                className="flex-1 px-4 py-3 border border-[#e2e8f0] text-[#64748b] font-medium rounded-lg hover:bg-[#f1f5f9] transition-colors duration-200"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleGenerateFiche}
-                disabled={generating || !guestName.trim()}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-[#16a34a] to-[#22c55e] text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {generating ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Génération...
-                  </>
-                ) : (
-                  'Générer la fiche'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

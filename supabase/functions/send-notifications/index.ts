@@ -156,8 +156,8 @@ async function sendEmail(email: string, hotelName: string, type: EmailType) {
         </div>
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
         <p style="color: #94a3b8; font-size: 13px; margin: 0; text-align: center;">
-          Des questions ? <a href="mailto:contact@percepta.io"
-            style="color: ${accentColor}; text-decoration: none;">contact@percepta.io</a>
+          Des questions ? <a href="mailto:perceptasn@gmail.com"
+            style="color: ${accentColor}; text-decoration: none;">perceptasn@gmail.com</a>
         </p>
       </div>
     </div>
@@ -170,7 +170,8 @@ async function sendEmail(email: string, hotelName: string, type: EmailType) {
       "Authorization": `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: "Check-in Express <noreply@percepta.io>",
+      from: "Check-in Express <onboarding@resend.dev>",
+      reply_to: "perceptasn@gmail.com",
       to: [email],
       subject,
       html,
