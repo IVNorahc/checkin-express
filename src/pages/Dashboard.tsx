@@ -627,7 +627,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       <main style={{maxWidth: "1280px", margin: "0 auto", padding: "80px 16px 40px"}} className="md:px-8">
         {/* Hero Section */}
         <div style={{
-          height: "150px",
+          height: "180px",
           backgroundImage: "url('/hotel-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
@@ -636,9 +636,24 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           marginBottom: "24px",
           overflow: "hidden"
         }} className="sm:h-48 sm:mb-8">
-          <h1 className="text-xl md:text-2xl font-bold text-blue-900 drop-shadow-sm text-center">
-            {hotelName}
-          </h1>
+          <div style={{
+            position: "absolute",
+            bottom: "16px",
+            left: 0,
+            right: 0,
+            textAlign: "center"
+          }}>
+            <h1 style={{
+              fontSize: "22px",
+              fontWeight: "800",
+              color: "white",
+              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              margin: 0,
+              padding: "0 16px"
+            }}>
+              {hotelName}
+            </h1>
+          </div>
         </div>
 
         {trialBanner && (
@@ -764,7 +779,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         )}
 
 
-        <section className="flex gap-3 mb-6">
+        <section className="flex gap-3 mb-6 max-w-sm mx-auto w-full">
           <button
             type="button"
             onClick={handleSubscribeClick}
