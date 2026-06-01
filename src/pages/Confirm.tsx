@@ -285,41 +285,19 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       return
     }
 
-    const db = getDB()
-    const scanDate = now.toISOString()
-    const printed = false
+    if (!navigator.onLine) {
+      alert('Connexion requise pour enregistrer le check-in.')
+      setIsGenerating(false)
+      return
+    }
 
-    // 1) Sauvegarder le client + 2) Sauvegarder la fiche de police
-    const clientId = await db.clients.add({
-      surname: formData.surname,
-      givenNames: formData.givenNames,
-      dateOfBirth: formData.dateOfBirth,
-      documentType: formData.documentType,
-      documentNumber: formData.documentNumber,
-      nationality: formData.nationality,
-      sex: formData.sex,
-      expiryDate: formData.expiryDate,
-      roomNumber,
-      scanDate,
-      printed,
-    })
-
-    const fichePoliceId = await db.fichesPolice.add({
-      clientId,
-      generatedAt: scanDate,
-      roomNumber,
-      printed,
-    })
-
-    // Sync vers Supabase pour que le check-in apparaisse dans l'historique.
-    // Non-bloquant : si le réseau est coupé, les données restent dans IndexedDB.
     setSyncError(null)
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       console.log('[Confirm] user_id:', sessionData.session?.user.id ?? 'PAS DE SESSION')
 
       if (!sessionData.session) {
-        setSyncError('Session expirée — check-in sauvegardé localement uniquement.')
+        setSyncError('Session expirée — veuillez vous reconnecter.')
       } else {
         const { data: hotelData, error: hotelError } = await supabase
           .from('hotels')
@@ -332,7 +310,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
         if (hotelError || !hotelData) {
           const msg = hotelError?.message ?? 'hôtel introuvable'
           console.error('[Confirm] Impossible de récupérer l\'hôtel:', hotelError)
-          setSyncError(`Hôtel introuvable (${msg}) — check-in sauvegardé localement.`)
+          setSyncError(`Hôtel introuvable (${msg}).`)
         } else {
           console.log('[Confirm] INSERT clients → hotel_id:', hotelData.id)
           const { error: insertError } = await supabase.from('clients').insert({
@@ -357,7 +335,6 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           })
 
           if (insertError) {
-            // Log complet : message + code (ex. 42501 = RLS violation, 23503 = FK violation)
             console.error('[Confirm] Supabase insert error:', insertError)
             console.error('[Confirm] code:', insertError.code, '| hint:', insertError.hint, '| details:', insertError.details)
             setSyncError(`Erreur enregistrement Supabase (code ${insertError.code}) : ${insertError.message}`)
@@ -368,7 +345,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       }
     } catch (err) {
       console.error('[Confirm] Supabase sync exception:', err)
-      setSyncError('Erreur réseau — check-in sauvegardé localement uniquement.')
+      setSyncError('Erreur réseau — impossible d\'enregistrer le check-in.')
     }
 
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
@@ -693,8 +670,6 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
 
     // 3) Générer et télécharger le PDF
     const pdfData = pdf.output('datauristring')
-    await db.fichesPolice.update(fichePoliceId, { pdfData })
-    
     // Generate filename with customer name and date
     const customerName = formData.surname?.toUpperCase() || 'CLIENT'
     const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')

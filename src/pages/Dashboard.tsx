@@ -25,9 +25,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [welcomeDismissed, setWelcomeDismissed] = useState(
     () => localStorage.getItem('checkin_welcome_v1') === 'dismissed'
   )
-  const [pendingFichesCount, setPendingFichesCount] = useState(0)
-  const [printReady, setPrintReady] = useState(false)
-  const [isPrinting, setIsPrinting] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -106,91 +103,67 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   useEffect(() => {
     const loadClients = async () => {
       if (!session) return
-      const db = getDB()
 
-      const clients = await db.clients.orderBy('scanDate').reverse().limit(10).toArray()
-      setLastClients(clients)
+      const { data: hotelData } = await supabase
+        .from('hotels')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .single()
 
-      const nowDate = new Date()
-      const startOfToday = new Date(nowDate)
-      startOfToday.setHours(0, 0, 0, 0)
-      const endOfToday = new Date(nowDate)
-      endOfToday.setHours(23, 59, 59, 999)
+      if (!hotelData?.id) return
 
-      const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1, 0, 0, 0, 0)
-      const endOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth() + 1, 0, 23, 59, 59, 999)
+      const { data: supabaseClients } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('hotel_id', hotelData.id)
+        .order('created_at', { ascending: false })
+        .limit(10)
 
-      const todayCount = await db.clients
-        .where('scanDate')
-        .between(startOfToday.toISOString(), endOfToday.toISOString())
-        .count()
-
-      const monthCount = await db.clients
-        .where('scanDate')
-        .between(startOfMonth.toISOString(), endOfMonth.toISOString())
-        .count()
-
-      // Fiches non encore imprimées du jour (pour le badge et l'impression groupée)
-      const pendingCount = await db.fichesPolice
-        .where('generatedAt')
-        .between(startOfToday.toISOString(), endOfToday.toISOString())
-        .filter(f => !f.printed)
-        .count()
-
-      setScansToday(todayCount)
-      setScansThisMonth(monthCount)
-      setPendingFichesCount(pendingCount)
-
-      const pendingSyncs = await db.clients.where('syncStatus').equals('pending_sync').count()
-
-      // Synchronisation automatique si en ligne
-      if (pendingSyncs > 0 && navigator.onLine && session) {
-        const db2 = getDB()
-        const { data: hotelData } = await supabase
-          .from('hotels')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .single()
-
-        if (hotelData?.id) {
-          const pendingClients = await db2.clients.where('syncStatus').equals('pending_sync').toArray()
-          for (const client of pendingClients) {
-            const payload = {
-              hotel_id: hotelData.id,
-              nom: client.surname ?? null,
-              prenoms: client.givenNames ?? null,
-              date_naissance: client.dateOfBirth ?? null,
-              nationalite: client.nationality ?? null,
-              document_type: client.documentType ?? null,
-              numero_document: client.documentNumber ?? null,
-              date_expiration: client.expiryDate ?? null,
-              chambre: client.roomNumber ?? null,
-              created_at: client.scanDate ?? null,
-            }
-            const { error } = await supabase.from('clients').insert(payload)
-            if (!error) {
-              await db2.clients.update(client.id!, { syncStatus: 'synced' })
-            }
-          }
-        }
+      if (supabaseClients) {
+        const mapped = supabaseClients.map(c => ({
+          id: c.id,
+          surname: c.nom ?? '',
+          givenNames: c.prenoms ?? '',
+          dateOfBirth: c.date_naissance ?? '',
+          documentType: c.document_type ?? '',
+          documentNumber: c.numero_document ?? '',
+          nationality: c.nationalite ?? '',
+          sex: '',
+          expiryDate: c.date_expiration ?? '',
+          roomNumber: c.chambre ?? '',
+          scanDate: c.created_at ?? '',
+          printed: false,
+          syncStatus: 'synced' as const,
+        }))
+        setLastClients(mapped)
       }
+
+      const startOfToday = new Date()
+      startOfToday.setHours(0, 0, 0, 0)
+
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+
+      const { count: todayC } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('hotel_id', hotelData.id)
+        .gte('created_at', startOfToday.toISOString())
+
+      const { count: monthC } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('hotel_id', hotelData.id)
+        .gte('created_at', startOfMonth.toISOString())
+
+      setScansToday(todayC ?? 0)
+      setScansThisMonth(monthC ?? 0)
     }
 
     void loadClients()
   }, [session, refreshKey])
 
-  useEffect(() => {
-    const onOnline = () => setIsOnline(true)
-    const onOffline = () => setIsOnline(false)
-
-    window.addEventListener('online', onOnline)
-    window.addEventListener('offline', onOffline)
-
-    return () => {
-      window.removeEventListener('online', onOnline)
-      window.removeEventListener('offline', onOffline)
-    }
-  }, [])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -207,22 +180,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     }
   }, [])
 
-  // Déclencheur 20h00 Dakar (Africa/Dakar = UTC+0, pas de DST)
-  useEffect(() => {
-    const dakarHour = new Date().getUTCHours()
-    const today = new Date().toISOString().split('T')[0]
-    const lastTriggered = localStorage.getItem('checkin_print_trigger_date')
-
-    if (dakarHour === 20 && lastTriggered !== today && pendingFichesCount > 0) {
-      setPrintReady(true)
-      localStorage.setItem('checkin_print_trigger_date', today)
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Check-in Express', {
-          body: `Vos ${pendingFichesCount} fiche(s) du jour sont prêtes à imprimer`,
-        })
-      }
-    }
-  }, [now, pendingFichesCount])
 
   // Correction 1: Real-time trial countdown update
   useEffect(() => {
@@ -293,55 +250,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
       onSubscribeClick()
     } else {
       handleSubscribe()
-    }
-  }
-
-  const handlePrintNow = async () => {
-    setIsPrinting(true)
-    try {
-      const db = getDB()
-      const nowDate = new Date()
-      const startOfToday = new Date(nowDate)
-      startOfToday.setUTCHours(0, 0, 0, 0)
-      const endOfToday = new Date(nowDate)
-      endOfToday.setUTCHours(23, 59, 59, 999)
-
-      const unprintedFiches = await db.fichesPolice
-        .where('generatedAt')
-        .between(startOfToday.toISOString(), endOfToday.toISOString())
-        .filter(f => !f.printed && !!f.ficheParams)
-        .toArray()
-
-      if (unprintedFiches.length === 0) {
-        alert('Aucune fiche à imprimer pour aujourd\'hui.')
-        setIsPrinting(false)
-        return
-      }
-
-      const fichesList: FicheParams[] = unprintedFiches.map(f => JSON.parse(f.ficheParams!))
-      const blob = generateFichesGroupees(fichesList)
-      const url = URL.createObjectURL(blob)
-      window.open(url, '_blank')
-      setTimeout(() => URL.revokeObjectURL(url), 15_000)
-
-      // Marquer comme imprimées
-      const ficheIds = unprintedFiches.map(f => f.id!)
-      const clientIds = unprintedFiches.map(f => f.clientId)
-      await Promise.all([
-        ...ficheIds.map(id => db.fichesPolice.update(id, { printed: true })),
-        ...clientIds.map(id => db.clients.update(id, { printed: true })),
-      ])
-
-      // Recharger l'état local
-      const updatedClients = await db.clients.orderBy('scanDate').reverse().limit(10).toArray()
-      setLastClients(updatedClients)
-      setPendingFichesCount(0)
-      setPrintReady(false)
-    } catch (err) {
-      console.error('Erreur impression:', err)
-      alert('Erreur lors de la génération du PDF.')
-    } finally {
-      setIsPrinting(false)
     }
   }
 
@@ -630,15 +538,21 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           height: "180px",
           backgroundImage: "url('/hotel-bg.png')",
           backgroundSize: "cover",
-          backgroundPosition: "center top",
+          backgroundPosition: "center",
           borderRadius: "16px",
-          position: "relative",
           marginBottom: "24px",
+          position: "relative",
           overflow: "hidden"
-        }} className="sm:h-48 sm:mb-8">
+        }}>
           <div style={{
             position: "absolute",
-            bottom: "16px",
+            inset: 0,
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.55))",
+            borderRadius: "16px"
+          }} />
+          <div style={{
+            position: "absolute",
+            bottom: "20px",
             left: 0,
             right: 0,
             textAlign: "center"
@@ -647,7 +561,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
               fontSize: "22px",
               fontWeight: "800",
               color: "white",
-              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              textShadow: "0 2px 12px rgba(0,0,0,0.7)",
               margin: 0,
               padding: "0 16px"
             }}>
@@ -659,13 +573,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         {trialBanner && (
           <div className={trialBanner.className}>
             {trialBanner.text}
-          </div>
-        )}
-
-        {!isOnline && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-orange-800 font-medium mb-4 flex items-center gap-2">
-            <span>📵</span>
-            <span>Mode hors ligne — vos check-ins sont sauvegardés localement.</span>
           </div>
         )}
 
@@ -744,40 +651,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
             📸 SCANNER UN DOCUMENT
           </button>
         </section>
-
-        {/* Badge fiches en attente + bouton impression */}
-        {pendingFichesCount > 0 && (
-          <section style={{display: "flex", justifyContent: "center", marginBottom: "16px"}}>
-            <div className={`w-full sm:max-w-sm rounded-xl p-4 flex items-center justify-between gap-3 ${
-              printReady
-                ? 'bg-green-50 border-2 border-green-400'
-                : 'bg-amber-50 border border-amber-300'
-            }`}>
-              <div>
-                <p className={`font-bold text-sm ${printReady ? 'text-green-800' : 'text-amber-800'}`}>
-                  {printReady ? '🖨️ Prêtes à imprimer !' : '⏳ Fiches en attente'}
-                </p>
-                <p className={`text-xs mt-0.5 ${printReady ? 'text-green-700' : 'text-amber-700'}`}>
-                  {pendingFichesCount} fiche{pendingFichesCount > 1 ? 's' : ''} du jour
-                  {!printReady && ' · impression prévue à 20h'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handlePrintNow}
-                disabled={isPrinting}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
-                  printReady
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-amber-500 hover:bg-amber-600 text-white'
-                }`}
-              >
-                {isPrinting ? '...' : 'Imprimer maintenant'}
-              </button>
-            </div>
-          </section>
-        )}
-
 
         <section className="flex gap-3 mb-6 max-w-sm mx-auto w-full">
           <button
