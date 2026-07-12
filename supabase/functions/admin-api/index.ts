@@ -185,6 +185,66 @@ serve(async (req: Request) => {
         return json({ data: data ?? [] })
       }
 
+      case 'createHotelAccount': {
+        const {
+          email,
+          password,
+          hotel_name,
+          phone,
+          address,
+          city,
+          country,
+          subscription_status,
+          trial_days,
+        } = params as {
+          email: string
+          password: string
+          hotel_name: string
+          phone: string
+          address?: string
+          city?: string
+          country?: string
+          subscription_status?: string
+          trial_days?: number
+        }
+
+        if (!email || !password || !hotel_name || !phone) {
+          return json({ error: 'email, password, hotel_name et phone sont obligatoires' }, 400)
+        }
+
+        // Créer le compte auth (email confirmé d'office)
+        const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        })
+        if (createErr) throw createErr
+
+        const userId = newUser.user.id
+        const trialEnd = new Date()
+        trialEnd.setDate(trialEnd.getDate() + (trial_days ?? 7))
+
+        const { error: hotelErr } = await admin.from('hotels').insert({
+          user_id: userId,
+          hotel_name: hotel_name.trim(),
+          phone: phone.trim(),
+          address: address?.trim() || null,
+          city: city?.trim() || null,
+          country: country || 'Sénégal',
+          subscription_status: subscription_status || 'trial',
+          trial_end: trialEnd.toISOString(),
+          status: 'active',
+          created_at: new Date().toISOString(),
+        })
+        if (hotelErr) {
+          // Rollback : supprimer le user créé si l'hôtel échoue
+          await admin.auth.admin.deleteUser(userId)
+          throw hotelErr
+        }
+
+        return json({ success: true, userId })
+      }
+
       default:
         return json({ error: 'Unknown action' }, 400)
     }

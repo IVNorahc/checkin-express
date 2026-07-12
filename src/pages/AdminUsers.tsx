@@ -23,6 +23,30 @@ interface Hotel {
   user_id: string
 }
 
+interface CreateForm {
+  email: string
+  password: string
+  hotel_name: string
+  phone: string
+  address: string
+  city: string
+  country: string
+  subscription_status: string
+  trial_days: number
+}
+
+const EMPTY_FORM: CreateForm = {
+  email: '',
+  password: '',
+  hotel_name: '',
+  phone: '',
+  address: '',
+  city: '',
+  country: 'Sénégal',
+  subscription_status: 'trial',
+  trial_days: 7,
+}
+
 const AdminUsers: React.FC = () => {
   const navigate = useNavigate()
   const [showLogout, setShowLogout] = useState(false)
@@ -33,6 +57,12 @@ const AdminUsers: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'trial' | 'starter' | 'business' | 'expired'>('all')
+
+  const [showCreate, setShowCreate] = useState(false)
+  const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_FORM)
+  const [createLoading, setCreateLoading] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [createSuccess, setCreateSuccess] = useState<string | null>(null)
 
   const fetchHotels = async () => {
     setLoading(true)
@@ -93,6 +123,33 @@ const AdminUsers: React.FC = () => {
       await callAdminApi('deleteHotel', { hotelId: hotel.id, userId: hotel.user_id })
       void fetchHotels()
     } catch (err) { alert('Erreur suppression : ' + String(err)) }
+  }
+
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreateError(null)
+    setCreateSuccess(null)
+    setCreateLoading(true)
+    try {
+      await callAdminApi('createHotelAccount', {
+        email: createForm.email.trim(),
+        password: createForm.password,
+        hotel_name: createForm.hotel_name.trim(),
+        phone: createForm.phone.trim(),
+        address: createForm.address.trim() || undefined,
+        city: createForm.city.trim() || undefined,
+        country: createForm.country,
+        subscription_status: createForm.subscription_status,
+        trial_days: Number(createForm.trial_days),
+      })
+      setCreateSuccess(`✅ Compte créé pour ${createForm.email}`)
+      setCreateForm(EMPTY_FORM)
+      void fetchHotels()
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Erreur lors de la création')
+    } finally {
+      setCreateLoading(false)
+    }
   }
 
   // ── Badges ─────────────────────────────────────────────────────────────────
@@ -204,7 +261,6 @@ const AdminUsers: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
 
-
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <input
@@ -232,6 +288,12 @@ const AdminUsers: React.FC = () => {
           </div>
           <button onClick={fetchHotels} className="px-4 py-2 bg-[#1e3a8a] text-white text-sm rounded-lg hover:bg-blue-800 shrink-0">
             ↻ Actualiser
+          </button>
+          <button
+            onClick={() => { setShowCreate(true); setCreateError(null); setCreateSuccess(null) }}
+            className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 shrink-0 flex items-center gap-1"
+          >
+            + Créer un compte
           </button>
         </div>
 
@@ -345,6 +407,158 @@ const AdminUsers: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Modale création compte hôtel */}
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg my-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">Créer un compte hôtel</h2>
+              <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">✕</button>
+            </div>
+
+            <form onSubmit={handleCreateAccount} className="px-6 py-5 space-y-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="hotel@exemple.com"
+                    value={createForm.email}
+                    onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Mot de passe temporaire *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="MotDePasse123!"
+                    value={createForm.password}
+                    onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Nom de l'hôtel *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Hôtel Terrou-Bi"
+                    value={createForm.hotel_name}
+                    onChange={e => setCreateForm(f => ({ ...f, hotel_name: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Téléphone *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+221 33 123 45 67"
+                    value={createForm.phone}
+                    onChange={e => setCreateForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Ville</label>
+                  <input
+                    type="text"
+                    placeholder="Dakar"
+                    value={createForm.city}
+                    onChange={e => setCreateForm(f => ({ ...f, city: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Pays</label>
+                  <select
+                    value={createForm.country}
+                    onChange={e => setCreateForm(f => ({ ...f, country: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    {["Sénégal","France","Belgique","Suisse","Maroc","Tunisie","Côte d'Ivoire","Mali","Autre"].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Adresse</label>
+                <input
+                  type="text"
+                  placeholder="123 Rue de la République"
+                  value={createForm.address}
+                  onChange={e => setCreateForm(f => ({ ...f, address: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Plan</label>
+                  <select
+                    value={createForm.subscription_status}
+                    onChange={e => setCreateForm(f => ({ ...f, subscription_status: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="trial">Trial</option>
+                    <option value="starter">Starter</option>
+                    <option value="business">Business</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Durée trial (jours)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={createForm.trial_days}
+                    onChange={e => setCreateForm(f => ({ ...f, trial_days: Number(e.target.value) }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {createError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2.5 text-sm">{createError}</div>
+              )}
+              {createSuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-2.5 text-sm">{createSuccess}</div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="flex-1 bg-[#1e3a8a] text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 disabled:opacity-50"
+                >
+                  {createLoading ? 'Création...' : 'Créer le compte'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

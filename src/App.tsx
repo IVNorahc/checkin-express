@@ -180,6 +180,13 @@ function SetupHotelRoute({ children }: { children: React.ReactNode }) {
           return
         }
 
+        // Seul l'admin peut accéder à /setup-hotel
+        const isAdmin = sessionData.session.user?.user_metadata?.is_admin === true
+        if (!isAdmin) {
+          window.location.href = '/dashboard'
+          return
+        }
+
         const { data: hotel } = await supabase
           .from('hotels')
           .select('id')
@@ -236,6 +243,71 @@ function SetupHotelRoute({ children }: { children: React.ReactNode }) {
 // parent would cause that parent to re-render, produce a new component reference,
 // and trigger an infinite unmount/remount loop. This fixes that.
 
+function PendingSetupScreen() {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#e8f4fd",
+      backgroundImage: "url('/hotel-bg.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      <div style={{
+        background: "rgba(255,255,255,0.97)",
+        borderRadius: "20px",
+        padding: "48px 40px",
+        textAlign: "center",
+        boxShadow: "0 20px 60px rgba(30,58,138,0.15)",
+        maxWidth: "420px",
+        width: "100%",
+        margin: "16px"
+      }}>
+        <div style={{ fontSize: "48px", marginBottom: "16px" }}>⏳</div>
+        <h2 style={{ color: "#1e3a8a", fontWeight: 800, fontSize: "22px", margin: "0 0 12px" }}>
+          Compte en attente
+        </h2>
+        <p style={{ color: "#64748b", fontSize: "15px", lineHeight: "1.6", margin: "0 0 24px" }}>
+          Votre compte est en attente de configuration.<br />
+          Contactez l'administrateur pour activer votre accès.
+        </p>
+        <a
+          href="mailto:contact@percepta.io"
+          style={{
+            display: "inline-block",
+            background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
+            color: "white",
+            borderRadius: "10px",
+            padding: "12px 28px",
+            fontWeight: 700,
+            fontSize: "15px",
+            textDecoration: "none"
+          }}
+        >
+          📧 Contacter l'administrateur
+        </a>
+        <div style={{ marginTop: "20px" }}>
+          <button
+            onClick={() => { supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#94a3b8",
+              fontSize: "13px",
+              cursor: "pointer",
+              textDecoration: "underline"
+            }}
+          >
+            Se déconnecter
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ProtectedRouteWrapper({
   children,
   employeeRestricted = false,
@@ -247,6 +319,7 @@ function ProtectedRouteWrapper({
 }) {
   const [isLoading, setIsLoading] = useState(true)
   const [redirect, setRedirect] = useState<string | null>(null)
+  const [pendingSetup, setPendingSetup] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -341,9 +414,9 @@ function ProtectedRouteWrapper({
           return
         }
 
-        // ── 4. New user with no hotel and no invite → setup ──────────────────
-        console.log('[Auth] no hotel found → redirecting to /setup-hotel')
-        setRedirect('/setup-hotel')
+        // ── 4. New user with no hotel and no invite → pending setup ──────────────────
+        console.log('[Auth] no hotel found → showing pending setup screen')
+        setPendingSetup(true)
 
       } catch (error) {
         console.error('Session error:', error)
@@ -357,6 +430,7 @@ function ProtectedRouteWrapper({
   }, [employeeRestricted, setHotelCtx])
 
   if (isLoading) return <RouteLoadingSpinner />
+  if (pendingSetup) return <PendingSetupScreen />
   if (redirect) return <Navigate to={redirect} replace />
   return <>{children}</>
 }
