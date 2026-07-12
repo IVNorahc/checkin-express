@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ReactElement } from 'react'
 import { useHotel } from '../contexts/HotelContext'
-import { useTheme } from '../contexts/ThemeContext'
 import LogoutConfirmModal from './LogoutConfirmModal'
 
 interface NavigationProps {
@@ -62,7 +61,6 @@ const icons: Record<string, ReactElement> = {
 
 export default function Navigation({ currentPage = 'dashboard', onNavigate }: NavigationProps) {
   const { isEmployee } = useHotel()
-  const { isDark, toggleTheme } = useTheme()
   const visibleItems = navItems.filter(item => !(item.ownerOnly && isEmployee))
   const [isMobile, setIsMobile] = useState(false)
   const [showLogout, setShowLogout] = useState(false)
@@ -77,10 +75,8 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    
     checkMobile()
     window.addEventListener('resize', checkMobile)
-    
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
@@ -88,67 +84,43 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
     if (onNavigate) {
       onNavigate(page)
     } else {
-      // Fallback: utiliser window.location pour la navigation
       window.location.href = `/${page === 'dashboard' ? '' : page}`
     }
   }
 
   if (isMobile) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-white/10 flex justify-around items-center py-2 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 z-50">
         {visibleItems.map((item) => (
           <button
             key={item.to}
             onClick={() => handleNavClick(item.to)}
             className={`flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
               currentPage === item.to
-                ? 'text-blue-500 dark:text-blue-400'
-                : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
+                ? 'text-blue-500'
+                : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <div className="w-6 h-6">{icons[item.icon]}</div>
             <span className="text-xs font-medium">{item.label}</span>
           </button>
         ))}
-        {/* Toggle soleil/lune */}
-        <button
-          onClick={toggleTheme}
-          aria-label="Basculer mode sombre"
-          className="flex flex-col items-center gap-1 px-2 py-1 rounded-lg transition-colors text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200"
-        >
-          <div className="w-6 h-6 flex items-center justify-center text-lg">
-            {isDark ? '☀️' : '🌙'}
-          </div>
-          <span className="text-xs font-medium">{isDark ? 'Clair' : 'Sombre'}</span>
-        </button>
       </nav>
     )
   }
 
-  // Navigation desktop - sidebar à gauche
   return (
-    <nav className="fixed left-0 top-0 h-screen w-56 bg-white dark:bg-slate-900 shadow-lg dark:shadow-none dark:border-r dark:border-white/10 flex flex-col p-4 z-50">
+    <nav className="fixed left-0 top-0 h-screen w-56 bg-white shadow-lg flex flex-col p-4 z-50">
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img
-              src="/percepta-logo.png"
-              alt="Percepta"
-              className="h-8 w-auto object-contain"
-            />
-            <span className="font-bold text-blue-800 dark:text-blue-300 text-sm">
-              Check-in Express
-            </span>
-          </div>
-          {/* Toggle soleil/lune desktop */}
-          <button
-            onClick={toggleTheme}
-            aria-label="Basculer mode sombre"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-base"
-            title={isDark ? 'Mode clair' : 'Mode sombre'}
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
+        <div className="flex items-center gap-2">
+          <img
+            src="/percepta-logo.png"
+            alt="Percepta"
+            className="h-8 w-auto object-contain"
+          />
+          <span className="font-bold text-blue-800 text-sm">
+            Check-in Express
+          </span>
         </div>
       </div>
 
@@ -159,8 +131,8 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
             onClick={() => handleNavClick(item.to)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
               currentPage === item.to
-                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-l-4 border-blue-600 dark:border-blue-400'
-                : 'text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
+                : 'text-gray-700 hover:bg-gray-50'
             }`}
           >
             <div className="w-5 h-5">{icons[item.icon]}</div>
@@ -169,10 +141,10 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
         ))}
       </div>
 
-      <div className="border-t border-gray-200 dark:border-white/10 pt-4">
+      <div className="border-t border-gray-200 pt-4">
         <button
           onClick={() => setShowLogout(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

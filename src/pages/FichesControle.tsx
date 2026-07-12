@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { generateFicheA6, generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
 
@@ -71,7 +71,7 @@ function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <span className="block text-[10px] text-[#94a3b8] uppercase tracking-wide leading-none mb-0.5">{label}</span>
-      <span className="text-[#1e3a8a] dark:text-blue-300 font-medium text-sm truncate block">{value || '—'}</span>
+      <span className="text-[#1e3a8a] font-medium text-sm truncate block">{value || 'â€”'}</span>
     </div>
   )
 }
@@ -137,7 +137,7 @@ export default function FichesControle() {
     if (pdfWin) {
       pdfWin.document.write(
         '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;color:#1e3a8a">' +
-        '<p>⏳ Génération du PDF en cours…</p></body></html>'
+        '<p>â³ GÃ©nÃ©ration du PDF en coursâ€¦</p></body></html>'
       )
     }
 
@@ -150,9 +150,9 @@ export default function FichesControle() {
       }
       setTimeout(() => URL.revokeObjectURL(url), 15_000)
     } catch (err) {
-      console.error('Erreur impression groupée:', err)
+      console.error('Erreur impression groupÃ©e:', err)
       pdfWin?.close()
-      alert('Erreur lors de la génération du PDF.')
+      alert('Erreur lors de la gÃ©nÃ©ration du PDF.')
     } finally {
       setPrinting(false)
     }
@@ -167,7 +167,7 @@ export default function FichesControle() {
       setTimeout(() => URL.revokeObjectURL(url), 15_000)
     } catch (err) {
       console.error('Erreur affichage fiche:', err)
-      alert('Erreur lors de la génération du PDF.')
+      alert('Erreur lors de la gÃ©nÃ©ration du PDF.')
     }
   }, [hotelName, logoDataUrl])
 
@@ -217,12 +217,12 @@ export default function FichesControle() {
     new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-4 sm:py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-4 sm:py-8 px-4">
       <div className="max-w-3xl mx-auto">
 
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] dark:text-blue-300">Fiches du jour</h1>
-          <p className="text-[#64748b] dark:text-slate-400 mt-1 capitalize">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#1e3a8a]">Fiches du jour</h1>
+          <p className="text-[#64748b] mt-1 capitalize">
             {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
@@ -236,39 +236,39 @@ export default function FichesControle() {
             {printing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Génération en cours…
+                GÃ©nÃ©ration en coursâ€¦
               </>
             ) : (
-              <>🖨 Imprimer toutes les fiches du jour</>
+              <>ðŸ–¨ Imprimer toutes les fiches du jour</>
             )}
           </button>
           <button
             onClick={() => setShowAll(v => !v)}
-            className="flex items-center gap-2 px-4 py-3 border border-[#e2e8f0] dark:border-white/10 bg-white dark:bg-slate-800 text-[#475569] dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-3 border border-[#e2e8f0] bg-white text-[#475569] font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm"
           >
-            {showAll ? '🟢 Voir uniquement les présents' : '👁 Voir tous les clients'}
+            {showAll ? 'ðŸŸ¢ Voir uniquement les prÃ©sents' : 'ðŸ‘ Voir tous les clients'}
           </button>
         </div>
 
         {minutesUntilAutoPrint !== null && minutesUntilAutoPrint > 0 && (
-          <div className="mb-4 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 px-4 py-3 text-orange-700 dark:text-orange-300 font-medium text-sm">
-            ⏰ Impression automatique dans {minutesUntilAutoPrint} minute{minutesUntilAutoPrint > 1 ? 's' : ''}
+          <div className="mb-4 rounded-xl bg-orange-50 border border-orange-300 px-4 py-3 text-orange-700 font-medium text-sm">
+            â° Impression automatique dans {minutesUntilAutoPrint} minute{minutesUntilAutoPrint > 1 ? 's' : ''}
           </div>
         )}
 
         {loading && (
           <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a] dark:border-blue-400" />
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]" />
           </div>
         )}
 
         {!loading && displayedClients.length === 0 && (
-          <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-[#e2e8f0] dark:border-white/10">
-            <p className="text-5xl mb-3">📋</p>
-            <h3 className="text-lg font-semibold text-[#1e3a8a] dark:text-blue-300 mb-1">
+          <div className="text-center py-16 bg-white rounded-xl border border-[#e2e8f0]">
+            <p className="text-5xl mb-3">ðŸ“‹</p>
+            <h3 className="text-lg font-semibold text-[#1e3a8a] mb-1">
               {clients.length > 0 ? 'Tous les clients sont partis' : 'Aucune fiche pour aujourd\'hui'}
             </h3>
-            <p className="text-[#64748b] dark:text-slate-400 text-sm">
+            <p className="text-[#64748b] text-sm">
               {clients.length > 0
                 ? 'Cliquez sur "Voir tous les clients" pour voir l\'historique complet du jour.'
                 : 'Scannez des documents via l\'onglet Scanner'}
@@ -279,32 +279,32 @@ export default function FichesControle() {
         {!loading && displayedClients.length > 0 && (
           <div className="space-y-3">
             {displayedClients.map((c) => (
-              <div key={c.id} className="bg-white dark:bg-slate-800 rounded-xl border border-[#e2e8f0] dark:border-white/10 px-5 py-4">
+              <div key={c.id} className="bg-white rounded-xl border border-[#e2e8f0] px-5 py-4">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-bold text-[#1e3a8a] dark:text-blue-300 text-base leading-tight">
+                    <h3 className="font-bold text-[#1e3a8a] text-base leading-tight">
                       {c.nom} {c.prenoms}
                     </h3>
                     <p className="text-xs text-[#94a3b8] mt-0.5">
-                      Enregistré à {formatTime(c.created_at)}
+                      EnregistrÃ© Ã  {formatTime(c.created_at)}
                     </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2.5">
-                  <Field label="Nationalité" value={c.nationalite} />
+                  <Field label="NationalitÃ©" value={c.nationalite} />
                   <Field label="Chambre" value={c.chambre} />
-                  <Field label="Type pièce" value={c.document_type} />
-                  <Field label="N° document" value={c.numero_document} />
+                  <Field label="Type piÃ¨ce" value={c.document_type} />
+                  <Field label="NÂ° document" value={c.numero_document} />
                   <Field label="Venant de" value={c.venant_de} />
-                  <Field label="Allant à" value={c.allant_a} />
+                  <Field label="Allant Ã " value={c.allant_a} />
                 </div>
 
                 <button
                   onClick={() => handleViewSingle(c)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#1e3a8a] dark:text-blue-300 border border-[#1e3a8a]/40 dark:border-blue-300/40 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#1e3a8a] border border-[#1e3a8a]/40 rounded-lg hover:bg-blue-50 transition-colors"
                 >
-                  📄 Voir la fiche PDF
+                  ðŸ“„ Voir la fiche PDF
                 </button>
               </div>
             ))}
@@ -314,3 +314,4 @@ export default function FichesControle() {
     </div>
   )
 }
+

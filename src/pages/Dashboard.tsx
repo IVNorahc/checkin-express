@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
 import { generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
 import LogoutConfirmModal from '../components/LogoutConfirmModal'
-import { useTheme } from '../contexts/ThemeContext'
-
 type DashboardProps = {
   onRequireLogin: () => void
 }
@@ -67,22 +65,22 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
       // Initialiser la DB avec l'ID utilisateur Supabase
       initDB(data.session.user.id)
       
-      // Récupérer le profil hôtel depuis Supabase
+      // RÃ©cupÃ©rer le profil hÃ´tel depuis Supabase
       const { data: hotelData, error } = await supabase
         .from('hotels')
         .select('subscription_status, trial_end, hotel_name, phone')
         .eq('user_id', data.session.user.id)
         .single()
       
-      // Gérer l'erreur PGRST116 (not found) et autres erreurs
+      // GÃ©rer l'erreur PGRST116 (not found) et autres erreurs
       if (error && error.code !== 'PGRST116') {
-        console.error('Erreur récupération hôtel:', error)
+        console.error('Erreur rÃ©cupÃ©ration hÃ´tel:', error)
         setNeedsOnboarding(true)
         return
       }
       
       if (hotelData) {
-        // Convertir les données pour compatibilité avec le reste du code
+        // Convertir les donnÃ©es pour compatibilitÃ© avec le reste du code
         setProfile({
           status: hotelData.subscription_status,
           trial_end: hotelData.trial_end,
@@ -90,12 +88,12 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
         })
         setHotelInfo(hotelData)
         setNow(Date.now())
-        // Vérifier si les informations de base sont manquantes
+        // VÃ©rifier si les informations de base sont manquantes
         if (!hotelData.hotel_name || !hotelData.phone) {
           setNeedsOnboarding(true)
         }
       } else {
-        // Hôtel non trouvé, besoin d'onboarding
+        // HÃ´tel non trouvÃ©, besoin d'onboarding
         setNeedsOnboarding(true)
       }
     }
@@ -207,15 +205,14 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
   }, [profile])
 
 
-  const { isDark } = useTheme()
   const email = session?.user.email ?? ''
-  const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
+  const hotelName = hotelInfo?.hotel_name || email || 'Mon hÃ´tel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
   const trialBanner = useMemo(() => {
     if (profile?.status !== 'trial' || daysLeft <= 0) return null
 
-    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} · 10 scans · Fiches PDF incluses`
+    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} Â· 10 scans Â· Fiches PDF incluses`
 
     let className: string
     if (daysLeft > 3) {
@@ -232,28 +229,28 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
   // Handle different subscription statuses
   if (profile?.status === 'expired') {
     return (
-      <div className="min-h-screen bg-[#f1f5f9] dark:bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
         {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-4">
-            Compte désactivé 🔒
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Compte dÃ©sactivÃ© ðŸ”’
           </h1>
-          <p className="text-gray-600 dark:text-slate-300 mb-8 leading-relaxed">
-            Votre accès a expiré. Contactez l'administrateur pour réactiver votre compte.
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Votre accÃ¨s a expirÃ©. Contactez l'administrateur pour rÃ©activer votre compte.
           </p>
 
           <a
             href="mailto:contact@percepta.io"
             className="block w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            📧 Contacter l'administrateur
+            ðŸ“§ Contacter l'administrateur
           </a>
 
           <button
             onClick={() => setShowLogout(true)}
-            className="w-full bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
-            Déconnexion
+            DÃ©connexion
           </button>
         </div>
       </div>
@@ -262,14 +259,14 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
 
   if (profile?.status === 'suspended') {
     return (
-      <div className="min-h-screen bg-[#f1f5f9] dark:bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
         {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-4">
-            Votre compte a été suspendu ⚠️
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Votre compte a Ã©tÃ© suspendu âš ï¸
           </h1>
-          <p className="text-gray-600 dark:text-slate-300 mb-8 leading-relaxed">
-            Votre compte a été suspendu. Contactez-nous pour réactiver votre accès.
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Votre compte a Ã©tÃ© suspendu. Contactez-nous pour rÃ©activer votre accÃ¨s.
           </p>
           
           <div className="mb-8">
@@ -277,68 +274,68 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               href="mailto:contact@percepta.io" 
               className="inline-flex items-center justify-center w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors"
             >
-              📧 Contactez-nous : contact@percepta.io
+              ðŸ“§ Contactez-nous : contact@percepta.io
             </a>
           </div>
           
           <button
             onClick={() => setShowLogout(true)}
-            className="w-full bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
-            Déconnexion
+            DÃ©connexion
           </button>
         </div>
       </div>
     )
   }
 
-  // If trial is expired, show blocking page — calcul direct pour éviter la race condition avec daysLeft
+  // If trial is expired, show blocking page â€” calcul direct pour Ã©viter la race condition avec daysLeft
   if (profile?.status === 'trial' && (!profile.trial_end || new Date(profile.trial_end) <= new Date())) {
     return (
-      <div className="min-h-screen bg-[#f1f5f9] dark:bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
         {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-4">
-            Accès expiré 🔒
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            AccÃ¨s expirÃ© ðŸ”’
           </h1>
-          <p className="text-gray-600 dark:text-slate-300 mb-8 leading-relaxed">
-            Votre accès a expiré. Contactez l'administrateur pour renouveler votre compte.
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Votre accÃ¨s a expirÃ©. Contactez l'administrateur pour renouveler votre compte.
           </p>
 
           <a
             href="mailto:contact@percepta.io"
             className="block w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            📧 Contacter l'administrateur
+            ðŸ“§ Contacter l'administrateur
           </a>
 
           <button
             onClick={() => setShowLogout(true)}
-            className="w-full bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
-            Déconnexion
+            DÃ©connexion
           </button>
         </div>
       </div>
     )
   }
 
-  // Si onboarding est nécessaire, afficher le formulaire
+  // Si onboarding est nÃ©cessaire, afficher le formulaire
   if (needsOnboarding && session) {
     return (
-      <div className="min-h-screen bg-[#e8f4fd] dark:bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 max-w-md w-full">
+      <div className="min-h-screen bg-[#e8f4fd] flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <img
               src="/percepta-logo.png"
               alt="Check-in Express by Percepta"
               className="h-16 w-auto object-contain mx-auto mb-4"
             />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Bienvenue dans Check-in Express ! 
             </h1>
-            <p className="text-gray-600 dark:text-slate-300">
-              Complétez vos informations pour commencer
+            <p className="text-gray-600">
+              ComplÃ©tez vos informations pour commencer
             </p>
           </div>
 
@@ -361,13 +358,13 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 .single()
 
               if (checkError && checkError.code !== 'PGRST116') {
-                console.error('Erreur vérification téléphone:', checkError)
-                alert('Erreur lors de la vérification du téléphone')
+                console.error('Erreur vÃ©rification tÃ©lÃ©phone:', checkError)
+                alert('Erreur lors de la vÃ©rification du tÃ©lÃ©phone')
                 return
               }
 
               if (existingHotel) {
-                alert('Ce numéro de téléphone est déjà associé à un compte.')
+                alert('Ce numÃ©ro de tÃ©lÃ©phone est dÃ©jÃ  associÃ© Ã  un compte.')
                 return
               }
 
@@ -388,31 +385,31 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               window.location.replace(window.location.origin + '/dashboard')
             } catch (error) {
               console.error('Erreur:', error)
-              alert('Erreur lors de la mise à jour')
+              alert('Erreur lors de la mise Ã  jour')
             }
           }}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                Nom de l'hôtel *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de l'hÃ´tel *
               </label>
               <input
                 type="text"
                 name="hotelName"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-white/20 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Hôtel de la Plage"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: HÃ´tel de la Plage"
               />
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                Téléphone *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                TÃ©lÃ©phone *
               </label>
               <input
                 type="tel"
                 name="phone"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-white/20 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ex: +221 33 123 45 67"
               />
             </div>
@@ -430,22 +427,22 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-50">
       {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
-      <header className="flex items-center justify-between px-4 md:px-8 py-2 bg-white dark:bg-slate-900 shadow-sm dark:shadow-none dark:border-b dark:border-white/10">
+      <header className="flex items-center justify-between px-4 md:px-8 py-2 bg-white shadow-sm">
             <div className="flex items-center gap-2">
               <img
                 src="/percepta-logo.png"
                 alt="Check-in Express by Percepta"
                 className="h-8 w-auto object-contain"
               />
-              <span className="font-bold text-blue-800 dark:text-blue-300 text-sm hidden sm:block">
+              <span className="font-bold text-blue-800 text-sm hidden sm:block">
                 Check-in Express
               </span>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Indicateur réseau */}
+              {/* Indicateur rÃ©seau */}
               <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
                 isOnline
                   ? 'text-green-700 bg-green-50 border border-green-200'
@@ -460,9 +457,9 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 onClick={handleRefresh}
                 disabled={isRefreshing}
                 title="Actualiser"
-                className="text-slate-500 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="text-slate-500 hover:text-blue-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <span className={isRefreshing ? 'animate-spin inline-block' : 'inline-block'}>↻</span>
+                <span className={isRefreshing ? 'animate-spin inline-block' : 'inline-block'}>â†»</span>
               </button>
               {isAdmin && (
                 <button
@@ -473,21 +470,21 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                   Admin
                 </button>
               )}
-              {/* Paramètres */}
+              {/* ParamÃ¨tres */}
               <button
                 type="button"
                 onClick={() => navigate('/parametres')}
-                title="Paramètres"
-                className="text-slate-600 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-400 px-2 py-1.5 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="ParamÃ¨tres"
+                className="text-slate-600 hover:text-blue-700 px-2 py-1.5 rounded-lg text-sm hover:bg-slate-100 transition-colors"
               >
-                ⚙️
+                âš™ï¸
               </button>
               <button
                 onClick={() => setShowLogout(true)}
                 type="button"
                 className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
-                Déconnexion
+                DÃ©connexion
               </button>
             </div>
           </header>
@@ -536,56 +533,56 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
           </div>
         )}
 
-        {/* Carte de bienvenue — visible au premier login, disparaît après dismiss */}
+        {/* Carte de bienvenue â€” visible au premier login, disparaÃ®t aprÃ¨s dismiss */}
         {!welcomeDismissed && lastClients.length === 0 && profile !== null && (
-          <div className="bg-white dark:bg-slate-800 border border-blue-100 dark:border-white/10 rounded-xl shadow-sm p-5 mb-6">
+          <div className="bg-white border border-blue-100 rounded-xl shadow-sm p-5 mb-6">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
-                <h2 className="text-lg font-bold text-blue-900 dark:text-blue-300">
-                  Bienvenue sur Check-in Express ! 👋
+                <h2 className="text-lg font-bold text-blue-900">
+                  Bienvenue sur Check-in Express ! ðŸ‘‹
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  3 étapes pour faire votre premier check-in en 30 secondes
+                <p className="text-sm text-slate-500 mt-0.5">
+                  3 Ã©tapes pour faire votre premier check-in en 30 secondes
                 </p>
               </div>
               <button
                 type="button"
                 onClick={dismissWelcome}
-                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-lg leading-none flex-shrink-0"
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none flex-shrink-0"
                 aria-label="Fermer"
               >
-                ✕
+                âœ•
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               {[
-                { step: '1', icon: '📸', title: 'Scannez le document', desc: "Photographiez la pièce d'identité du client avec la caméra arrière" },
-                { step: '2', icon: '✏️', title: 'Vérifiez les données', desc: "L'OCR remplit le formulaire automatiquement — corrigez si besoin" },
-                { step: '3', icon: '🖊️', title: 'Faites signer & générez', desc: 'Le client signe sur l\'écran, la fiche PDF est créée instantanément' },
+                { step: '1', icon: 'ðŸ“¸', title: 'Scannez le document', desc: "Photographiez la piÃ¨ce d'identitÃ© du client avec la camÃ©ra arriÃ¨re" },
+                { step: '2', icon: 'âœï¸', title: 'VÃ©rifiez les donnÃ©es', desc: "L'OCR remplit le formulaire automatiquement â€” corrigez si besoin" },
+                { step: '3', icon: 'ðŸ–Šï¸', title: 'Faites signer & gÃ©nÃ©rez', desc: 'Le client signe sur l\'Ã©cran, la fiche PDF est crÃ©Ã©e instantanÃ©ment' },
               ].map(({ step, icon, title, desc }) => (
-                <div key={step} className="flex gap-3 bg-slate-50 dark:bg-slate-900/60 rounded-lg p-3">
+                <div key={step} className="flex gap-3 bg-slate-50 rounded-lg p-3">
                   <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-800 text-white text-xs font-bold flex items-center justify-center">
                     {step}
                   </span>
                   <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{icon} {title}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{desc}</p>
+                    <p className="font-semibold text-slate-800 text-sm">{icon} {title}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">{desc}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <p className="text-xs text-slate-400 dark:text-slate-500">
-                💡 Besoin d'aide ? <a href="mailto:contact@percepta.io" className="text-blue-600 dark:text-blue-400 hover:underline">contact@percepta.io</a>
+              <p className="text-xs text-slate-400">
+                ðŸ’¡ Besoin d'aide ? <a href="mailto:contact@percepta.io" className="text-blue-600 hover:underline">contact@percepta.io</a>
               </p>
               <button
                 type="button"
                 onClick={() => { dismissWelcome(); navigate('/scanner') }}
                 className="w-full sm:w-auto bg-blue-800 text-white text-sm font-bold px-5 py-2.5 rounded-lg hover:bg-blue-900 transition-colors"
               >
-                📸 Faire mon premier scan
+                ðŸ“¸ Faire mon premier scan
               </button>
             </div>
           </div>
@@ -608,7 +605,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               minWidth: "280px"
             }} className="w-full sm:max-w-sm"
           >
-            📸 SCANNER UN DOCUMENT
+            ðŸ“¸ SCANNER UN DOCUMENT
           </button>
         </section>
 
@@ -618,59 +615,59 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
             onClick={() => navigate('/fiches')}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-sm"
           >
-            Fiche de contrôle
+            Fiche de contrÃ´le
           </button>
         </section>
 
         <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 dark:border-white/10 flex flex-col items-center">
-            <span className="text-2xl mb-1">📅</span>
-            <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{scansToday}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Scans aujourd'hui</p>
+          <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
+            <span className="text-2xl mb-1">ðŸ“…</span>
+            <p className="text-3xl font-bold text-blue-700">{scansToday}</p>
+            <p className="text-xs text-gray-500 mt-1">Scans aujourd'hui</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl px-3 py-5 text-center shadow-sm border border-green-100 dark:border-white/10 flex flex-col items-center">
-            <span className="text-2xl mb-1">🛎</span>
-            <p className="text-3xl font-bold text-green-700 dark:text-green-400">{clientsPresents}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Présents ce soir</p>
+          <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-green-100 flex flex-col items-center">
+            <span className="text-2xl mb-1">ðŸ›Ž</span>
+            <p className="text-3xl font-bold text-green-700">{clientsPresents}</p>
+            <p className="text-xs text-gray-500 mt-1">PrÃ©sents ce soir</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 dark:border-white/10 flex flex-col items-center">
-            <span className="text-2xl mb-1">📊</span>
-            <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{scansThisMonth}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Scans ce mois</p>
+          <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
+            <span className="text-2xl mb-1">ðŸ“Š</span>
+            <p className="text-3xl font-bold text-blue-700">{scansThisMonth}</p>
+            <p className="text-xs text-gray-500 mt-1">Scans ce mois</p>
           </div>
         </div>
 
         <section style={{
-          background: isDark ? "rgba(30,41,59,0.97)" : "rgba(232,244,253,0.60)",
+          background: "rgba(232,244,253,0.60)",
           backdropFilter: "blur(1px)",
-          border: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(191,219,254,0.5)",
+          border: "1px solid rgba(191,219,254,0.5)",
           borderRadius: "16px",
           padding: "24px"
         }}>
-          <h2 style={{fontSize: "18px", fontWeight: "bold", color: isDark ? "#93C5FD" : "#1e3a8a", marginBottom: "16px"}}>
-            Derniers clients scannés
+          <h2 style={{fontSize: "18px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "16px"}}>
+            Derniers clients scannÃ©s
           </h2>
           {lastClients.length === 0 ? (
             <div className="py-8 px-4 text-center">
-              <div className="text-5xl mb-3">🏨</div>
-              <h3 className="text-base font-bold text-blue-900 dark:text-blue-300 mb-1">
+              <div className="text-5xl mb-3">ðŸ¨</div>
+              <h3 className="text-base font-bold text-blue-900 mb-1">
                 Aucun check-in pour l'instant
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                Votre historique apparaîtra ici après votre premier scan
+              <p className="text-sm text-slate-500 mb-6">
+                Votre historique apparaÃ®tra ici aprÃ¨s votre premier scan
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-2 text-left max-w-md mx-auto mb-6">
                 {[
-                  { n: '1', label: 'Scannez la pièce d\'identité' },
-                  { n: '2', label: 'Vérifiez et faites signer' },
-                  { n: '3', label: 'La fiche PDF est générée' },
+                  { n: '1', label: 'Scannez la piÃ¨ce d\'identitÃ©' },
+                  { n: '2', label: 'VÃ©rifiez et faites signer' },
+                  { n: '3', label: 'La fiche PDF est gÃ©nÃ©rÃ©e' },
                 ].map(({ n, label }) => (
-                  <div key={n} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/60 rounded-lg px-3 py-2 flex-1">
+                  <div key={n} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 flex-1">
                     <span className="w-6 h-6 rounded-full bg-blue-800 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                       {n}
                     </span>
-                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{label}</span>
+                    <span className="text-xs text-slate-700 font-medium">{label}</span>
                   </div>
                 ))}
               </div>
@@ -680,7 +677,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 onClick={() => navigate('/scanner')}
                 className="bg-gradient-to-br from-blue-800 to-blue-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-shadow"
               >
-                📸 Démarrer mon premier scan
+                ðŸ“¸ DÃ©marrer mon premier scan
               </button>
             </div>
           ) : (
@@ -692,19 +689,19 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 const yyyy = d.getFullYear()
                 const hh = String(d.getHours()).padStart(2, '0')
                 const min = String(d.getMinutes()).padStart(2, '0')
-                const badgeText = client.printed ? '✅ Imprimé' : '⏳ En attente'
+                const badgeText = client.printed ? 'âœ… ImprimÃ©' : 'â³ En attente'
 
                 return (
                   <div
                     key={client.id}
-                    className="border border-[#e2e8f0] dark:border-white/10 rounded-lg p-3 sm:p-4 flex flex-row items-center justify-between gap-2"
+                    className="border border-[#e2e8f0] rounded-lg p-3 sm:p-4 flex flex-row items-center justify-between gap-2"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[#1e293b] dark:text-slate-100 text-sm sm:text-base truncate">
+                      <div className="font-semibold text-[#1e293b] text-sm sm:text-base truncate">
                         {client.surname} {client.givenNames}
                       </div>
-                      <div className="text-xs sm:text-sm text-[#64748b] dark:text-slate-400">
-                        {dd}/{mm}/{yyyy} {hh}:{min} · Chambre {client.roomNumber}
+                      <div className="text-xs sm:text-sm text-[#64748b]">
+                        {dd}/{mm}/{yyyy} {hh}:{min} Â· Chambre {client.roomNumber}
                       </div>
                     </div>
                     <div
@@ -722,13 +719,13 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
         </section>
 
         <footer className="mt-6 pb-6 px-2">
-          {/* Mobile : grille 2 colonnes, 3 rangées */}
+          {/* Mobile : grille 2 colonnes, 3 rangÃ©es */}
           <div className="grid grid-cols-2 gap-y-2 sm:hidden">
             {[
-              { label: 'Fiches de contrôle', path: '/fiches' },
+              { label: 'Fiches de contrÃ´le', path: '/fiches' },
               { label: 'Historique', path: '/historique' },
-              { label: '📊 Statistiques', path: '/stats' },
-              { label: '❓ Aide', path: '/aide' },
+              { label: 'ðŸ“Š Statistiques', path: '/stats' },
+              { label: 'â“ Aide', path: '/aide' },
               { label: 'Support', path: '/support' },
               { label: 'CGU', path: '/cgu' },
             ].map(({ label, path }) => (
@@ -736,7 +733,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 key={path}
                 type="button"
                 onClick={() => navigate(path)}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm text-center py-1 transition-colors"
+                className="text-blue-600 hover:text-blue-800 text-sm text-center py-1 transition-colors"
               >
                 {label}
               </button>
@@ -746,35 +743,36 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
           {/* Desktop : ligne horizontale avec tous les liens */}
           <div className="hidden sm:flex flex-row flex-wrap justify-center items-center gap-x-1 gap-y-1">
             {[
-              { label: 'Fiches de contrôle', path: '/fiches' },
+              { label: 'Fiches de contrÃ´le', path: '/fiches' },
               { label: 'Historique', path: '/historique' },
-              { label: '📊 Statistiques', path: '/stats' },
-              { label: '❓ Aide', path: '/aide' },
+              { label: 'ðŸ“Š Statistiques', path: '/stats' },
+              { label: 'â“ Aide', path: '/aide' },
               { label: 'Support', path: '/support' },
               { label: 'CGU', path: '/cgu' },
-              { label: 'Confidentialité', path: '/confidentialite' },
-              { label: 'Mentions légales', path: '/mentions-legales' },
+              { label: 'ConfidentialitÃ©', path: '/confidentialite' },
+              { label: 'Mentions lÃ©gales', path: '/mentions-legales' },
             ].map(({ label, path }, i, arr) => (
               <span key={path} className="flex items-center">
                 <button
                   type="button"
                   onClick={() => navigate(path)}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline text-sm px-1 py-0.5 transition-colors"
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-sm px-1 py-0.5 transition-colors"
                 >
                   {label}
                 </button>
                 {i < arr.length - 1 && (
-                  <span className="text-gray-300 dark:text-slate-600 select-none ml-1">·</span>
+                  <span className="text-gray-300 select-none ml-1">Â·</span>
                 )}
               </span>
             ))}
           </div>
 
-          <p className="text-center text-xs text-gray-400 dark:text-slate-500 mt-3">
-            © 2026 Percepta SUARL · Tous droits réservés
+          <p className="text-center text-xs text-gray-400 mt-3">
+            Â© 2026 Percepta SUARL Â· Tous droits rÃ©servÃ©s
           </p>
         </footer>
       </main>
     </div>
   )
 }
+

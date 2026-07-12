@@ -26,7 +26,7 @@ export default function Layout({ children, currentPage, onNavigate, showNavigati
       )}
       
       {/* Overlay léger comme la page login */}
-      <div className={`min-h-screen w-full bg-blue-50/40 dark:bg-slate-900/85 ${
+      <div className={`min-h-screen w-full bg-blue-50/40 ${
         showNavigation ? 'md:ml-56' : ''
       }`}>
         {/* Padding pour mobile avec navigation en bas */}
