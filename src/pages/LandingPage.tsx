@@ -96,12 +96,6 @@ function Hero() {
           >
             Accéder à la plateforme
           </a>
-          <a
-            href="/login"
-            className="px-8 py-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/30 text-white font-bold text-base sm:text-lg hover:bg-white/20 transition-colors"
-          >
-            Se connecter
-          </a>
         </div>
 
         <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
