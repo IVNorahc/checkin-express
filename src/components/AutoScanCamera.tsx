@@ -184,6 +184,7 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
   const capturedRef    = useRef(false)
   const isMounted      = useRef(true)
   const cvReadyRef     = useRef(false)
+  const cvLoadStartRef = useRef(Date.now())   // timestamp when CV load began
 
   const [cvReady,        setCvReady]        = useState(false)
   const [cvLoading,      setCvLoading]      = useState(true)   // OpenCV loading in background
@@ -194,6 +195,10 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
   const [guidance,       setGuidance]       = useState('Placez la pièce devant la caméra')
   const [stableProgress, setStableProgress] = useState(0)
   const [flash,          setFlash]          = useState(false)
+  // ── Diagnostic state (visible on-screen, no console needed) ──────────────────
+  const [cvLoadMs,    setCvLoadMs]    = useState<number | null>(null) // null = loading/failed
+  const [diagElapsed, setDiagElapsed] = useState(0)                   // seconds elapsed while loading
+  const [diagDetail,  setDiagDetail]  = useState('')                  // precise detection info
 
   // ── 1. Start camera IMMEDIATELY on mount, independently of OpenCV ────────────
   useEffect(() => {
@@ -223,11 +228,18 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
 
   // ── 3. Load OpenCV in background, with 10 s timeout ─────────────────────────
   useEffect(() => {
+    cvLoadStartRef.current = Date.now()
+
+    // Live ticker: increments diagElapsed every second while loading
+    const tickerId = setInterval(() => {
+      if (isMounted.current && !cvReadyRef.current)
+        setDiagElapsed(Math.floor((Date.now() - cvLoadStartRef.current) / 1000))
+    }, 1000)
+
     const timeoutId = setTimeout(() => {
       if (!cvReadyRef.current) {
         console.warn('[AutoScan] OpenCV.js timed out after', CV_LOAD_TIMEOUT_MS / 1000, 's — falling back to manual mode')
         if (isMounted.current) { setCvError(true); setCvLoading(false) }
-        // Invalidate the singleton so a retry could work in a future mount
         cvLoadPromise = null
       }
     }, CV_LOAD_TIMEOUT_MS)
@@ -235,21 +247,25 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
     loadOpenCV()
       .then(() => {
         clearTimeout(timeoutId)
+        clearInterval(tickerId)
         if (isMounted.current) {
-          console.log('[AutoScan] OpenCV.js ready — detection active')
+          const ms = Date.now() - cvLoadStartRef.current
+          console.log('[AutoScan] OpenCV.js ready — detection active, loaded in', ms, 'ms')
           cvReadyRef.current = true
           setCvReady(true)
           setCvLoading(false)
+          setCvLoadMs(ms)
         }
       })
       .catch(err => {
         clearTimeout(timeoutId)
+        clearInterval(tickerId)
         console.error('[AutoScan] OpenCV.js load failed:', err)
         if (isMounted.current) { setCvError(true); setCvLoading(false) }
         cvLoadPromise = null
       })
 
-    return () => clearTimeout(timeoutId)
+    return () => { clearTimeout(timeoutId); clearInterval(tickerId) }
   }, [])
 
   // ── 4. Start detection loop once OpenCV is ready (video might already be running) ──
@@ -403,13 +419,16 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
       if (!corners) {
         stableStart.current = null; lastCorners.current = null
         setStableProgress(0); setGuidance('Placez la pièce devant la caméra')
+        setDiagDetail('aucun quadrilatère détecté')
         clearOverlay(); return
       }
 
       const area = polygonArea(corners)
+      const coveragePct = (area / (ANALYSIS_W * ANALYSIS_H) * 100).toFixed(0)
       if (area / (ANALYSIS_W * ANALYSIS_H) < COVERAGE_MIN) {
         stableStart.current = null; setStableProgress(0)
         setGuidance('Rapprochez la pièce de la caméra')
+        setDiagDetail(`surface ${coveragePct}% < ${(COVERAGE_MIN * 100).toFixed(0)}% requis`)
         drawOverlay(corners, '#f97316'); return
       }
 
@@ -418,12 +437,15 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
           Math.max(...xs) > ANALYSIS_W - EDGE_MARGIN_PX ||
           Math.max(...ys) > ANALYSIS_H - EDGE_MARGIN_PX) {
         stableStart.current = null; setStableProgress(0)
-        setGuidance('Reculez légèrement'); drawOverlay(corners, '#f97316'); return
+        setGuidance('Reculez légèrement')
+        setDiagDetail(`bords rognés (surface ${coveragePct}%)`)
+        drawOverlay(corners, '#f97316'); return
       }
 
       if (sharpness < SHARPNESS_MIN) {
         stableStart.current = null; setStableProgress(0)
         setGuidance('Image floue — stabilisez la caméra')
+        setDiagDetail(`netteté ${sharpness.toFixed(0)} < ${SHARPNESS_MIN} requis`)
         drawOverlay(corners, '#facc15'); return
       }
 
@@ -433,7 +455,9 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
         const delta = corners.reduce((s, c, i) => s + Math.hypot(c.x - prev[i].x, c.y - prev[i].y), 0)
         if (delta > STABILITY_THRESHOLD_PX) {
           stableStart.current = null; setStableProgress(0)
-          setGuidance('Tenez stable…'); drawOverlay(corners, '#60a5fa'); return
+          setGuidance('Tenez stable…')
+          setDiagDetail(`mouvement ${delta.toFixed(0)}px > ${STABILITY_THRESHOLD_PX}px max`)
+          drawOverlay(corners, '#60a5fa'); return
         }
       }
 
@@ -441,6 +465,7 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
       const stableMs = ts - stableStart.current
       const pct = Math.min(100, (stableMs / STABILITY_DURATION_MS) * 100)
       setStableProgress(pct); drawOverlay(corners, '#22c55e'); setGuidance('Tenez stable…')
+      setDiagDetail(`stable ${stableMs.toFixed(0)}ms / ${STABILITY_DURATION_MS}ms — net. ${sharpness.toFixed(0)} — surf. ${coveragePct}%`)
 
       if (stableMs >= STABILITY_DURATION_MS) {
         capturedRef.current = true
@@ -590,6 +615,22 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
             Détection auto indisponible — utilisez "Capturer manuellement"
           </p>
         )}
+      </div>
+
+      {/* ── Diagnostic panel (visible on mobile, no console needed) ────────── */}
+      <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono text-gray-500 space-y-0.5">
+        <p>
+          <span className="font-semibold text-gray-700">OpenCV : </span>
+          {cvLoading
+            ? `chargement… ${diagElapsed}s / ${CV_LOAD_TIMEOUT_MS / 1000}s`
+            : cvError
+              ? `❌ échec — timeout ${CV_LOAD_TIMEOUT_MS / 1000}s`
+              : `✅ prêt en ${cvLoadMs != null ? (cvLoadMs / 1000).toFixed(1) + 's' : '?'}`}
+        </p>
+        <p>
+          <span className="font-semibold text-gray-700">Détection : </span>
+          {cvReady ? (diagDetail || guidance) : cvError ? 'désactivée (mode manuel)' : 'en attente d\'OpenCV…'}
+        </p>
       </div>
 
       {/* ── Buttons ─────────────────────────────────────────────────────────── */}
