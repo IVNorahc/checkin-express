@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import BackButton from '../components/BackButton'
-
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 interface User {
   id: string
   email: string
@@ -27,6 +26,8 @@ export default function Support() {
     sujet: '',
     message: ''
   })
+
+  const [showLogout, setShowLogout] = useState(false)
 
   const signOut = async () => {
     await supabase.auth.signOut()
@@ -141,6 +142,9 @@ export default function Support() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void signOut()} onCancel={() => setShowLogout(false)} />
+      )}
       {/* HEADER */}
       <header className="flex items-center justify-between px-4 py-3"
         style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)' }}>
@@ -155,8 +159,8 @@ export default function Support() {
           </div>
         </div>
 
-        <button 
-          onClick={signOut}
+        <button
+          onClick={() => setShowLogout(true)}
           className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           Déconnexion
@@ -165,7 +169,6 @@ export default function Support() {
 
       {/* CONTENU */}
       <div className="px-4 py-6 sm:px-6">
-        <BackButton />
 
         {/* Messages d'erreur/succès */}
         {error && (

@@ -1,29 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import BackButton from '../components/BackButton'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-
+import type { OCRData } from '../types/ocr'
 
 type ScanProps = {
   onBack: () => void
   onCapture: (data: OCRData | null) => void
-}
-
-type OCRData = {
-  documentType: string | null
-  needsVerso: boolean | null
-  nom: string | null
-  prenoms: string | null
-  dateNaissance: string | null
-  lieuNaissance: string | null
-  nationalite: string | null
-  numeroDocument: string | null
-  dateDelivrance: string | null
-  dateExpiration: string | null
-  confidence: number | null
-  adresse: string | null
-  profession: string | null
-  nomPere: string | null
-  nomMere: string | null
 }
 
 function normalizeScreenshot(screenshot: string, fallbackMimeType = 'image/jpeg') {
@@ -85,9 +66,9 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   const [rectoResult, setRectoResult] = useState<OCRData | null>(null)
   const [isVersoMode, setIsVersoMode] = useState(false)
   const [showVersoPrompt, setShowVersoPrompt] = useState(false)
-  const [showManualCapture, setShowManualCapture] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isMountedRef = useRef(true)
+  const isInitialMount = useRef(true)
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -111,8 +92,16 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Erreur caméra:', err)
+      const name = (err as { name?: string })?.name ?? ''
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        setError("Accès à la caméra refusé. Autorisez l'accès dans les paramètres de votre navigateur.")
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        setError("Aucune caméra détectée sur cet appareil.")
+      } else {
+        setError("Impossible d'accéder à la caméra. Utilisez la saisie manuelle.")
+      }
     }
   }
 
@@ -141,7 +130,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
 
     // Transformer les données pour correspondre au format OCRData
-    const ocrData: OCRData & { sex?: string | null } = {
+    const ocrData: OCRData = {
       documentType: parsed.type_piece || 'CNI',
       needsVerso: isVersoMode ? false : true,
       nom: parsed.nom || null,
@@ -149,15 +138,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       dateNaissance: parsed.date_naissance || null,
       lieuNaissance: parsed.lieu_naissance || null,
       nationalite: parsed.nationalite || null,
+      paysEmission: parsed.pays_emission || null,
+      sexe: parsed.sexe || null,
       numeroDocument: parsed.numero_piece || null,
       dateDelivrance: parsed.date_delivrance || null,
       dateExpiration: parsed.date_expiration || null,
       confidence: 0.8,
-      sex: parsed.sexe || null,
       adresse: parsed.adresse || null,
       profession: parsed.profession || null,
-      nomPere: parsed.nom_pere || null,
-      nomMere: parsed.nom_mere || null,
     }
     
     if (!isMountedRef.current) return
@@ -184,6 +172,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
   // useEffect pour gérer les changements d'étape (recto ↔ verso)
   useEffect(() => {
+    // Ne pas s'exécuter au montage initial (startCamera est déjà appelé dans le premier useEffect)
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
     // Quand on change d'étape, redémarrer la caméra
     if (!showVersoPrompt && !capturedImage) {
       const restartCamera = async () => {
@@ -206,39 +199,6 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
     }
   }, [isVersoMode, showVersoPrompt])
 
-  // Capture et analyse manuelle
-  const captureAndAnalyze = useCallback(async () => {
-    if (!videoRef.current) return
-    
-    setIsAnalyzing(true)
-    setError(null)
-    
-    try {
-      const canvas = document.createElement('canvas')
-      const video = videoRef.current
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')!
-      ctx.drawImage(video, 0, 0)
-      
-      const capturedImage = canvas.toDataURL('image/jpeg', 0.8)
-      const imageBase64 = capturedImage.split(',')[1]
-      
-      setCapturedImage(capturedImage)
-      setCapturedImageBase64(imageBase64)
-      setCapturedMimeType('image/jpeg')
-      
-      // Utiliser la nouvelle fonction analyseImage avec l'Edge Function
-      await analyseImage(imageBase64)
-      return
-    } catch (error) {
-      console.error('Erreur capture:', error)
-      setError('Erreur lors de la capture. Veuillez réessayer.')
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }, [isVersoMode, onCapture])
-
   const captureHighQuality = async (): Promise<string> => {
     const video = videoRef.current
     if (!video) {
@@ -260,8 +220,12 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
   const handleScanResult = (result: OCRData) => {
     if (isVersoMode) {
-      // Mode verso : fusionner recto + verso et passer au formulaire
-      const mergedData = { ...rectoResult, ...result }
+      // Mode verso : le verso n'apporte que le numero_piece (NIN)
+      // Tous les autres champs viennent du recto — ne pas écraser
+      const mergedData: OCRData = {
+        ...rectoResult!,
+        ...(result.numeroDocument ? { numeroDocument: result.numeroDocument } : {}),
+      }
       onCapture(mergedData)
     } else {
       // Mode recto : vérifier si verso nécessaire
@@ -429,14 +393,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       dateNaissance: "",
       lieuNaissance: "",
       nationalite: "",
+      paysEmission: null,
+      sexe: null,
       numeroDocument: "",
       dateDelivrance: "",
       dateExpiration: "",
       confidence: 0,
       adresse: "",
       profession: "",
-      nomPere: "",
-      nomMere: ""
     }
     onCapture(manualData)
   }
@@ -457,9 +421,6 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
       </header>
 
       <main className="px-4 md:px-8 pb-8 flex flex-col items-center gap-3 md:gap-6">
-        <div className="w-full max-w-xl self-start">
-          <BackButton />
-        </div>
         {showVersoPrompt ? (
           // Écran intermédiaire après détection CNI
           <div className="w-full max-w-xl flex flex-col items-center justify-center min-h-[60vh]">
@@ -582,14 +543,26 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
           </div>
         ) : (
           <>
+            {error && (
+              <div className="w-full max-w-xl rounded-xl bg-red-50 border border-red-300 p-4 text-center">
+                <p className="text-red-700 font-medium mb-4">{error}</p>
+                <button
+                  type="button"
+                  onClick={handleManualInput}
+                  className="w-full h-12 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors"
+                >
+                  ✏️ Saisie manuelle
+                </button>
+              </div>
+            )}
             <div className="w-full max-w-xl aspect-[3/4] relative rounded-xl overflow-hidden h-[60vh] max-h-[500px]" style={{animation: "pulse-border 2s infinite"}}>
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                style={{ 
-                  width: '100%', 
+                style={{
+                  width: '100%',
                   height: '100%',
                   objectFit: 'cover',
                   display: 'block'
@@ -602,56 +575,6 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                   <p className="text-base sm:text-lg font-medium text-center px-4">Analyse en cours...</p>
                 </div>
               )}
-
-              <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-600 text-sm sm:text-base space-y-1 px-4">
-                <p>📏 Placez le document bien à plat</p>
-                <p>💡 Assurez-vous d'avoir un bon éclairage</p>
-              </div>
-
-              <div className="mt-6 sm:mt-8 w-full max-w-xl flex flex-col items-center gap-3 sm:gap-4 px-4">
-                {/* Bouton de capture automatique */}
-                {!showManualCapture && (
-                  <button
-                    type="button"
-                    onClick={capturePhoto}
-                    disabled={isAnalyzing}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
-                  >
-                    {isAnalyzing ? 'Analyse en cours...' : 'CAPTURER'}
-                  </button>
-                )}
-                
-                {/* Bouton de capture manuelle - fallback */}
-                {showManualCapture && (
-                  <button
-                    type="button"
-                    onClick={capturePhoto}
-                    disabled={isAnalyzing}
-                    className="w-full h-12 sm:h-14 rounded-xl bg-orange-600 text-white text-base sm:text-lg font-bold hover:bg-orange-700 transition-colors"
-                  >
-                    Capturer manuellement
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleManualInput}
-                  disabled={isAnalyzing}
-                  className="w-full h-12 rounded-xl bg-white border-2 border-blue-700 text-blue-700 font-bold hover:bg-blue-50 transition-colors"
-                  style={{ marginTop: '12px' }}
-                >
-                  ✏️ Saisie manuelle
-                </button>
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="w-full h-12 rounded-xl bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  ✕ Annuler
-                </button>
-                <p className="w-full text-center text-gray-500 text-xs sm:text-sm mt-2 px-4">
-                  💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
-                </p>
-              </div>
             </div>
 
             <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-600 text-sm sm:text-base space-y-1 px-4">
@@ -660,29 +583,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
             </div>
 
             <div className="mt-6 sm:mt-8 w-full max-w-xl flex flex-col items-center gap-3 sm:gap-4 px-4">
-              {/* Bouton de capture automatique */}
-              {!showManualCapture && (
-                <button
-                  type="button"
-                  onClick={capturePhoto}
-                  disabled={isAnalyzing}
-                  className="w-full h-12 sm:h-14 rounded-xl bg-blue-700 text-white text-base sm:text-lg font-bold hover:bg-blue-800 transition-colors"
-                >
-                  {isAnalyzing ? 'Analyse en cours...' : 'CAPTURER'}
-                </button>
-              )}
-              
-              {/* Bouton de capture manuelle - fallback */}
-              {showManualCapture && (
-                <button
-                  type="button"
-                  onClick={capturePhoto}
-                  disabled={isAnalyzing}
-                  className="w-full h-12 sm:h-14 rounded-xl bg-orange-600 text-white text-base sm:text-lg font-bold hover:bg-orange-700 transition-colors"
-                >
-                  Capturer manuellement
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={capturePhoto}
+                disabled={isAnalyzing}
+                className="w-full h-12 sm:h-14 rounded-xl bg-[#1e3a8a] text-white text-base sm:text-lg font-bold hover:bg-[#1e40af] transition-colors"
+              >
+                {isAnalyzing ? 'Analyse en cours...' : 'CAPTURER'}
+              </button>
               <button
                 type="button"
                 onClick={handleManualInput}
@@ -690,7 +598,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 className="w-full h-12 rounded-xl bg-white border-2 border-blue-700 text-blue-700 font-bold hover:bg-blue-50 transition-colors"
                 style={{ marginTop: '12px' }}
               >
-                ✏️ SAISIE MANUELLE
+                ✏️ Saisie manuelle
               </button>
               <button
                 type="button"

@@ -94,9 +94,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  // Redirect to subscription page if no access
+  // Redirect to login if no access
   if (!hasAccess) {
-    window.location.replace(window.location.origin + '/subscribe')
+    window.location.replace(window.location.origin + '/login')
     return null
   }
 

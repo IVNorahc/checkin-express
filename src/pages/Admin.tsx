@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 
 type Profile = {
   id: string
@@ -117,6 +118,8 @@ export default function Admin() {
     })
   }
 
+  const [showLogout, setShowLogout] = useState(false)
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.href = '/'
@@ -199,6 +202,9 @@ export default function Admin() {
 
   return (
     <div style={{minHeight: "100vh"}}>
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void handleLogout()} onCancel={() => setShowLogout(false)} />
+      )}
       {/* Header */}
       <header style={{
         background: "linear-gradient(135deg, #1e3a8a, #4a90d9)",
@@ -245,7 +251,7 @@ export default function Admin() {
               </p>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={() => setShowLogout(true)}
               style={{
                 padding: "8px 16px",
                 borderRadius: "8px",

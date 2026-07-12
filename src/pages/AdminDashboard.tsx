@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Building2, Users, Camera, TrendingUp, Clock, AlertCircle, BarChart2, Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 
 // ── API helper ─────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ interface HotelRow {
   trial_end: string
   created_at: string
   last_sign_in_at?: string
+  last_login?: string
   ocr_scans_used: number
   monthly_scans: number
   status: string
@@ -90,6 +92,9 @@ interface DetailedKPIs {
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate()
+
+  const [showLogout, setShowLogout] = useState(false)
+  const doSignOut = async () => { await supabase.auth.signOut(); window.location.replace('/login') }
 
   const [kpis, setKpis]             = useState<DetailedKPIs | null>(null)
   const [kpisLoading, setKpisLoading] = useState(true)
@@ -218,6 +223,21 @@ const AdminDashboard: React.FC = () => {
     }
   }
 
+  const fmtLogin = (iso?: string) => {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    const now = new Date()
+    const diffMs = now.getTime() - d.getTime()
+    const diffMin = Math.floor(diffMs / 60000)
+    if (diffMin < 1)   return 'À l\'instant'
+    if (diffMin < 60)  return `Il y a ${diffMin} min`
+    const diffH = Math.floor(diffMin / 60)
+    if (diffH < 24)    return `Il y a ${diffH} h`
+    const diffD = Math.floor(diffH / 24)
+    if (diffD < 7)     return `Il y a ${diffD} j`
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  }
+
   const exportCSV = () => {
     const headers = ['Hôtel', 'Email', 'Abonnement', 'Statut', 'Créé le', 'Fin essai', 'Scans mois', 'Scans total']
     const rows = hotels.map(h => [
@@ -267,6 +287,9 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void doSignOut()} onCancel={() => setShowLogout(false)} />
+      )}
 
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6]">
@@ -286,7 +309,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
         <button
-          onClick={async () => { await supabase.auth.signOut(); window.location.replace('/login') }}
+          onClick={() => setShowLogout(true)}
           className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2 rounded-lg text-sm"
         >
           Déconnexion
@@ -447,7 +470,7 @@ const AdminDashboard: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-100">
                   <thead className="bg-gray-50">
                     <tr>
-                      {['Hôtel', 'Email', 'Abonnement', 'Statut', 'Créé le', 'Fin essai', 'Scans mois', 'Actions'].map(h => (
+                      {['Hôtel', 'Email', 'Abonnement', 'Statut', 'Créé le', 'Fin essai', 'Dernière co.', 'Scans mois', 'Actions'].map(h => (
                         <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wide">{h}</th>
                       ))}
                     </tr>
@@ -465,6 +488,9 @@ const AdminDashboard: React.FC = () => {
                           <td className="px-5 py-3 text-sm text-gray-500">{new Date(hotel.created_at).toLocaleDateString('fr-FR')}</td>
                           <td className="px-5 py-3 text-sm text-gray-500">
                             {hotel.trial_end ? new Date(hotel.trial_end).toLocaleDateString('fr-FR') : '—'}
+                          </td>
+                          <td className="px-5 py-3 text-sm text-gray-500 whitespace-nowrap">
+                            {fmtLogin(hotel.last_login)}
                           </td>
                           <td className="px-5 py-3">
                             <span className="text-sm font-semibold text-gray-800">{hotel.monthly_scans}</span>
@@ -506,6 +532,7 @@ const AdminDashboard: React.FC = () => {
                           <p className="font-semibold text-gray-900">{hotel.hotel_name || '—'}</p>
                           <p className="text-xs text-gray-500">{hotel.email}</p>
                           <p className="text-xs text-gray-400 mt-0.5">{hotel.monthly_scans} scans ce mois</p>
+                          <p className="text-xs text-gray-400">Connexion : {fmtLogin(hotel.last_login)}</p>
                         </div>
                         <div className="flex gap-1 flex-col items-end">
                           {subBadge(hotel.subscription_status)}

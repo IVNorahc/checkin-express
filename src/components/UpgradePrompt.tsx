@@ -32,7 +32,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     if (currentPlan === 'trial') {
       return (
         <button
-          onClick={() => window.location.href = '/subscribe'}
+          onClick={() => window.location.href = 'mailto:contact@percepta.io'}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
           Passer à Starter ({getPlanPrice('starter')}{'\u20ac'}/mois)
@@ -43,7 +43,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     if (currentPlan === 'starter' && requiredPlan === 'business') {
       return (
         <button
-          onClick={() => window.location.href = '/subscribe'}
+          onClick={() => window.location.href = 'mailto:contact@percepta.io'}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
           Passer à Business ({getPlanPrice('business')}{'\u20ac'}/mois)
@@ -53,7 +53,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     
     return (
       <button
-        onClick={() => window.location.href = '/subscribe'}
+        onClick={() => window.location.href = 'mailto:contact@percepta.io'}
         className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
       >
         Voir les abonnements

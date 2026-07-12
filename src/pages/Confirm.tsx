@@ -11,6 +11,7 @@ import {
 import { jsPDF } from 'jspdf'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB } from '../lib/db'
+import type { OCRData } from '../types/ocr'
 
 const mockData = {
   documentType: 'passport',
@@ -18,6 +19,7 @@ const mockData = {
   surname: 'DUPONT',
   givenNames: 'JEAN',
   dateOfBirth: '1985-06-15',
+  lieuNaissance: '',
   documentNumber: '12AB34567',
   nationality: 'FRANÇAISE',
   sex: 'M',
@@ -25,29 +27,9 @@ const mockData = {
   dateDelivrance: '2020-06-14',
   address: '123 Rue de la Paix, 75001 Paris',
   profession: 'Ingénieur',
-  nomPere: 'PIERRE DUPONT',
-  nomMere: 'MARIE DURAND',
   venantDe: 'Paris',
   allantA: 'Dakar',
   confidence: 0.97,
-}
-
-type OCRData = {
-  documentType: string | null
-  needsVerso: boolean | null
-  nom: string | null
-  prenoms: string | null
-  dateNaissance: string | null
-  lieuNaissance: string | null
-  nationalite: string | null
-  numeroDocument: string | null
-  dateDelivrance: string | null
-  dateExpiration: string | null
-  confidence: number | null
-  adresse: string | null
-  profession: string | null
-  nomPere: string | null
-  nomMere: string | null
 }
 
 type EditableKey = Exclude<keyof typeof mockData, 'confidence'>
@@ -60,6 +42,7 @@ const fieldLabels: Record<string, string> = {
   surname: 'Nom',
   givenNames: 'Prénom(s)',
   dateOfBirth: 'Date de naissance',
+  lieuNaissance: 'Lieu de naissance',
   documentNumber: 'Numéro du document',
   nationality: 'Nationalité',
   sex: 'Sexe',
@@ -67,8 +50,6 @@ const fieldLabels: Record<string, string> = {
   dateDelivrance: 'Date de délivrance',
   address: 'Adresse',
   profession: 'Profession',
-  nomPere: 'Nom du père',
-  nomMere: 'Nom de la mère',
   venantDe: 'Venant de',
   allantA: 'Allant à',
 }
@@ -79,6 +60,7 @@ const initialData: FormData = {
   surname: mockData.surname,
   givenNames: mockData.givenNames,
   dateOfBirth: mockData.dateOfBirth,
+  lieuNaissance: mockData.lieuNaissance,
   documentNumber: mockData.documentNumber,
   nationality: mockData.nationality,
   sex: mockData.sex,
@@ -86,8 +68,6 @@ const initialData: FormData = {
   dateDelivrance: mockData.dateDelivrance,
   address: mockData.address ?? '',
   profession: mockData.profession,
-  nomPere: mockData.nomPere,
-  nomMere: mockData.nomMere,
   venantDe: mockData.venantDe,
   allantA: mockData.allantA,
 }
@@ -99,23 +79,20 @@ type ConfirmProps = {
 }
 
 const buildFormDataFromOCR = (ocr: OCRData): FormData => {
-  console.log('OCR Result:', JSON.stringify(ocr))
-  
   return {
     documentType: ocr.documentType ?? '',
-    issuingCountry: ocr.nationalite ?? '', // nationalite -> issuingCountry
+    issuingCountry: ocr.paysEmission ?? ocr.nationalite ?? '', // paysEmission -> issuingCountry
     surname: ocr.nom ?? '', // nom -> surname
     givenNames: ocr.prenoms ?? '', // prenoms -> givenNames
-    dateOfBirth: ocr.dateNaissance ?? '', // dateNaissance -> dateOfBirth
+    dateOfBirth: ocr.dateNaissance ?? '',
+    lieuNaissance: ocr.lieuNaissance ?? '',
     documentNumber: ocr.numeroDocument ?? '', // numeroDocument -> documentNumber
     nationality: ocr.nationalite ?? '', // nationalite -> nationality
-    sex: '', // Champ non fourni par l'OCR
+    sex: ocr.sexe ?? '',
     expiryDate: ocr.dateExpiration ?? '', // dateExpiration -> expiryDate
     dateDelivrance: ocr.dateDelivrance ?? '', // dateDelivrance -> dateDelivrance
     address: ocr.adresse ?? '', // adresse -> address
     profession: ocr.profession ?? '', // profession -> profession
-    nomPere: ocr.nomPere ?? '', // nomPere -> nomPere
-    nomMere: ocr.nomMere ?? '', // nomMere -> nomMere
     venantDe: '', // Champ manuel
     allantA: '', // Champ manuel
   }
@@ -125,6 +102,8 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const effectiveFormData = data ? buildFormDataFromOCR(data) : initialData
   const [formData, setFormData] = useState<FormData>(effectiveFormData)
   const [roomNumber, setRoomNumber] = useState('')
+  const [objetVoyage, setObjetVoyage] = useState('')
+  const [objetVoyageAutre, setObjetVoyageAutre] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -152,7 +131,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const confidenceValue = data && typeof data.confidence === 'number' ? data.confidence : mockData.confidence
   const confidencePercent = useMemo(() => Math.round(confidenceValue * 100), [confidenceValue])
 
-  const handleFieldChange = (key: EditableKey) => (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFieldChange = (key: EditableKey) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [key]: e.target.value }))
   }
 
@@ -247,6 +226,8 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const handleReset = () => {
     setFormData(effectiveFormData)
     setRoomNumber('')
+    setObjetVoyage('')
+    setObjetVoyageAutre('')
     setSubmitted(false)
     setSuccessMessage('')
     handleClearSignature()
@@ -294,7 +275,6 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
     setSyncError(null)
     try {
       const { data: sessionData } = await supabase.auth.getSession()
-      console.log('[Confirm] user_id:', sessionData.session?.user.id ?? 'PAS DE SESSION')
 
       if (!sessionData.session) {
         setSyncError('Session expirée — veuillez vous reconnecter.')
@@ -305,20 +285,17 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           .eq('user_id', sessionData.session.user.id)
           .single()
 
-        console.log('[Confirm] hotel lookup →', { hotel_id: hotelData?.id ?? null, hotelError })
-
         if (hotelError || !hotelData) {
           const msg = hotelError?.message ?? 'hôtel introuvable'
           console.error('[Confirm] Impossible de récupérer l\'hôtel:', hotelError)
           setSyncError(`Hôtel introuvable (${msg}).`)
         } else {
-          console.log('[Confirm] INSERT clients → hotel_id:', hotelData.id)
           const { error: insertError } = await supabase.from('clients').insert({
             hotel_id: hotelData.id,
             nom: formData.surname,
             prenoms: formData.givenNames,
             date_naissance: formData.dateOfBirth,
-            lieu_naissance: '',
+            lieu_naissance: formData.lieuNaissance,
             nationalite: formData.nationality,
             document_type: formData.documentType,
             numero_document: formData.documentNumber,
@@ -329,17 +306,14 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
             domicile: formData.address,
             venant_de: formData.venantDe,
             allant_a: formData.allantA,
-            objet_voyage: '',
-            nb_enfants: '',
-            immatriculation: '',
+            objet_voyage: objetVoyage === 'Autre' ? objetVoyageAutre : objetVoyage,
+            signature: signatureDataUrl,
           })
 
           if (insertError) {
             console.error('[Confirm] Supabase insert error:', insertError)
             console.error('[Confirm] code:', insertError.code, '| hint:', insertError.hint, '| details:', insertError.details)
             setSyncError(`Erreur enregistrement Supabase (code ${insertError.code}) : ${insertError.message}`)
-          } else {
-            console.log('[Confirm] ✓ Check-in synchronisé dans Supabase')
           }
         }
       }
@@ -703,12 +677,24 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                 <label className="block text-xs font-semibold text-[#64748b] mb-1">
                   {fieldLabels[key]}
                 </label>
-                <input
-                  type="text"
-                  value={formData[key]}
-                  onChange={handleFieldChange(key)}
-                  className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
-                />
+                {key === 'sex' ? (
+                  <select
+                    value={formData[key]}
+                    onChange={handleFieldChange(key)}
+                    className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+                  >
+                    <option value="">— Sélectionner —</option>
+                    <option value="M">M — Masculin</option>
+                    <option value="F">F — Féminin</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={formData[key]}
+                    onChange={handleFieldChange(key)}
+                    className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -723,17 +709,57 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                       {fieldLabels[key]}
                     </th>
                     <td className="px-4 py-3">
-                      <input
-                        type="text"
-                        value={formData[key]}
-                        onChange={handleFieldChange(key)}
-                        className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
-                      />
+                      {key === 'sex' ? (
+                        <select
+                          value={formData[key]}
+                          onChange={handleFieldChange(key)}
+                          className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
+                        >
+                          <option value="">— Sélectionner —</option>
+                          <option value="M">M — Masculin</option>
+                          <option value="F">F — Féminin</option>
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={formData[key]}
+                          onChange={handleFieldChange(key)}
+                          className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div>
+            <label htmlFor="objetVoyage" className="block text-sm font-semibold text-[#1e293b] mb-2">
+              Objet du voyage
+            </label>
+            <select
+              id="objetVoyage"
+              value={objetVoyage}
+              onChange={(e) => { setObjetVoyage(e.target.value); setObjetVoyageAutre('') }}
+              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+            >
+              <option value="">— Sélectionner —</option>
+              <option value="Tourisme">Tourisme</option>
+              <option value="Affaires">Affaires</option>
+              <option value="Transit">Transit</option>
+              <option value="Famille">Famille</option>
+              <option value="Autre">Autre</option>
+            </select>
+            {objetVoyage === 'Autre' && (
+              <input
+                type="text"
+                value={objetVoyageAutre}
+                onChange={(e) => setObjetVoyageAutre(e.target.value)}
+                placeholder="Précisez l'objet du voyage…"
+                className="mt-2 w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+              />
+            )}
           </div>
 
           <div>

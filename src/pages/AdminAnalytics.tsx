@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import BackButton from '../components/BackButton'
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { supabase } from '../lib/supabase'
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 
 async function callAdminApi(action: string, params?: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke('admin-api', {
@@ -36,6 +36,9 @@ interface DailyPoint  { date: string; scans: number }
 
 const AdminAnalytics: React.FC = () => {
   const navigate = useNavigate()
+  const [showLogout, setShowLogout] = useState(false)
+  const doSignOut = async () => { await supabase.auth.signOut(); window.location.replace('/login') }
+
   const [weeklyData, setWeeklyData]  = useState<WeeklyPoint[]>([])
   const [dailyScans, setDailyScans]  = useState<DailyPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,6 +103,9 @@ const AdminAnalytics: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void doSignOut()} onCancel={() => setShowLogout(false)} />
+      )}
 
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6]">
@@ -110,7 +116,7 @@ const AdminAnalytics: React.FC = () => {
           <h1 className="text-white font-bold text-lg">Analytics</h1>
         </div>
         <button
-          onClick={async () => { await supabase.auth.signOut(); window.location.replace('/login') }}
+          onClick={() => setShowLogout(true)}
           className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2 rounded-lg text-sm"
         >
           Déconnexion
@@ -143,7 +149,6 @@ const AdminAnalytics: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
 
-        <BackButton />
 
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">

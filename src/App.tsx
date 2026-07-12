@@ -3,8 +3,8 @@ import type { ErrorInfo, ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { HotelContext, type HotelContextValue } from './contexts/HotelContext'
+import type { OCRData } from './types/ocr'
 import Login from './pages/Login'
-import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Scan from './pages/Scan'
 import Confirm from './pages/Confirm'
@@ -14,11 +14,11 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminAnalytics from './pages/AdminAnalytics'
 import AdminParametres from './pages/AdminParametres'
 import AdminUsers from './pages/AdminUsers'
-import Subscribe from './pages/Subscribe'
 import Historique from './pages/Historique'
 import FichesControle from './pages/FichesControle'
 import Parametres from './pages/Parametres'
 import Support from './pages/Support'
+import Aide from './pages/Aide'
 import Stats from './pages/Stats'
 import CGU from './pages/CGU'
 import Confidentialite from './pages/Confidentialite'
@@ -26,24 +26,6 @@ import MentionsLegales from './pages/MentionsLegales'
 import LandingPage from './pages/LandingPage'
 import Layout from './components/Layout'
 import { useRegisterSW } from 'virtual:pwa-register/react'
-
-type OcrData = {
-  documentType: string | null
-  needsVerso: boolean | null
-  nom: string | null
-  prenoms: string | null
-  dateNaissance: string | null
-  lieuNaissance: string | null
-  nationalite: string | null
-  numeroDocument: string | null
-  dateDelivrance: string | null
-  dateExpiration: string | null
-  confidence: number | null
-  adresse: string | null
-  profession: string | null
-  nomPere: string | null
-  nomMere: string | null
-}
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; message: string }> {
   constructor(props: { children: ReactNode }) {
@@ -147,29 +129,29 @@ function RouteLoadingSpinner() {
 function BackButton() {
   const navigate = useNavigate()
   return (
-    <button
-      onClick={() => navigate(-1)}
-      style={{
-        position: 'fixed',
-        top: '12px',
-        left: '12px',
-        zIndex: 9999,
-        background: 'rgba(255,255,255,0.95)',
-        border: '1px solid #e2e8f0',
-        borderRadius: '10px',
-        padding: '8px 14px',
-        fontSize: '14px',
-        fontWeight: '600',
-        color: '#1e3a8a',
-        cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-      }}
-    >
-      ← Retour
-    </button>
+    <div style={{
+      background: 'white',
+      borderBottom: '1px solid #e2e8f0',
+      padding: '10px 16px',
+    }}>
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          background: 'none',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '14px',
+          fontWeight: '600',
+          color: '#1e3a8a',
+          cursor: 'pointer',
+          padding: '4px 0',
+        }}
+      >
+        ← Retour
+      </button>
+    </div>
   )
 }
 
@@ -306,6 +288,7 @@ function ProtectedRouteWrapper({
         if (hotel) {
           setHotelCtx({ hotelId: hotel.id, hotelName: hotel.hotel_name, isEmployee: false })
           console.log('[Auth] resolved as OWNER — hotel_id:', hotel.id)
+          void logLogin(user.id, hotel.id)
           setIsLoading(false)
           return
         }
@@ -378,11 +361,49 @@ function ProtectedRouteWrapper({
   return <>{children}</>
 }
 
+function detectDevice(): string {
+  return /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+}
+
+function detectBrowser(): string {
+  const ua = navigator.userAgent
+  if (/Edge|Edg/i.test(ua)) return 'Edge'
+  if (/Chrome/i.test(ua)) return 'Chrome'
+  if (/Firefox/i.test(ua)) return 'Firefox'
+  if (/Safari/i.test(ua)) return 'Safari'
+  return 'Autre'
+}
+
+const LOGIN_LOG_KEY = '_login_logged_at'
+const LOGIN_LOG_THRESHOLD_MS = 60 * 60 * 1000 // 1 heure
+
+async function logLogin(userId: string, hotelId: string) {
+  // Guard: ne loggue pas si une session a déjà été enregistrée il y a moins d'1h
+  // localStorage persist sur PWA mobile contrairement à sessionStorage
+  const lastLogged = localStorage.getItem(LOGIN_LOG_KEY)
+  if (lastLogged && Date.now() - Number(lastLogged) < LOGIN_LOG_THRESHOLD_MS) return
+  localStorage.setItem(LOGIN_LOG_KEY, String(Date.now()))
+
+  const now = new Date().toISOString()
+  const [updateRes, insertRes] = await Promise.all([
+    supabase.from('hotels').update({ last_login: now }).eq('id', hotelId),
+    supabase.from('login_logs').insert({
+      hotel_id: hotelId,
+      user_id: userId,
+      device: detectDevice(),
+      browser: detectBrowser(),
+    }),
+  ])
+
+  if (updateRes.error) console.error('[LoginLog] hotels.last_login update error:', updateRes.error)
+  if (insertRes.error) console.error('[LoginLog] login_logs insert error:', insertRes.error)
+}
+
 function AppContent() {
-  const [ocrData, setOcrData] = useState<OcrData | null>(() => {
+  const [ocrData, setOCRData] = useState<OCRData | null>(() => {
     try {
       const stored = sessionStorage.getItem(OCR_SESSION_KEY)
-      return stored ? (JSON.parse(stored) as OcrData) : null
+      return stored ? (JSON.parse(stored) as OCRData) : null
     } catch {
       return null
     }
@@ -394,19 +415,17 @@ function AppContent() {
     isEmployee: false,
   })
 
+
   return (
     <HotelContext.Provider value={hotelCtx}>
       <Routes>
         {/* ── Public routes ──────────────────────────────────────────────────── */}
-        <Route path="/login" element={<Login onRegisterClick={() => window.location.href = '/register'} />} />
-        <Route path="/register" element={<Register onLoginClick={() => window.location.href = '/login'} />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/confirm-email" element={<><BackButton /><ConfirmEmail /></>} />
         <Route path="/confirm-email-pending" element={<><BackButton /><ConfirmEmail /></>} />
         <Route path="/cgu" element={<><BackButton /><CGU /></>} />
         <Route path="/confidentialite" element={<><BackButton /><Confidentialite /></>} />
         <Route path="/mentions-legales" element={<><BackButton /><MentionsLegales /></>} />
-        <Route path="/subscribe" element={<><BackButton /><Subscribe /></>} />
-        <Route path="/pricing" element={<><BackButton /><Subscribe /></>} />
         <Route path="/" element={<LandingPage />} />
 
         {/* ── Setup hotel (owner-only, before first hotel) ────────────────────── */}
@@ -431,7 +450,6 @@ function AppContent() {
             <Layout currentPage="dashboard">
               <Dashboard
                 onRequireLogin={() => window.location.href = '/login'}
-                onSubscribeClick={() => window.location.href = '/pricing'}
               />
             </Layout>
           </ProtectedRouteWrapper>
@@ -446,7 +464,7 @@ function AppContent() {
                   onBack={() => window.location.href = '/dashboard'}
                   onCapture={(data) => {
                     try { sessionStorage.setItem(OCR_SESSION_KEY, JSON.stringify(data)) } catch { /* quota */ }
-                    setOcrData(data)
+                    setOCRData(data)
                     window.location.href = '/confirm'
                   }}
                 />
@@ -463,7 +481,7 @@ function AppContent() {
                   onBack={() => window.location.href = '/dashboard'}
                   onCapture={(data) => {
                     try { sessionStorage.setItem(OCR_SESSION_KEY, JSON.stringify(data)) } catch { /* quota */ }
-                    setOcrData(data)
+                    setOCRData(data)
                     window.location.href = '/confirm'
                   }}
                 />
@@ -481,7 +499,7 @@ function AppContent() {
                   data={ocrData}
                   onRestart={() => {
                     sessionStorage.removeItem(OCR_SESSION_KEY)
-                    setOcrData(null)
+                    setOCRData(null)
                     window.location.href = '/scan'
                   }}
                   onConfirm={() => {
@@ -534,6 +552,17 @@ function AppContent() {
             <ProtectedRouteWrapper setHotelCtx={setHotelCtx}>
               <Layout currentPage="support">
                 <Support />
+              </Layout>
+            </ProtectedRouteWrapper>
+          </>
+        } />
+
+        <Route path="/aide" element={
+          <>
+            <BackButton />
+            <ProtectedRouteWrapper setHotelCtx={setHotelCtx}>
+              <Layout currentPage="aide">
+                <Aide />
               </Layout>
             </ProtectedRouteWrapper>
           </>

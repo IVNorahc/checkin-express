@@ -1,8 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import BackButton from '../components/BackButton'
-
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+interface LoginLog {
+  id: string
+  device: string | null
+  browser: string | null
+  created_at: string
+}
 
 interface Employee {
   id: string
@@ -102,7 +108,23 @@ export default function Parametres() {
   const [error, setError]         = useState<string | null>(null)
   const [success, setSuccess]     = useState<string | null>(null)
   const [logoCacheBust, setLogoCacheBust] = useState(Date.now())
+  const [showLogout, setShowLogout] = useState(false)
+  const [loginLogs, setLoginLogs] = useState<LoginLog[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
+  const [mfaEnabled, setMfaEnabled]       = useState(false)
+  const [mfaFactorId, setMfaFactorId]     = useState<string | null>(null)
+  const [mfaEnrolling, setMfaEnrolling]   = useState(false)
+  const [enrollData, setEnrollData]       = useState<{ qr_code: string; secret: string; factorId: string } | null>(null)
+  const [mfaCode, setMfaCode]             = useState('')
+  const [mfaVerifying, setMfaVerifying]   = useState(false)
+  const [mfaDisabling, setMfaDisabling]   = useState(false)
+  const [mfaError, setMfaError]           = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const doSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.replace('/login')
+  }
 
   // ── Employee state ───────────────────────────────────────────────────────────
   const [employees, setEmployees]       = useState<Employee[]>([])
@@ -155,6 +177,8 @@ export default function Parametres() {
 
         // Isolated — never blocks page render
         loadEmployees(data.id)
+        loadLoginLogs(data.id)
+        checkMfaStatus()
       } catch {
         setError('Erreur lors du chargement')
       } finally {
@@ -299,7 +323,87 @@ export default function Parametres() {
     else setSuccess('Email de réinitialisation envoyé. Vérifiez votre boîte.')
   }
 
-  // ── Employee helpers ─────────────────────────────────────────────────────────
+  // ── 2FA helpers ──────────────────────────────────────────────────────────────
+
+  const checkMfaStatus = async () => {
+    const { data } = await supabase.auth.mfa.listFactors()
+    const verified = data?.totp?.find(f => f.status === 'verified')
+    if (verified) {
+      setMfaEnabled(true)
+      setMfaFactorId(verified.id)
+    }
+  }
+
+  const handleStartEnroll = async () => {
+    setMfaError(null)
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    if (error || !data) {
+      setMfaError('Erreur lors de la génération du QR code.')
+      return
+    }
+    setEnrollData({ qr_code: data.totp.qr_code, secret: data.totp.secret, factorId: data.id })
+    setMfaEnrolling(true)
+  }
+
+  const handleVerifyEnroll = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!enrollData) return
+    setMfaVerifying(true)
+    setMfaError(null)
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: enrollData.factorId,
+      code: mfaCode,
+    })
+    if (error) {
+      setMfaError("Code incorrect. Réessayez avec un nouveau code de l'application.")
+      setMfaCode('')
+      setMfaVerifying(false)
+      return
+    }
+    setMfaEnabled(true)
+    setMfaFactorId(enrollData.factorId)
+    setMfaEnrolling(false)
+    setEnrollData(null)
+    setMfaCode('')
+    setMfaVerifying(false)
+    setSuccess('Double authentification activée avec succès.')
+  }
+
+  const handleUnenroll = async () => {
+    if (!mfaFactorId) return
+    if (!window.confirm('Désactiver la double authentification ? Votre compte sera moins sécurisé.')) return
+    setMfaDisabling(true)
+    setMfaError(null)
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId })
+    if (error) {
+      setMfaError('Erreur lors de la désactivation.')
+      setMfaDisabling(false)
+      return
+    }
+    setMfaEnabled(false)
+    setMfaFactorId(null)
+    setMfaDisabling(false)
+    setSuccess('Double authentification désactivée.')
+  }
+
+  // ── Employee helpers ──────────────────────────────────────────────────────────
+
+  const loadLoginLogs = async (hotelId: string) => {
+    setLogsLoading(true)
+    try {
+      const { data } = await supabase
+        .from('login_logs')
+        .select('id, device, browser, created_at')
+        .eq('hotel_id', hotelId)
+        .order('created_at', { ascending: false })
+        .limit(10)
+      if (data) setLoginLogs(data as LoginLog[])
+    } catch {
+      // table may not exist yet — silently ignore
+    } finally {
+      setLogsLoading(false)
+    }
+  }
 
   const loadEmployees = async (hotelId: string) => {
     setEmpLoading(true)
@@ -413,6 +517,9 @@ export default function Parametres() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void doSignOut()} onCancel={() => setShowLogout(false)} />
+      )}
 
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6]">
@@ -426,7 +533,7 @@ export default function Parametres() {
           </div>
         </div>
         <button
-          onClick={async () => { await supabase.auth.signOut(); window.location.replace('/login') }}
+          onClick={() => setShowLogout(true)}
           className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2 rounded-lg text-sm"
         >
           Déconnexion
@@ -434,7 +541,6 @@ export default function Parametres() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
-        <BackButton />
 
         {error   && <StatusBanner text={error}   type="error"   onDismiss={() => setError(null)} />}
         {success && <StatusBanner text={success} type="success" onDismiss={() => setSuccess(null)} />}
@@ -553,6 +659,101 @@ export default function Parametres() {
           </div>
         </SectionCard>
 
+        {/* ── 4.5. Sécurité ─────────────────────────────────────────────────── */}
+        <SectionCard title="Sécurité">
+          <div className="space-y-4">
+            {/* Status badge */}
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Double authentification (2FA)</p>
+                <p className="text-xs text-gray-400 mt-0.5">Protégez votre compte avec Google Authenticator ou Authy</p>
+              </div>
+              <span className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                mfaEnabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+              }`}>
+                {mfaEnabled ? '● Activé' : '● Inactif'}
+              </span>
+            </div>
+
+            {mfaError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{mfaError}</p>
+            )}
+
+            {/* Non inscrit → bouton activer */}
+            {!mfaEnabled && !mfaEnrolling && (
+              <button
+                type="button"
+                onClick={() => void handleStartEnroll()}
+                className="w-full px-4 py-2.5 bg-[#1e3a8a] hover:bg-blue-800 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                Activer la double authentification
+              </button>
+            )}
+
+            {/* Enrollment en cours → QR code + saisie code */}
+            {mfaEnrolling && enrollData && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Scannez ce QR code avec <strong>Google Authenticator</strong> ou <strong>Authy</strong>, puis entrez le code généré ci-dessous.
+                  </p>
+                  <div className="inline-block border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
+                    <img src={enrollData.qr_code} alt="QR Code 2FA" className="w-48 h-48 mx-auto" />
+                  </div>
+                  <details className="mt-3 text-left">
+                    <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 text-center">Afficher le code secret (saisie manuelle)</summary>
+                    <p className="mt-1.5 font-mono text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 break-all select-all">{enrollData.secret}</p>
+                  </details>
+                </div>
+                <form onSubmit={e => void handleVerifyEnroll(e)} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Code de vérification (6 chiffres)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={mfaCode}
+                      onChange={e => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                      autoFocus
+                      className="w-full border border-gray-300 rounded-lg px-3 py-3 text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setMfaEnrolling(false); setEnrollData(null); setMfaCode(''); setMfaError(null) }}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={mfaVerifying || mfaCode.length !== 6}
+                      className="flex-1 px-4 py-2.5 bg-[#1e3a8a] hover:bg-blue-800 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      {mfaVerifying ? 'Vérification…' : 'Confirmer'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Déjà activé → bouton désactiver */}
+            {mfaEnabled && !mfaEnrolling && (
+              <button
+                type="button"
+                onClick={() => void handleUnenroll()}
+                disabled={mfaDisabling}
+                className="w-full px-4 py-2.5 border border-red-300 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+              >
+                {mfaDisabling ? 'Désactivation…' : 'Désactiver le 2FA'}
+              </button>
+            )}
+          </div>
+        </SectionCard>
+
         {/* ── 5. Employés ───────────────────────────────────────────────────── */}
         <SectionCard title="Employés">
 
@@ -659,6 +860,49 @@ export default function Parametres() {
               Gérer mon abonnement
             </button>
           </div>
+        </SectionCard>
+
+        {/* ── 7. Connexions récentes ─────────────────────────────────────── */}
+        <SectionCard title="Connexions récentes">
+          {logsLoading ? (
+            <div className="flex justify-center py-4">
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-[#1e3a8a] rounded-full animate-spin" />
+            </div>
+          ) : loginLogs.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-3">Aucune connexion enregistrée.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {loginLogs.map((log, idx) => {
+                const deviceIcon = log.device === 'mobile' ? '📱' : '💻'
+                const browserIcon =
+                  log.browser === 'Chrome'  ? '🌐' :
+                  log.browser === 'Firefox' ? '🦊' :
+                  log.browser === 'Safari'  ? '🧭' :
+                  log.browser === 'Edge'    ? '🔷' : '🌍'
+                const date = new Date(log.created_at)
+                const label = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+                  + ' à ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                return (
+                  <li key={log.id} className="flex items-center justify-between py-3 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-xl shrink-0">{deviceIcon}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800">
+                          {browserIcon} {log.browser ?? 'Navigateur inconnu'} · {log.device === 'mobile' ? 'Mobile' : 'Bureau'}
+                        </p>
+                        <p className="text-xs text-gray-400">{label}</p>
+                      </div>
+                    </div>
+                    {idx === 0 && (
+                      <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        Actuelle
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </SectionCard>
 
         {/* Footer légal */}

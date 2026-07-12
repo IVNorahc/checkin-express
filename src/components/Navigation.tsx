@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { ReactElement } from 'react'
 import { useHotel } from '../contexts/HotelContext'
+import LogoutConfirmModal from './LogoutConfirmModal'
 
 interface NavigationProps {
   currentPage?: string
@@ -62,6 +63,13 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
   const { isEmployee } = useHotel()
   const visibleItems = navItems.filter(item => !(item.ownerOnly && isEmployee))
   const [isMobile, setIsMobile] = useState(false)
+  const [showLogout, setShowLogout] = useState(false)
+
+  const doSignOut = async () => {
+    const { supabase } = await import('../lib/supabase')
+    await supabase.auth.signOut()
+    window.location.replace(window.location.origin + '/login')
+  }
 
   useEffect(() => {
     const checkMobile = () => {
@@ -144,11 +152,7 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
 
       <div className="border-t border-gray-200 pt-4">
         <button
-          onClick={async () => {
-            const { supabase } = await import('../lib/supabase')
-            await supabase.auth.signOut()
-            window.location.replace(window.location.origin + '/login')
-          }}
+          onClick={() => setShowLogout(true)}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,6 +161,9 @@ export default function Navigation({ currentPage = 'dashboard', onNavigate }: Na
           <span className="font-medium">Déconnexion</span>
         </button>
       </div>
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void doSignOut()} onCancel={() => setShowLogout(false)} />
+      )}
     </nav>
   )
 }

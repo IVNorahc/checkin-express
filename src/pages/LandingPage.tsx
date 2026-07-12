@@ -24,7 +24,6 @@ export default function LandingPage() {
       <Hero />
       <ProblemSolution />
       <Features />
-      <Pricing />
       <Footer />
     </div>
   )
@@ -57,12 +56,6 @@ function Nav() {
           >
             Se connecter
           </a>
-          <a
-            href="/register"
-            className="text-sm font-semibold px-4 py-2 rounded-lg bg-[#1e3a8a] text-white hover:bg-[#162e6e] transition-colors shadow"
-          >
-            Essai gratuit
-          </a>
         </div>
       </div>
     </nav>
@@ -87,11 +80,6 @@ function Hero() {
           <img src="/percepta-logo.png" alt="Percepta" className="h-14 w-auto" />
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-white text-sm font-medium mb-6">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          Essai gratuit 7 jours — sans carte bancaire
-        </div>
-
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight mb-5">
           L'enregistrement hôtelier intelligent
           <span className="text-[#4a90d9]"> pour le Sénégal</span>
@@ -103,10 +91,10 @@ function Hero() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="/register"
+            href="/login"
             className="px-8 py-4 rounded-xl bg-[#4a90d9] text-white font-bold text-base sm:text-lg shadow-lg hover:bg-[#3a7bc8] transition-colors"
           >
-            Commencer l'essai gratuit
+            Accéder à la plateforme
           </a>
           <a
             href="/login"
@@ -120,8 +108,8 @@ function Hero() {
           {[
             { value: '30s', label: 'Check-in complet' },
             { value: '100%', label: 'Conforme RGPD' },
-            { value: '7j', label: 'Essai gratuit' },
-            { value: '0€', label: 'Sans engagement' },
+            { value: '24/7', label: 'Support inclus' },
+            { value: 'OCR', label: 'Scan intelligent' },
           ].map(({ value, label }) => (
             <div key={label}>
               <p className="text-2xl sm:text-3xl font-extrabold text-white">{value}</p>
@@ -189,7 +177,7 @@ function ProblemSolution() {
             <ul className="space-y-4">
               {[
                 'Scan automatique de la pièce d\'identité',
-                'Données extraites sans erreur par l\'IA',
+                'Données extraites sans erreur',
                 'Fiche de police PDF générée en 1 clic',
                 'Export SYNEXIE vers la gendarmerie instantané',
                 'Historique complet et consultable',
@@ -215,9 +203,9 @@ function Features() {
   const features = [
     {
       icon: '📷',
-      title: 'Scan IA',
+      title: 'Scan',
       subtitle: 'Lecture automatique des pièces d\'identité',
-      description: 'Photographiez la pièce d\'identité du client. Notre IA (Google Gemini) extrait instantanément nom, prénom, date de naissance, nationalité et numéro de document.',
+      description: 'Photographiez la pièce d\'identité du client. Checki-in Express extrait instantanément nom, prénom, date de naissance, nationalité et numéro de document.',
       bullets: ['CNI, passeport, titre de séjour', 'Précision de lecture > 95%', 'Fonctionne même sur photos floues'],
     },
     {
@@ -276,105 +264,6 @@ function Features() {
   )
 }
 
-/* ── Pricing ─────────────────────────────────────────────────────────────────── */
-
-function Pricing() {
-  return (
-    <section className="py-20 px-4 bg-slate-50">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1e3a8a] mb-3">
-            Tarifs simples et transparents
-          </h2>
-          <p className="text-slate-500">
-            7 jours gratuits sur les deux formules — aucune carte bancaire requise.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {/* Starter */}
-          <div className="bg-white rounded-2xl border-2 border-blue-100 p-6 sm:p-8 flex flex-col shadow-sm">
-            <h3 className="font-extrabold text-[#1e3a8a] text-xl mb-1">Starter</h3>
-            <p className="text-slate-500 text-sm mb-5">Idéal pour les petits établissements</p>
-            <div className="mb-6">
-              <span className="text-4xl font-extrabold text-[#1e3a8a]">49,99€</span>
-              <span className="text-slate-500 text-sm">/mois</span>
-            </div>
-            <ul className="space-y-3 mb-8 flex-1">
-              {[
-                '500 scans inclus/mois',
-                'Fiches de police PDF',
-                'Signature électronique',
-                'Export SYNEXIE',
-                'Historique clients',
-                'Support email',
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-slate-700 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                  <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <a
-              href="/register"
-              className="block w-full text-center py-3.5 rounded-xl bg-gradient-to-br from-[#1e3a8a] to-[#4a90d9] text-white font-bold text-sm hover:opacity-90 transition-opacity"
-            >
-              Démarrer l'essai gratuit
-            </a>
-            <p className="text-center text-xs text-slate-400 mt-3">0,25€/scan au-delà de 500</p>
-          </div>
-
-          {/* Business */}
-          <div className="relative bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] rounded-2xl p-6 sm:p-8 flex flex-col shadow-xl">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-yellow-400 text-gray-900 text-xs font-bold px-4 py-1.5 rounded-full shadow">
-                Plus populaire
-              </span>
-            </div>
-            <h3 className="font-extrabold text-white text-xl mb-1 mt-3">Business</h3>
-            <p className="text-blue-200 text-sm mb-5">Pour les hôtels à fort volume</p>
-            <div className="mb-6">
-              <span className="text-4xl font-extrabold text-white">89,99€</span>
-              <span className="text-blue-200 text-sm">/mois</span>
-            </div>
-            <ul className="space-y-3 mb-8 flex-1">
-              {[
-                'Scans illimités',
-                'Fiches de police PDF',
-                'Signature électronique',
-                'Export SYNEXIE',
-                'Historique clients',
-                'Support prioritaire',
-                'Dashboard statistiques',
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-blue-100 border-b border-white/10 pb-3 last:border-0 last:pb-0">
-                  <svg className="w-4 h-4 text-yellow-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <a
-              href="/register"
-              className="block w-full text-center py-3.5 rounded-xl bg-white text-[#1e3a8a] font-bold text-sm hover:bg-blue-50 transition-colors"
-            >
-              Démarrer l'essai gratuit
-            </a>
-            <p className="text-center text-xs text-blue-300 mt-3">Aucun frais supplémentaire</p>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-slate-500 mt-8">
-          Paiement sécurisé via Lemon Squeezy · Annulation à tout moment · Sans engagement
-        </p>
-      </div>
-    </section>
-  )
-}
-
 /* ── Footer ─────────────────────────────────────────────────────────────────── */
 
 function Footer() {
@@ -406,9 +295,7 @@ function Footer() {
               <ul className="space-y-2">
                 {[
                   { label: 'Fonctionnalités', href: '#' },
-                  { label: 'Tarifs', href: '#' },
                   { label: 'Se connecter', href: '/login' },
-                  { label: 'Créer un compte', href: '/register' },
                 ].map(({ label, href }) => (
                   <li key={label}>
                     <a href={href} className="text-sm text-blue-300 hover:text-white transition-colors">{label}</a>

@@ -43,7 +43,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
       .select("subscription_status")
       .eq("user_id", data.session.user.id)
       .single();
-    if (hotel?.subscription_status === "active") {
+    if (["starter", "business", "active"].includes(hotel?.subscription_status ?? "")) {
       navigate('/dashboard');
     } else {
       alert("Paiement non détecté. Réessayez dans quelques secondes.");
@@ -67,19 +67,7 @@ export default function Subscribe({ onBack, showWelcome }: SubscribeProps) {
         }}
       >
         <div className="mx-auto max-w-6xl">
-          {/* Bouton retour */}
-          <div className="mb-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-blue-600 font-medium py-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Retour
-            </button>
-          </div>
+
 
           {/* En-tête */}
           <div className="mb-6 text-center md:mb-8">

@@ -7,6 +7,29 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-signature",
 }
 
+/**
+ * Lit le nom du variant dans le payload LemonSqueezy et retourne
+ * "starter", "business" ou "active" (fallback) selon le plan souscrit.
+ *
+ * LemonSqueezy expose le nom du variant dans :
+ *   payload.data.attributes.variant_name          (subscriptions)
+ *   payload.data.attributes.first_order_item.variant_name  (orders)
+ */
+function getPlanStatus(payload: Record<string, unknown>): string {
+  const attrs = (payload.data as Record<string, unknown>)?.attributes as Record<string, unknown> | undefined
+  const variantName = (
+    (attrs?.variant_name as string | undefined) ??
+    ((attrs?.first_order_item as Record<string, unknown> | undefined)?.variant_name as string | undefined) ??
+    ""
+  ).toLowerCase()
+
+  console.log("[lemonsqueezy-webhook] variant_name:", variantName)
+
+  if (variantName.includes("business")) return "business"
+  if (variantName.includes("starter")) return "starter"
+  return "active" // fallback si le nom de plan n'est pas reconnu
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
@@ -16,7 +39,14 @@ serve(async (req) => {
 
   // ── Vérification signature HMAC-SHA256 ───────────────────────────────────
   const webhookSecret = Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET")
-  if (webhookSecret) {
+  if (!webhookSecret) {
+    console.error("[lemonsqueezy-webhook] LEMONSQUEEZY_WEBHOOK_SECRET not configured")
+    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    })
+  }
+  {
     const signature = req.headers.get("X-Signature") ?? ""
     const key = await crypto.subtle.importKey(
       "raw",
@@ -40,9 +70,10 @@ serve(async (req) => {
   }
 
   try {
-    const payload = JSON.parse(body)
-    const eventName = payload.meta?.event_name
-    const userEmail = payload.data?.attributes?.user_email
+    const payload = JSON.parse(body) as Record<string, unknown>
+    const eventName = (payload.meta as Record<string, unknown>)?.event_name as string | undefined
+    const attrs = (payload.data as Record<string, unknown>)?.attributes as Record<string, unknown> | undefined
+    const userEmail = attrs?.user_email as string | undefined
 
     console.log("[lemonsqueezy-webhook] Event:", eventName, "| Email:", userEmail)
 
@@ -66,23 +97,31 @@ serve(async (req) => {
       return json({ warning: "User not found", email: userEmail })
     }
 
+    const ocrLimit = (status: string): number => {
+      if (status === "business") return 999999
+      if (status === "expired" || status === "suspended") return 0
+      return 500 // starter + active fallback
+    }
+
     const updateHotel = async (status: string) => {
       const { error } = await supabase
         .from("hotels")
-        .update({ subscription_status: status })
+        .update({ subscription_status: status, ocr_scans_limit: ocrLimit(status) })
         .eq("user_id", user.id)
       if (error) throw error
-      console.log(`[lemonsqueezy-webhook] hotels.subscription_status = '${status}' for user ${user.id}`)
+      console.log(`[lemonsqueezy-webhook] hotels updated: status='${status}' ocr_scans_limit=${ocrLimit(status)} for user ${user.id}`)
     }
 
     if (eventName === "subscription_created" || eventName === "order_created") {
-      await updateHotel("active")
+      // Lire le plan depuis le payload pour distinguer Starter / Business
+      await updateHotel(getPlanStatus(payload))
     } else if (eventName === "subscription_cancelled" || eventName === "subscription_expired") {
       await updateHotel("expired")
     } else if (eventName === "subscription_paused") {
       await updateHotel("suspended")
     } else if (eventName === "subscription_resumed") {
-      await updateHotel("active")
+      // Rétablissement : relire le plan depuis le payload
+      await updateHotel(getPlanStatus(payload))
     } else {
       console.log("[lemonsqueezy-webhook] Unhandled event:", eventName)
     }

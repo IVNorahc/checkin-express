@@ -1,20 +1,73 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import BackButton from '../components/BackButton'
-import { getDB, initDB, type FichePolice } from '../lib/db'
-import { generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
+import { generateFicheA6, generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
 
-type FicheWithParams = FichePolice & { params: FicheParams }
-
-function todayRange() {
-  const start = new Date()
-  start.setUTCHours(0, 0, 0, 0)
-  const end = new Date()
-  end.setUTCHours(23, 59, 59, 999)
-  return { start, end }
+type ClientRow = {
+  id: string
+  nom: string | null
+  prenoms: string | null
+  date_naissance: string | null
+  nationalite: string | null
+  document_type: string | null
+  numero_document: string | null
+  date_delivrance: string | null
+  chambre: string | null
+  domicile: string | null
+  venant_de: string | null
+  allant_a: string | null
+  objet_voyage: string | null
+  profession: string | null
+  created_at: string
+  checkout_status?: string | null
+  lieu_naissance: string | null
+  signature: string | null
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function toFicheParams(c: ClientRow, hotelName: string, hotelPhone?: string, logoUrl?: string): FicheParams {
+  const dateArrivee = new Date(c.created_at).toLocaleDateString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  })
+  return {
+    hotelName,
+    hotelPhone,
+    nom: c.nom ?? '',
+    prenoms: c.prenoms ?? '',
+    dateNaissance: c.date_naissance ?? '',
+    lieuNaissance: c.lieu_naissance ?? '',
+    nationalite: c.nationalite ?? '',
+    typePiece: c.document_type ?? '',
+    numeroPiece: c.numero_document ?? '',
+    dateDelivrance: c.date_delivrance ?? '',
+    paysEmission: '',
+    adresse: c.domicile ?? '',
+    profession: c.profession ?? '',
+    venantDe: c.venant_de ?? '',
+    allantA: c.allant_a ?? '',
+    objetVoyage: c.objet_voyage ?? '',
+    numeroChambre: c.chambre ?? '',
+    dateArrivee,
+    dateDepart: '',
+    logoUrl,
+    signatureDataUrl: c.signature ?? undefined,
+  }
+}
+
+async function fetchLogoDataUrl(logoUrl: string): Promise<string | undefined> {
+  try {
+    const resp = await fetch(logoUrl)
+    const blob = await resp.blob()
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return undefined
+  }
+}
+
+function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <span className="block text-[10px] text-[#94a3b8] uppercase tracking-wide leading-none mb-0.5">{label}</span>
@@ -24,53 +77,63 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default function FichesControle() {
-  const [fiches, setFiches] = useState<FicheWithParams[]>([])
+  const [clients, setClients] = useState<ClientRow[]>([])
   const [loading, setLoading] = useState(true)
   const [printing, setPrinting] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const [minutesUntil20h, setMinutesUntil20h] = useState<number | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
+  const [hotelName, setHotelName] = useState('')
+  const [hotelPhone, setHotelPhone] = useState<string | undefined>(undefined)
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined)
+  const [minutesUntilAutoPrint, setMinutesUntilAutoPrint] = useState<number | null>(null)
 
-  const autoFiredRef = useRef(false)
-  const printAllRef = useRef<((auto: boolean) => Promise<void>) | null>(null)
+  const loadClients = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setLoading(false); return }
 
-  const loadFiches = useCallback(async (uid: string) => {
-    const { start, end } = todayRange()
-    initDB(uid)
-    const db = getDB()
+    const { data: hotelData } = await supabase
+      .from('hotels')
+      .select('id, hotel_name, phone, logo_url')
+      .eq('user_id', session.user.id)
+      .single()
 
-    const raw = await db.fichesPolice
-      .where('generatedAt')
-      .between(start.toISOString(), end.toISOString())
-      .reverse()
-      .toArray()
+    if (!hotelData?.id) { setLoading(false); return }
 
-    setFiches(
-      raw
-        .filter(f => !!f.ficheParams)
-        .map(f => ({ ...f, params: JSON.parse(f.ficheParams!) as FicheParams }))
-    )
+    setHotelName(hotelData.hotel_name ?? '')
+    setHotelPhone(hotelData.phone ?? undefined)
+
+    if (hotelData.logo_url) {
+      const dataUrl = await fetchLogoDataUrl(hotelData.logo_url)
+      setLogoDataUrl(dataUrl)
+    }
+
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+
+    const { data } = await supabase
+      .from('clients')
+      .select('id, nom, prenoms, date_naissance, lieu_naissance, nationalite, document_type, numero_document, date_delivrance, chambre, domicile, venant_de, allant_a, objet_voyage, profession, created_at, checkout_status, signature')
+      .eq('hotel_id', hotelData.id)
+      .gte('created_at', startOfToday.toISOString())
+      .order('created_at', { ascending: false })
+
+    setClients(data ?? [])
     setLoading(false)
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUserId(session.user.id)
-        void loadFiches(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
-  }, [loadFiches])
+    void loadClients()
+  }, [loadClients])
 
-  const handlePrintAll = useCallback(async (auto: boolean) => {
-    if (printing || !userId) return
+  const displayedClients = useMemo(
+    () => showAll ? clients : clients.filter(c => (c.checkout_status ?? 'present') !== 'departed'),
+    [showAll, clients]
+  )
+
+  const handlePrintAll = useCallback(async () => {
+    if (printing || displayedClients.length === 0) return
     setPrinting(true)
 
-    // Ouvrir la fenêtre PDF de façon synchrone (avant tout await) pour contourner
-    // le bloqueur de popups iOS/Android qui refuse window.open après des awaits.
-    const pdfWin = auto ? null : window.open('', '_blank')
+    const pdfWin = window.open('', '_blank')
     if (pdfWin) {
       pdfWin.document.write(
         '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;color:#1e3a8a">' +
@@ -79,79 +142,13 @@ export default function FichesControle() {
     }
 
     try {
-      const { start, end } = todayRange()
-      const db = getDB()
-
-      const unprintedFiches = await db.fichesPolice
-        .where('generatedAt')
-        .between(start.toISOString(), end.toISOString())
-        .filter(f => !f.printed && !!f.ficheParams)
-        .toArray()
-
-      if (unprintedFiches.length === 0) {
-        if (!auto) alert("Aucune fiche non imprimée pour aujourd'hui.")
-        pdfWin?.close()
-        return
-      }
-
-      // Charger le logo de l'hôtel
-      let logoDataUrl: string | undefined
-      try {
-        const { data: hotelRow } = await supabase
-          .from('hotels')
-          .select('logo_url')
-          .eq('user_id', userId)
-          .single()
-        if (hotelRow?.logo_url) {
-          const resp = await fetch(hotelRow.logo_url)
-          const imgBlob = await resp.blob()
-          logoDataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
-            reader.onerror = reject
-            reader.readAsDataURL(imgBlob)
-          })
-        }
-      } catch { /* logo indisponible — on continue sans */ }
-
-      const fichesList: FicheParams[] = unprintedFiches.map(f => ({
-        ...JSON.parse(f.ficheParams!),
-        logoUrl: logoDataUrl,
-      }))
-
-      // Générer le PDF groupé
-      const blob = generateFichesGroupees(fichesList)
+      const fiches = displayedClients.map(c => toFicheParams(c, hotelName, hotelPhone, logoDataUrl))
+      const blob = generateFichesGroupees(fiches)
       const url = URL.createObjectURL(blob)
-
       if (pdfWin) {
-        // Affichage interactif : naviguer la fenêtre déjà ouverte vers le PDF
         pdfWin.location.href = url
-      } else {
-        // Déclenchement automatique (20h) : téléchargement classique
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `fiches-police-${new Date().toISOString().split('T')[0]}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
       }
       setTimeout(() => URL.revokeObjectURL(url), 15_000)
-
-      // Marquer comme imprimées dans IndexedDB
-      await Promise.all([
-        ...unprintedFiches.map(f => db.fichesPolice.update(f.id!, { printed: true })),
-        ...unprintedFiches.map(f => db.clients.update(f.clientId, { printed: true })),
-      ])
-
-      localStorage.setItem('checkin_print_trigger_date', new Date().toISOString().split('T')[0])
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Check-in Express', {
-          body: `${unprintedFiches.length} fiche(s) prêtes. Ouvrez le PDF pour imprimer.`,
-        })
-      }
-
-      await loadFiches(userId)
     } catch (err) {
       console.error('Erreur impression groupée:', err)
       pdfWin?.close()
@@ -159,11 +156,12 @@ export default function FichesControle() {
     } finally {
       setPrinting(false)
     }
-  }, [printing, userId, loadFiches])
+  }, [printing, displayedClients, hotelName, hotelPhone, logoDataUrl])
 
-  const handleViewSingle = useCallback((fiche: FicheWithParams) => {
+  const handleViewSingle = useCallback((client: ClientRow) => {
     try {
-      const blob = generateFichesGroupees([fiche.params])
+      const params = toFicheParams(client, hotelName, hotelPhone, logoDataUrl)
+      const blob = generateFicheA6(params)
       const url = URL.createObjectURL(blob)
       window.open(url, '_blank')
       setTimeout(() => URL.revokeObjectURL(url), 15_000)
@@ -171,122 +169,49 @@ export default function FichesControle() {
       console.error('Erreur affichage fiche:', err)
       alert('Erreur lors de la génération du PDF.')
     }
-  }, [])
+  }, [hotelName, logoDataUrl])
 
-  const handleExportSynexie = async (mode: 'today' | 'all') => {
-    if (!userId || exporting) return
-    setExporting(true)
-    try {
-      const db = getDB()
-      let rawFiches: FichePolice[]
+  const handlePrintAllRef = useRef(handlePrintAll)
+  useEffect(() => { handlePrintAllRef.current = handlePrintAll }, [handlePrintAll])
 
-      if (mode === 'today') {
-        const { start, end } = todayRange()
-        rawFiches = await db.fichesPolice
-          .where('generatedAt')
-          .between(start.toISOString(), end.toISOString())
-          .reverse()
-          .toArray()
-      } else {
-        rawFiches = await db.fichesPolice.orderBy('generatedAt').reverse().toArray()
-      }
-
-      const withParams = rawFiches
-        .filter(f => !!f.ficheParams)
-        .map(f => ({ ...f, params: JSON.parse(f.ficheParams!) as FicheParams }))
-
-      if (withParams.length === 0) {
-        alert(mode === 'today' ? "Aucune fiche pour aujourd'hui." : 'Aucune fiche dans l\'historique.')
-        return
-      }
-
-      const SEP = ';'
-      const esc = (v: string) => {
-        const s = String(v ?? '')
-        return (s.includes(SEP) || s.includes('"') || s.includes('\n'))
-          ? '"' + s.replace(/"/g, '""') + '"'
-          : s
-      }
-
-      const HEADERS = [
-        'NUMERO_REGISTRE',
-        'NOM', 'PRENOMS', 'DATE_NAISSANCE', 'LIEU_NAISSANCE', 'NATIONALITE',
-        'TYPE_PIECE', 'NUMERO_PIECE', 'DATE_EXPIRATION',
-        'ADRESSE', 'PROFESSION', 'VENANT_DE', 'ALLANT_A',
-        'NUMERO_CHAMBRE', 'DATE_ARRIVEE', 'DATE_DEPART',
-        'NOM_HOTEL', 'DATE_ENREGISTREMENT',
-      ]
-
-      const rows = withParams.map(({ params: p, generatedAt }) => [
-        p.registrationNumber ?? '',
-        p.nom, p.prenoms, p.dateNaissance, p.lieuNaissance, p.nationalite,
-        p.typePiece, p.numeroPiece, p.dateExpiration,
-        p.adresse, p.profession, p.venantDe, p.allantA,
-        p.numeroChambre, p.dateArrivee, p.dateDepart,
-        p.hotelName,
-        new Date(generatedAt).toLocaleDateString('fr-FR'),
-      ].map(esc).join(SEP))
-
-      // UTF-8 BOM pour compatibilité Excel/Windows
-      const csv = '﻿' + [HEADERS.join(SEP), ...rows].join('\r\n')
-
-      const hotelName = withParams[0]?.params.hotelName ?? 'HOTEL'
-      const hotelSlug = hotelName.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 20)
-      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '')
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `SYNEXIE_${hotelSlug}_${dateStr}.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 15_000)
-    } catch (err) {
-      console.error('Erreur export SYNEXIE:', err)
-      alert('Erreur lors de la génération du fichier SYNEXIE.')
-    } finally {
-      setExporting(false)
-    }
-  }
-
-  // Synchroniser la ref pour que l'interval accède toujours à la dernière version
-  useEffect(() => {
-    printAllRef.current = handlePrintAll
-  })
-
-  // Vérification 20h Dakar (Africa/Dakar = UTC+0)
   useEffect(() => {
     const check = () => {
       const now = new Date()
-      const totalMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
-      const todayKey = now.toISOString().split('T')[0]
-      const alreadyDone = localStorage.getItem('checkin_print_trigger_date') === todayKey
+      const parts = new Intl.DateTimeFormat('fr-FR', {
+        timeZone: 'Africa/Dakar',
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour12: false,
+      }).formatToParts(now)
+      const get = (t: string) => parseInt(parts.find(p => p.type === t)?.value ?? '0')
+      const hour = get('hour')
+      const minute = get('minute')
+      const day = parts.find(p => p.type === 'day')?.value ?? '01'
+      const month = parts.find(p => p.type === 'month')?.value ?? '01'
+      const year = parts.find(p => p.type === 'year')?.value ?? '2000'
+      const dateKey = `${year}-${month}-${day}`
 
-      if (alreadyDone || autoFiredRef.current) {
-        setMinutesUntil20h(null)
-        return
-      }
-
-      if (totalMinutes >= 20 * 60) {
-        autoFiredRef.current = true
-        setMinutesUntil20h(null)
-        printAllRef.current?.(true)
-      } else if (totalMinutes >= 19 * 60 + 30) {
-        setMinutesUntil20h(20 * 60 - totalMinutes)
+      const totalMin = hour * 60 + minute
+      if (totalMin >= 19 * 60 + 30 && totalMin < 20 * 60) {
+        setMinutesUntilAutoPrint(20 * 60 - totalMin)
+      } else if (hour === 20 && minute === 0) {
+        setMinutesUntilAutoPrint(0)
+        if (localStorage.getItem('checkin_autoPrint_date') !== dateKey) {
+          localStorage.setItem('checkin_autoPrint_date', dateKey)
+          void handlePrintAllRef.current()
+        }
       } else {
-        setMinutesUntil20h(null)
+        setMinutesUntilAutoPrint(null)
       }
     }
 
     check()
-    const timer = window.setInterval(check, 60_000)
-    return () => window.clearInterval(timer)
-  }, []) // refs uniquement — pas de dépendances d'état
-
-  const unprintedCount = fiches.filter(f => !f.printed).length
-  const alreadyPrinted = localStorage.getItem('checkin_print_trigger_date') === new Date().toISOString().split('T')[0]
+    const id = setInterval(check, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -295,9 +220,6 @@ export default function FichesControle() {
     <div className="min-h-screen bg-slate-50 py-4 sm:py-8 px-4">
       <div className="max-w-3xl mx-auto">
 
-        <BackButton />
-
-        {/* En-tête */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#1e3a8a]">Fiches du jour</h1>
           <p className="text-[#64748b] mt-1 capitalize">
@@ -305,26 +227,10 @@ export default function FichesControle() {
           </p>
         </div>
 
-        {/* Bannière compte à rebours (après 19h30) */}
-        {minutesUntil20h !== null && (
-          <div className="mb-5 bg-amber-50 border border-amber-300 rounded-xl px-5 py-4 flex items-start gap-3">
-            <span className="text-2xl mt-0.5">⏰</span>
-            <div>
-              <p className="font-semibold text-amber-800">
-                Impression automatique dans {minutesUntil20h} minute{minutesUntil20h > 1 ? 's' : ''}
-              </p>
-              <p className="text-sm text-amber-600 mt-0.5">
-                Le PDF groupé sera généré automatiquement à 20h00 Dakar
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Boutons actions */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
           <button
-            onClick={() => void handlePrintAll(false)}
-            disabled={printing || unprintedCount === 0}
+            onClick={() => void handlePrintAll()}
+            disabled={printing || displayedClients.length === 0}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white font-semibold rounded-xl shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {printing ? (
@@ -336,119 +242,72 @@ export default function FichesControle() {
               <>🖨 Imprimer toutes les fiches du jour</>
             )}
           </button>
-
-          {/* Split-button Export SYNEXIE */}
-          <div className="flex rounded-xl overflow-hidden shadow-sm border border-[#15803d]">
-            <button
-              onClick={() => void handleExportSynexie('today')}
-              disabled={exporting || fiches.length === 0}
-              className="flex items-center gap-2 px-4 py-3 bg-[#16a34a] text-white text-sm font-semibold hover:bg-[#15803d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Exporter les fiches du jour au format SYNEXIE (gendarmerie)"
-            >
-              {exporting
-                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : <span>📤</span>
-              }
-              Export SYNEXIE
-            </button>
-            <button
-              onClick={() => void handleExportSynexie('all')}
-              disabled={exporting}
-              className="px-3 py-3 bg-[#15803d] text-white text-xs font-medium hover:bg-[#166534] transition-colors border-l border-[#166534] disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Exporter toutes les fiches (historique complet)"
-            >
-              Tout
-            </button>
-          </div>
-
-          {unprintedCount > 0 && !printing && (
-            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-700 border border-red-200">
-              {unprintedCount} non imprimée{unprintedCount > 1 ? 's' : ''}
-            </span>
-          )}
-          {alreadyPrinted && (
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-700 border border-green-200">
-              ✓ Imprimées aujourd'hui
-            </span>
-          )}
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="flex items-center gap-2 px-4 py-3 border border-[#e2e8f0] bg-white text-[#475569] font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm"
+          >
+            {showAll ? '🟢 Voir uniquement les présents' : '👁 Voir tous les clients'}
+          </button>
         </div>
 
-        {/* Chargement */}
+        {minutesUntilAutoPrint !== null && minutesUntilAutoPrint > 0 && (
+          <div className="mb-4 rounded-xl bg-orange-50 border border-orange-300 px-4 py-3 text-orange-700 font-medium text-sm">
+            ⏰ Impression automatique dans {minutesUntilAutoPrint} minute{minutesUntilAutoPrint > 1 ? 's' : ''}
+          </div>
+        )}
+
         {loading && (
           <div className="text-center py-16">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]" />
           </div>
         )}
 
-        {/* Vide */}
-        {!loading && fiches.length === 0 && (
+        {!loading && displayedClients.length === 0 && (
           <div className="text-center py-16 bg-white rounded-xl border border-[#e2e8f0]">
             <p className="text-5xl mb-3">📋</p>
-            <h3 className="text-lg font-semibold text-[#1e3a8a] mb-1">Aucune fiche pour aujourd'hui</h3>
-            <p className="text-[#64748b] text-sm">Scannez des documents via l'onglet Scanner</p>
+            <h3 className="text-lg font-semibold text-[#1e3a8a] mb-1">
+              {clients.length > 0 ? 'Tous les clients sont partis' : 'Aucune fiche pour aujourd\'hui'}
+            </h3>
+            <p className="text-[#64748b] text-sm">
+              {clients.length > 0
+                ? 'Cliquez sur "Voir tous les clients" pour voir l\'historique complet du jour.'
+                : 'Scannez des documents via l\'onglet Scanner'}
+            </p>
           </div>
         )}
 
-        {/* Liste des fiches */}
-        {!loading && fiches.length > 0 && (
+        {!loading && displayedClients.length > 0 && (
           <div className="space-y-3">
-            {fiches.map((fiche) => {
-              const p = fiche.params
-              return (
-                <div
-                  key={fiche.id}
-                  className={`bg-white rounded-xl border px-5 py-4 transition-colors ${
-                    fiche.printed
-                      ? 'border-green-200 bg-green-50/30'
-                      : 'border-[#e2e8f0]'
-                  }`}
-                >
-                  {/* Ligne 1 : nom + statut + heure */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-bold text-[#1e3a8a] text-base leading-tight">
-                        {p.nom} {p.prenoms}
-                      </h3>
-                      <p className="text-xs text-[#94a3b8] mt-0.5">
-                        Enregistré à {formatTime(fiche.generatedAt)}
-                      </p>
-                      {p.registrationNumber && (
-                        <p className="text-xs font-mono font-semibold text-[#1e3a8a] mt-0.5">
-                          N° {p.registrationNumber}
-                        </p>
-                      )}
-                    </div>
-                    <span
-                      className={`shrink-0 ml-3 text-xs px-2.5 py-1 rounded-full font-medium ${
-                        fiche.printed
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-orange-100 text-orange-700'
-                      }`}
-                    >
-                      {fiche.printed ? '✓ Imprimée' : 'En attente'}
-                    </span>
+            {displayedClients.map((c) => (
+              <div key={c.id} className="bg-white rounded-xl border border-[#e2e8f0] px-5 py-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-bold text-[#1e3a8a] text-base leading-tight">
+                      {c.nom} {c.prenoms}
+                    </h3>
+                    <p className="text-xs text-[#94a3b8] mt-0.5">
+                      Enregistré à {formatTime(c.created_at)}
+                    </p>
                   </div>
-
-                  {/* Grille détails */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2.5">
-                    <Field label="Nationalité" value={p.nationalite} />
-                    <Field label="Chambre" value={p.numeroChambre} />
-                    <Field label="Date arrivée" value={p.dateArrivee} />
-                    <Field label="Venant de" value={p.venantDe} />
-                    <Field label="Allant à" value={p.allantA} />
-                    <Field label={p.typePiece || 'N° pièce'} value={p.numeroPiece} />
-                  </div>
-
-                  {/* Bouton voir PDF individuel */}
-                  <button
-                    onClick={() => handleViewSingle(fiche)}
-                    className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#1e3a8a] border border-[#1e3a8a]/40 rounded-lg hover:bg-blue-50 transition-colors"
-                  >
-                    📄 Voir la fiche PDF
-                  </button>
                 </div>
-              )
-            })}
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2.5">
+                  <Field label="Nationalité" value={c.nationalite} />
+                  <Field label="Chambre" value={c.chambre} />
+                  <Field label="Type pièce" value={c.document_type} />
+                  <Field label="N° document" value={c.numero_document} />
+                  <Field label="Venant de" value={c.venant_de} />
+                  <Field label="Allant à" value={c.allant_a} />
+                </div>
+
+                <button
+                  onClick={() => handleViewSingle(c)}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#1e3a8a] border border-[#1e3a8a]/40 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  📄 Voir la fiche PDF
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>

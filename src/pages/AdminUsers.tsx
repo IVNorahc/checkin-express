@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import BackButton from '../components/BackButton'
-
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 async function callAdminApi(action: string, params?: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke('admin-api', {
     body: { action, ...params },
@@ -26,6 +25,9 @@ interface Hotel {
 
 const AdminUsers: React.FC = () => {
   const navigate = useNavigate()
+  const [showLogout, setShowLogout] = useState(false)
+  const doSignOut = async () => { await supabase.auth.signOut(); window.location.replace('/login') }
+
   const [hotels, setHotels] = useState<Hotel[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -156,6 +158,9 @@ const AdminUsers: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showLogout && (
+        <LogoutConfirmModal onConfirm={() => void doSignOut()} onCancel={() => setShowLogout(false)} />
+      )}
 
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6]">
@@ -166,7 +171,7 @@ const AdminUsers: React.FC = () => {
           <h1 className="text-white font-bold text-lg">Gestion des utilisateurs</h1>
         </div>
         <button
-          onClick={async () => { await supabase.auth.signOut(); window.location.replace('/login') }}
+          onClick={() => setShowLogout(true)}
           className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2 rounded-lg text-sm"
         >
           Déconnexion
@@ -199,7 +204,6 @@ const AdminUsers: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
 
-        <BackButton />
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">

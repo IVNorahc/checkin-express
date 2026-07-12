@@ -4,13 +4,13 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { getDB, initDB, type Client } from '../lib/db'
 import { generateFichesGroupees, type FicheParams } from '../utils/generateFicheControle'
+import LogoutConfirmModal from '../components/LogoutConfirmModal'
 
 type DashboardProps = {
   onRequireLogin: () => void
-  onSubscribeClick?: () => void
 }
 
-export default function Dashboard({ onRequireLogin, onSubscribeClick }: DashboardProps) {
+export default function Dashboard({ onRequireLogin }: DashboardProps) {
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<{ status: string; trial_end: string | null; subscription_id: string | null } | null>(null)
@@ -20,6 +20,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const [lastClients, setLastClients] = useState<Client[]>([])
   const [scansToday, setScansToday] = useState(0)
   const [scansThisMonth, setScansThisMonth] = useState(0)
+  const [clientsPresents, setClientsPresents] = useState(0)
   const [hotelInfo, setHotelInfo] = useState<any>(null)
   const [daysLeft, setDaysLeft] = useState(0)
   const [welcomeDismissed, setWelcomeDismissed] = useState(
@@ -27,6 +28,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [showLogout, setShowLogout] = useState(false)
 
   const dismissWelcome = () => {
     localStorage.setItem('checkin_welcome_v1', 'dismissed')
@@ -157,8 +159,15 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         .eq('hotel_id', hotelData.id)
         .gte('created_at', startOfMonth.toISOString())
 
+      const { count: presentsC } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('hotel_id', hotelData.id)
+        .eq('checkout_status', 'present')
+
       setScansToday(todayC ?? 0)
       setScansThisMonth(monthC ?? 0)
+      setClientsPresents(presentsC ?? 0)
     }
 
     void loadClients()
@@ -189,15 +198,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
         : 0
 
-      console.log('[Dashboard] DEBUG trial countdown:', {
-        subscription_status: profile?.status,
-        trial_end_raw: profile?.trial_end,
-        trial_end_parsed: trialEnd ? trialEnd.toISOString() : null,
-        now: new Date().toISOString(),
-        daysLeft: daysLeftCalc,
-        willRedirect: daysLeftCalc <= 0 && profile?.status === 'trial',
-      })
-
       setDaysLeft(daysLeftCalc)
     }
     updateCountdown()
@@ -205,20 +205,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     return () => clearInterval(interval)
   }, [profile])
 
-  // Redirect check — calcul direct depuis trial_end pour éviter la race condition avec daysLeft
-  useEffect(() => {
-    if (profile?.status !== 'trial') return
-    const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null
-    const expired = !trialEnd || trialEnd <= new Date()
-    console.log('[Dashboard] REDIRECT check:', {
-      trial_end: profile.trial_end,
-      expired,
-      status: profile.status,
-    })
-    if (expired) {
-      navigate('/subscribe')
-    }
-  }, [profile, navigate])
 
   const email = session?.user.email ?? ''
   const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
@@ -227,7 +213,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   const trialBanner = useMemo(() => {
     if (profile?.status !== 'trial' || daysLeft <= 0) return null
 
-    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} d'essai gratuit · 10 scans · Fiches PDF incluses`
+    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} · 10 scans · Fiches PDF incluses`
 
     let className: string
     if (daysLeft > 3) {
@@ -241,51 +227,32 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     return { className, text }
   }, [profile, daysLeft])
 
-  const handleSubscribe = () => {
-    window.open('https://checkin-express.lemonsqueezy.com/checkout/buy/00847c55-3cff-475c-8c02-0c31c2b3cb02', '_blank')
-  }
-
-  const handleSubscribeClick = () => {
-    if (onSubscribeClick) {
-      onSubscribeClick()
-    } else {
-      handleSubscribe()
-    }
-  }
-
   // Handle different subscription statuses
   if (profile?.status === 'expired') {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
+        {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Votre essai est terminé 🔒
+            Compte désactivé 🔒
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Merci d'avoir testé Check-in Express. Pour continuer à utiliser l'application et 
-            accéder à toutes vos fiches de police, souscrivez un abonnement.
+            Votre accès a expiré. Contactez l'administrateur pour réactiver votre compte.
           </p>
-          
-          <button
-            onClick={handleSubscribeClick}
-            className="w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
+
+          <a
+            href="mailto:contact@percepta.io"
+            className="block w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            💳 Passer à l'abonnement
-          </button>
-          
+            📧 Contacter l'administrateur
+          </a>
+
           <button
-            onClick={handleSignOut}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors mb-6"
+            onClick={() => setShowLogout(true)}
+            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Déconnexion
           </button>
-          
-          <p className="text-sm text-gray-500">
-            Vous avez déjà souscrit ? Contactez-nous :{' '}
-            <a href="mailto:contact@percepta.io" className="text-[#1e3a8a] hover:underline">
-              contact@percepta.io
-            </a>
-          </p>
         </div>
       </div>
     )
@@ -294,6 +261,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
   if (profile?.status === 'suspended') {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
+        {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
             Votre compte a été suspendu ⚠️
@@ -312,7 +280,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           </div>
           
           <button
-            onClick={handleSignOut}
+            onClick={() => setShowLogout(true)}
             className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Déconnexion
@@ -322,39 +290,32 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
     )
   }
 
-  // If trial is expired, show blocking page
-  if (profile?.status === 'trial' && daysLeft === 0) {
+  // If trial is expired, show blocking page — calcul direct pour éviter la race condition avec daysLeft
+  if (profile?.status === 'trial' && (!profile.trial_end || new Date(profile.trial_end) <= new Date())) {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
+        {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Votre essai est terminé 🔒
+            Accès expiré 🔒
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Merci d'avoir testé Check-in Express. Pour continuer à utiliser l'application et 
-            accéder à toutes vos fiches de police, souscrivez un abonnement.
+            Votre accès a expiré. Contactez l'administrateur pour renouveler votre compte.
           </p>
-          
-          <button
-            onClick={handleSubscribeClick}
-            className="w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
+
+          <a
+            href="mailto:contact@percepta.io"
+            className="block w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            💳 Passer à l'abonnement
-          </button>
-          
+            📧 Contacter l'administrateur
+          </a>
+
           <button
-            onClick={handleSignOut}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors mb-6"
+            onClick={() => setShowLogout(true)}
+            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Déconnexion
           </button>
-          
-          <p className="text-sm text-gray-500">
-            Vous avez déjà souscrit ? Contactez-nous :{' '}
-            <a href="mailto:contact@percepta.io" className="text-[#1e3a8a] hover:underline">
-              contact@percepta.io
-            </a>
-          </p>
         </div>
       </div>
     )
@@ -471,6 +432,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
       <header className="flex items-center justify-between px-4 md:px-8 py-2 bg-white shadow-sm">
             {/* Logo + titre sur fond blanc arrondi */}
             <div className="flex items-center gap-2">
@@ -523,7 +485,7 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
                 ⚙️
               </button>
               <button
-                onClick={handleSignOut}
+                onClick={() => setShowLogout(true)}
                 type="button"
                 className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
@@ -655,13 +617,6 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
         <section className="flex gap-3 mb-6 max-w-sm mx-auto w-full">
           <button
             type="button"
-            onClick={handleSubscribeClick}
-            className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white py-3 px-4 rounded-xl font-semibold transition-colors text-sm"
-          >
-            {profile?.status === 'active' ? 'Gérer mon abonnement' : 'Passer à l\'abonnement'}
-          </button>
-          <button
-            type="button"
             onClick={() => navigate('/fiches')}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-sm"
           >
@@ -669,13 +624,18 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           </button>
         </section>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-white rounded-xl px-4 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
             <span className="text-2xl mb-1">📅</span>
             <p className="text-3xl font-bold text-blue-700">{scansToday}</p>
             <p className="text-xs text-gray-500 mt-1">Scans aujourd'hui</p>
           </div>
-          <div className="bg-white rounded-xl px-4 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
+          <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-green-100 flex flex-col items-center">
+            <span className="text-2xl mb-1">🛎</span>
+            <p className="text-3xl font-bold text-green-700">{clientsPresents}</p>
+            <p className="text-xs text-gray-500 mt-1">Présents ce soir</p>
+          </div>
+          <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
             <span className="text-2xl mb-1">📊</span>
             <p className="text-3xl font-bold text-blue-700">{scansThisMonth}</p>
             <p className="text-xs text-gray-500 mt-1">Scans ce mois</p>
@@ -763,31 +723,59 @@ export default function Dashboard({ onRequireLogin, onSubscribeClick }: Dashboar
           )}
         </section>
 
-        <div className="flex gap-4 justify-center mt-4 flex-nowrap items-center">
-          <button
-            type="button"
-            onClick={() => navigate('/fiches')}
-            className="text-blue-600 hover:underline text-sm"
-          >
-            Fiches de contrôle
-          </button>
-          <span className="text-gray-300">|</span>
-          <button
-            type="button"
-            onClick={() => navigate('/historique')}
-            className="text-blue-600 hover:underline text-sm"
-          >
-            Voir l'historique complet
-          </button>
-          <span className="text-gray-300">|</span>
-          <button
-            type="button"
-            onClick={() => navigate('/stats')}
-            className="text-blue-600 hover:underline text-sm"
-          >
-            📊 Statistiques
-          </button>
-        </div>
+        <footer className="mt-6 pb-6 px-2">
+          {/* Mobile : grille 2 colonnes, 3 rangées */}
+          <div className="grid grid-cols-2 gap-y-2 sm:hidden">
+            {[
+              { label: 'Fiches de contrôle', path: '/fiches' },
+              { label: 'Historique', path: '/historique' },
+              { label: '📊 Statistiques', path: '/stats' },
+              { label: '❓ Aide', path: '/aide' },
+              { label: 'Support', path: '/support' },
+              { label: 'CGU', path: '/cgu' },
+            ].map(({ label, path }) => (
+              <button
+                key={path}
+                type="button"
+                onClick={() => navigate(path)}
+                className="text-blue-600 hover:text-blue-800 text-sm text-center py-1 transition-colors"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop : ligne horizontale avec tous les liens */}
+          <div className="hidden sm:flex flex-row flex-wrap justify-center items-center gap-x-1 gap-y-1">
+            {[
+              { label: 'Fiches de contrôle', path: '/fiches' },
+              { label: 'Historique', path: '/historique' },
+              { label: '📊 Statistiques', path: '/stats' },
+              { label: '❓ Aide', path: '/aide' },
+              { label: 'Support', path: '/support' },
+              { label: 'CGU', path: '/cgu' },
+              { label: 'Confidentialité', path: '/confidentialite' },
+              { label: 'Mentions légales', path: '/mentions-legales' },
+            ].map(({ label, path }, i, arr) => (
+              <span key={path} className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => navigate(path)}
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-sm px-1 py-0.5 transition-colors"
+                >
+                  {label}
+                </button>
+                {i < arr.length - 1 && (
+                  <span className="text-gray-300 select-none ml-1">·</span>
+                )}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-center text-xs text-gray-400 mt-3">
+            © 2026 Percepta SUARL · Tous droits réservés
+          </p>
+        </footer>
       </main>
     </div>
   )

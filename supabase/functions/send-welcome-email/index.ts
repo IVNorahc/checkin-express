@@ -37,7 +37,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Check-in Express <onboarding@resend.dev>",
+        from: "Check-in Express <noreply@checkinexpress.app>",
         reply_to: "perceptasn@gmail.com",
         to: [email],
         subject,
