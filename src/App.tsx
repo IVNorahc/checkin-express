@@ -3,6 +3,7 @@ import type { ErrorInfo, ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { HotelContext, type HotelContextValue } from './contexts/HotelContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import type { OCRData } from './types/ocr'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -661,6 +662,7 @@ function AppContent() {
 export default function App() {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   return (
+    <ThemeProvider>
     <ErrorBoundary>
       <BrowserRouter>
         {needRefresh && (
@@ -718,5 +720,6 @@ export default function App() {
         `}</style>
       </BrowserRouter>
     </ErrorBoundary>
+    </ThemeProvider>
   )
 }

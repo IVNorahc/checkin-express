@@ -656,13 +656,13 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   }
 
   return (
-    <div className="min-h-screen py-4 sm:py-8 px-4">
-      <div className="max-w-3xl mx-auto bg-white shadow-md rounded-xl p-4 sm:p-6 lg:p-8 border border-[#e2e8f0]">
+    <div className="min-h-screen dark:bg-slate-900 py-4 sm:py-8 px-4">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 shadow-md rounded-xl p-4 sm:p-6 lg:p-8 border border-[#e2e8f0] dark:border-white/10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Confirmation des données</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a] dark:text-blue-300">Confirmation des données</h1>
           <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs sm:text-sm font-semibold ${
-            confidencePercent >= 80 
-              ? 'bg-[#dcfce7] text-[#166534]' 
+            confidencePercent >= 80
+              ? 'bg-[#dcfce7] text-[#166534]'
               : 'bg-[#fef3c7] text-[#92400e]'
           }`}>
             Confiance : {confidencePercent}%
@@ -673,15 +673,15 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           {/* Mobile: Cards view - Desktop: Table view */}
           <div className="sm:hidden space-y-3">
             {(Object.keys(fieldLabels) as EditableKey[]).map((key) => (
-              <div key={key} className="bg-[#f8fafc] rounded-lg p-3">
-                <label className="block text-xs font-semibold text-[#64748b] mb-1">
+              <div key={key} className="bg-[#f8fafc] dark:bg-slate-900/60 rounded-lg p-3">
+                <label className="block text-xs font-semibold text-[#64748b] dark:text-slate-400 mb-1">
                   {fieldLabels[key]}
                 </label>
                 {key === 'sex' ? (
                   <select
                     value={formData[key]}
                     onChange={handleFieldChange(key)}
-                    className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+                    className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-3 py-2 text-base bg-white dark:bg-slate-900 focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b] dark:text-slate-100"
                   >
                     <option value="">— Sélectionner —</option>
                     <option value="M">M — Masculin</option>
@@ -692,7 +692,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                     type="text"
                     value={formData[key]}
                     onChange={handleFieldChange(key)}
-                    className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+                    className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-3 py-2 text-base bg-white dark:bg-slate-900 focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b] dark:text-slate-100"
                   />
                 )}
               </div>
@@ -700,12 +700,12 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto rounded-lg border border-[#e2e8f0]">
+          <div className="hidden sm:block overflow-x-auto rounded-lg border border-[#e2e8f0] dark:border-white/10">
             <table className="w-full text-sm">
               <tbody>
                 {(Object.keys(fieldLabels) as EditableKey[]).map((key) => (
-                  <tr key={key} className="border-b border-[#e2e8f0] last:border-b-0">
-                    <th className="w-1/3 text-left font-semibold text-[#64748b] bg-[#f8fafc] px-4 py-3">
+                  <tr key={key} className="border-b border-[#e2e8f0] dark:border-white/10 last:border-b-0">
+                    <th className="w-1/3 text-left font-semibold text-[#64748b] dark:text-slate-400 bg-[#f8fafc] dark:bg-slate-900/40 px-4 py-3">
                       {fieldLabels[key]}
                     </th>
                     <td className="px-4 py-3">
@@ -713,7 +713,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                         <select
                           value={formData[key]}
                           onChange={handleFieldChange(key)}
-                          className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
+                          className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-3 py-2 bg-white dark:bg-slate-900 focus:border-[#1e3a8a] text-[#1e293b] dark:text-slate-100"
                         >
                           <option value="">— Sélectionner —</option>
                           <option value="M">M — Masculin</option>
@@ -724,7 +724,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                           type="text"
                           value={formData[key]}
                           onChange={handleFieldChange(key)}
-                          className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
+                          className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-3 py-2 bg-white dark:bg-slate-900 focus:border-[#1e3a8a] text-[#1e293b] dark:text-slate-100"
                         />
                       )}
                     </td>
@@ -735,14 +735,14 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           </div>
 
           <div>
-            <label htmlFor="objetVoyage" className="block text-sm font-semibold text-[#1e293b] mb-2">
+            <label htmlFor="objetVoyage" className="block text-sm font-semibold text-[#1e293b] dark:text-slate-200 mb-2">
               Objet du voyage
             </label>
             <select
               id="objetVoyage"
               value={objetVoyage}
               onChange={(e) => { setObjetVoyage(e.target.value); setObjetVoyageAutre('') }}
-              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+              className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-4 py-3 text-base bg-white dark:bg-slate-900 focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b] dark:text-slate-100"
             >
               <option value="">— Sélectionner —</option>
               <option value="Tourisme">Tourisme</option>
@@ -757,13 +757,13 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                 value={objetVoyageAutre}
                 onChange={(e) => setObjetVoyageAutre(e.target.value)}
                 placeholder="Précisez l'objet du voyage…"
-                className="mt-2 w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+                className="mt-2 w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-4 py-3 text-base bg-white dark:bg-slate-900 focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b] dark:text-slate-100"
               />
             )}
           </div>
 
           <div>
-            <label htmlFor="roomNumber" className="block text-sm font-semibold text-[#1e293b] mb-2">
+            <label htmlFor="roomNumber" className="block text-sm font-semibold text-[#1e293b] dark:text-slate-200 mb-2">
               Numéro de chambre <span className="text-red-600">*</span>
             </label>
             <input
@@ -772,7 +772,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               required
               value={roomNumber}
               onChange={(e) => setRoomNumber(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
+              className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-lg px-4 py-3 text-base bg-white dark:bg-slate-900 focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b] dark:text-slate-100"
               placeholder="Ex: 204"
             />
             {submitted && !roomNumber.trim() && (
@@ -784,12 +784,12 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-[#64748b] mb-2">Signature du client</p>
+            <p className="text-sm font-semibold text-[#64748b] dark:text-slate-400 mb-2">Signature du client</p>
             <canvas
               ref={canvasRef}
               width={800}
               height={300}
-              className="w-full h-[120px] sm:h-[150px] bg-white border-2 border-[#e2e8f0] rounded-lg touch-none"
+              className="w-full h-[120px] sm:h-[150px] bg-white border-2 border-[#e2e8f0] dark:border-white/20 rounded-lg touch-none"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={stopDrawing}
@@ -801,7 +801,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
             <button
               type="button"
               onClick={handleClearSignature}
-              className="mt-2 text-xs text-[#64748b] hover:underline"
+              className="mt-2 text-xs text-[#64748b] dark:text-slate-400 hover:underline"
             >
               Effacer la signature
             </button>
@@ -819,7 +819,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               type="button"
               disabled={isGenerating}
               onClick={handleReset}
-              className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] font-semibold transition-colors text-base sm:text-sm"
+              className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#f1f5f9] dark:bg-slate-700 text-[#64748b] dark:text-slate-300 border border-[#e2e8f0] dark:border-white/10 font-semibold transition-colors text-base sm:text-sm"
             >
               ↻ RECOMMENCER
             </button>
@@ -827,7 +827,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
 
           {successMessage && <p className="text-sm text-green-600 font-medium">{successMessage}</p>}
           {syncError && (
-            <p className="text-sm text-orange-600 font-medium bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+            <p className="text-sm text-orange-600 font-medium bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg px-3 py-2">
               ⚠️ {syncError}
             </p>
           )}

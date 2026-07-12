@@ -2,10 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme variables ───────────────────────────────────────────── */
+:root {
+  --bg-page:      #e8f4fd;
+  --bg-card:      rgba(255, 255, 255, 0.95);
+  --bg-card-solid: #ffffff;
+  --bg-section:   #f8fafc;
+  --bg-input:     rgba(232, 244, 253, 0.60);
+  --border-card:  rgba(191, 219, 254, 0.5);
+  --border-input: #bfdbfe;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted:   #94a3b8;
+  --overlay-bg:   rgba(232, 244, 253, 0.60);
+  --shadow-card:  0 20px 60px rgba(30, 58, 138, 0.15);
+}
+
+html.dark {
+  --bg-page:      #0F172A;
+  --bg-card:      rgba(30, 41, 59, 0.97);
+  --bg-card-solid: #1E293B;
+  --bg-section:   #1E293B;
+  --bg-input:     rgba(15, 23, 42, 0.70);
+  --border-card:  rgba(255, 255, 255, 0.10);
+  --border-input: rgba(148, 163, 184, 0.30);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted:   #64748b;
+  --overlay-bg:   rgba(15, 23, 42, 0.78);
+  --shadow-card:  0 20px 60px rgba(0, 0, 0, 0.40);
+}
+
 @layer base {
   body {
-    background-color: #e8f4fd;
-    color: #1e293b;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -19,6 +51,10 @@
 .bg-overlay {
   background: rgba(232, 244, 253, 0.60);
   backdrop-filter: blur(1px);
+}
+
+html.dark .bg-overlay {
+  background: rgba(15, 23, 42, 0.78);
 }
 
 @keyframes spin {

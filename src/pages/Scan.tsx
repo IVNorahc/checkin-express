@@ -406,14 +406,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <header className="h-16 px-4 md:px-8 flex flex-col items-center justify-center relative pt-2">
         <div className="w-full text-center">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-slate-100">
             {showVersoPrompt ? 'CNI détectée' : isVersoMode ? 'Scanner le verso' : 'Scanner un document'}
           </h1>
           {!showVersoPrompt && !isVersoMode && (
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-slate-300">
               Placez la pièce à 15-20cm du téléphone
             </p>
           )}
@@ -422,22 +422,21 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
 
       <main className="px-4 md:px-8 pb-8 flex flex-col items-center gap-3 md:gap-6">
         {showVersoPrompt ? (
-          // Écran intermédiaire après détection CNI
           <div className="w-full max-w-xl flex flex-col items-center justify-center min-h-[60vh]">
             <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-8">
               <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 text-center">
+
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-4 text-center">
               CNI détectée
             </h2>
-            
-            <p className="text-lg text-gray-700 mb-8 text-center">
+
+            <p className="text-lg text-gray-700 dark:text-slate-300 mb-8 text-center">
               Retournez la carte pour scanner le verso
             </p>
-            
+
             <div className="w-full space-y-4">
               <button
                 type="button"
@@ -446,11 +445,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               >
                 <span className="text-xl">Scanner le verso</span>
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleSkipVerso}
-                className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                className="w-full md:w-auto px-8 h-12 rounded-full bg-white dark:bg-slate-800 border border-gray-400 dark:border-white/20 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium"
               >
                 Passer le verso
               </button>
@@ -463,15 +462,14 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               alt="Capture du document"
               className="w-full rounded-xl border border-white/20"
             />
-            
-            {/* Message spécial pour mode verso */}
+
             {isVersoMode && !analysisError && !isAnalyzing && (
-              <div className="mt-6 p-4 bg-blue-50/90 border border-blue-200 text-blue-700 rounded-xl text-center">
+              <div className="mt-6 p-4 bg-blue-50/90 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded-xl text-center">
                 <p className="font-medium">CNI détectée ! Retournez la carte et scannez le verso.</p>
               </div>
             )}
-            
-            <div className="mt-6 flex items-center justify-center gap-3 text-gray-900">
+
+            <div className="mt-6 flex items-center justify-center gap-3 text-gray-900 dark:text-slate-100">
               {isAnalyzing ? (
                 <>
                   <span className="inline-block h-5 w-5 rounded-full border-2 border-blue-700 border-t-transparent animate-spin" />
@@ -482,8 +480,8 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               )}
             </div>
             {isServiceError ? (
-              <div className="mt-4 rounded-xl bg-red-50 border border-red-300 p-4 text-center">
-                <p className="text-red-700 font-medium mb-4">{analysisError}</p>
+              <div className="mt-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 p-4 text-center">
+                <p className="text-red-700 dark:text-red-300 font-medium mb-4">{analysisError}</p>
                 <button
                   type="button"
                   onClick={handleManualInput}
@@ -494,13 +492,13 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               </div>
             ) : (
               <>
-                {analysisError && <p className="mt-3 text-sm text-red-500 text-center">{analysisError}</p>}
+                {analysisError && <p className="mt-3 text-sm text-red-500 dark:text-red-400 text-center">{analysisError}</p>}
                 {canRetry && (
                   <div className="mt-4 flex justify-center">
                     <button
                       type="button"
                       onClick={handleRetryAnalysis}
-                      className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full md:w-auto px-8 h-12 rounded-full bg-white dark:bg-slate-800 border border-gray-400 dark:border-white/20 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                       disabled={isAnalyzing}
                     >
                       Réessayer
@@ -509,8 +507,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 )}
               </>
             )}
-            
-            {/* Boutons spécifiques au mode verso */}
+
             {isVersoMode && !isAnalyzing && !analysisError && (
               <div className="mt-6 flex flex-col items-center gap-3">
                 <button
@@ -523,18 +520,18 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 <button
                   type="button"
                   onClick={handleSkipVerso}
-                  className="text-sm text-gray-600 hover:text-gray-700 transition-colors underline"
+                  className="text-sm text-gray-600 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 transition-colors underline"
                 >
                   Passer le verso
                 </button>
               </div>
             )}
-            
+
             <div className="mt-6 flex justify-center">
               <button
                 type="button"
                 onClick={handleRetry}
-                className="w-full md:w-auto px-8 h-12 rounded-full bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full md:w-auto px-8 h-12 rounded-full bg-white dark:bg-slate-800 border border-gray-400 dark:border-white/20 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                 disabled={isAnalyzing}
               >
                 Reprendre
@@ -544,8 +541,8 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
         ) : (
           <>
             {error && (
-              <div className="w-full max-w-xl rounded-xl bg-red-50 border border-red-300 p-4 text-center">
-                <p className="text-red-700 font-medium mb-4">{error}</p>
+              <div className="w-full max-w-xl rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 p-4 text-center">
+                <p className="text-red-700 dark:text-red-300 font-medium mb-4">{error}</p>
                 <button
                   type="button"
                   onClick={handleManualInput}
@@ -577,7 +574,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               )}
             </div>
 
-            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-600 text-sm sm:text-base space-y-1 px-4">
+            <div className="mt-4 sm:mt-5 w-full max-w-xl text-center text-gray-600 dark:text-slate-400 text-sm sm:text-base space-y-1 px-4">
               <p>📏 Placez le document bien à plat</p>
               <p>💡 Assurez-vous d'avoir un bon éclairage</p>
             </div>
@@ -595,7 +592,7 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
                 type="button"
                 onClick={handleManualInput}
                 disabled={isAnalyzing}
-                className="w-full h-12 rounded-xl bg-white border-2 border-blue-700 text-blue-700 font-bold hover:bg-blue-50 transition-colors"
+                className="w-full h-12 rounded-xl bg-white dark:bg-slate-900 border-2 border-blue-700 dark:border-blue-400 text-blue-700 dark:text-blue-400 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                 style={{ marginTop: '12px' }}
               >
                 ✏️ Saisie manuelle
@@ -603,11 +600,11 @@ export default function Scan({ onBack, onCapture }: ScanProps) {
               <button
                 type="button"
                 onClick={onBack}
-                className="w-full h-12 rounded-xl bg-white border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full h-12 rounded-xl bg-white dark:bg-slate-800 border border-gray-400 dark:border-white/20 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
               >
                 ✕ Annuler
               </button>
-              <p className="w-full text-center text-gray-500 text-xs sm:text-sm mt-2 px-4">
+              <p className="w-full text-center text-gray-500 dark:text-slate-400 text-xs sm:text-sm mt-2 px-4">
                 💡 Sans connexion ou en cas d'erreur OCR, utilisez la saisie manuelle
               </p>
             </div>

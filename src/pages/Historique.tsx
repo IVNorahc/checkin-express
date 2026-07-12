@@ -150,19 +150,19 @@ function EditModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10 sticky top-0 bg-white dark:bg-slate-800 z-10">
           <div>
-            <h2 className="font-bold text-[#1e3a8a] text-base">✏️ Modifier la fiche</h2>
-            <p className="text-xs text-gray-500 mt-0.5">{client.nom} {client.prenoms}</p>
+            <h2 className="font-bold text-[#1e3a8a] dark:text-blue-400 text-base">✏️ Modifier la fiche</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{client.nom} {client.prenoms}</p>
           </div>
           <button
             onClick={onClose}
             disabled={saving}
-            className="text-gray-400 hover:text-gray-700 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-40"
+            className="text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40"
           >
             ✕
           </button>
@@ -187,13 +187,13 @@ function EditModal({
         <div className="px-5 py-4 space-y-4">
           {FIELDS.map(({ label, field, type }) => (
             <div key={field}>
-              <label className="block text-xs font-medium text-[#64748b] mb-1">{label}</label>
+              <label className="block text-xs font-medium text-[#64748b] dark:text-slate-400 mb-1">{label}</label>
               <input
                 type={type}
                 value={form[field]}
                 onChange={setField(field)}
                 disabled={saving || success}
-                className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] focus:outline-none focus:border-[#1e3a8a] transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-[#1e293b] dark:text-slate-100 bg-white dark:bg-slate-700 focus:outline-none focus:border-[#1e3a8a] transition-colors disabled:bg-gray-50 dark:disabled:bg-slate-600 disabled:text-gray-400 dark:disabled:text-slate-500"
               />
             </div>
           ))}
@@ -204,7 +204,7 @@ function EditModal({
           <button
             onClick={onClose}
             disabled={saving}
-            className="flex-1 border border-[#e2e8f0] text-[#475569] py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex-1 border border-[#e2e8f0] dark:border-white/10 text-[#475569] dark:text-slate-300 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
             Annuler
           </button>
@@ -260,22 +260,22 @@ function ClientModal({ client, onClose }: { client: Client; onClose: () => void 
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header modale */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
           <div>
-            <h2 className="font-bold text-blue-900 text-base">
+            <h2 className="font-bold text-blue-900 dark:text-blue-300 text-base">
               {client.nom} {client.prenoms}
             </h2>
             {client.numero_registre && (
-              <p className="text-xs font-mono text-blue-600 mt-0.5">N° {client.numero_registre}</p>
+              <p className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5">N° {client.numero_registre}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
+            className="text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
           >
             ✕
           </button>
@@ -285,8 +285,8 @@ function ClientModal({ client, onClose }: { client: Client; onClose: () => void 
         <div className="px-5 py-4 space-y-3">
           {fields.map(({ label, value }) => (
             <div key={label} className="flex justify-between items-start gap-3">
-              <span className="text-xs text-gray-500 flex-shrink-0 pt-0.5">{label}</span>
-              <span className="text-sm text-gray-900 font-medium text-right">{value}</span>
+              <span className="text-xs text-gray-500 dark:text-slate-400 flex-shrink-0 pt-0.5">{label}</span>
+              <span className="text-sm text-gray-900 dark:text-slate-100 font-medium text-right">{value}</span>
             </div>
           ))}
         </div>
@@ -489,10 +489,10 @@ export default function Historique() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement de l'historique...</p>
+          <p className="mt-4 text-gray-600 dark:text-slate-400">Chargement de l'historique...</p>
         </div>
       </div>
     )
@@ -500,10 +500,10 @@ export default function Historique() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-600 text-xl mb-4">Erreur</div>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600 dark:text-slate-400">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -516,7 +516,7 @@ export default function Historique() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {showLogout && (
         <LogoutConfirmModal onConfirm={() => void signOut()} onCancel={() => setShowLogout(false)} />
       )}
@@ -558,12 +558,12 @@ export default function Historique() {
 
         {/* Titre */}
         <div className="mb-8">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Historique des clients</h1>
-          <p className="mt-2 text-gray-600">Tous les check-ins effectués dans votre établissement</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-slate-100">Historique des clients</h1>
+          <p className="mt-2 text-gray-600 dark:text-slate-400">Tous les check-ins effectués dans votre établissement</p>
         </div>
 
         {/* Barre de recherche + filtres */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm p-4 mb-5 space-y-3">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-[#e2e8f0] dark:border-white/10 shadow-sm p-4 mb-5 space-y-3">
           {/* Recherche texte */}
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-base pointer-events-none">🔍</span>
@@ -572,7 +572,7 @@ export default function Historique() {
               placeholder="Nom, prénom, chambre, n° document…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1e293b] placeholder-[#94a3b8] focus:outline-none focus:border-[#1e3a8a] transition-colors"
+              className="w-full border border-[#e2e8f0] dark:border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1e293b] dark:text-slate-100 bg-white dark:bg-slate-700 placeholder-[#94a3b8] dark:placeholder-slate-500 focus:outline-none focus:border-[#1e3a8a] transition-colors"
             />
             {search && (
               <button
@@ -589,7 +589,7 @@ export default function Historique() {
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as typeof dateFilter)}
-              className="border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] bg-white focus:outline-none focus:border-[#1e3a8a] transition-colors"
+              className="border border-[#e2e8f0] dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-[#1e293b] dark:text-slate-100 bg-white dark:bg-slate-700 focus:outline-none focus:border-[#1e3a8a] transition-colors"
             >
               <option value="all">📅 Toutes les dates</option>
               <option value="today">Aujourd'hui</option>
@@ -600,7 +600,7 @@ export default function Historique() {
             <select
               value={nationaliteFilter}
               onChange={(e) => setNationaliteFilter(e.target.value)}
-              className="border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] bg-white focus:outline-none focus:border-[#1e3a8a] transition-colors"
+              className="border border-[#e2e8f0] dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-[#1e293b] dark:text-slate-100 bg-white dark:bg-slate-700 focus:outline-none focus:border-[#1e3a8a] transition-colors"
             >
               <option value="">🌍 Toutes nationalités</option>
               {nationalites.map(n => (
@@ -611,7 +611,7 @@ export default function Historique() {
             <select
               value={chambreFilter}
               onChange={(e) => setChambreFilter(e.target.value)}
-              className="border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] bg-white focus:outline-none focus:border-[#1e3a8a] transition-colors"
+              className="border border-[#e2e8f0] dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-[#1e293b] dark:text-slate-100 bg-white dark:bg-slate-700 focus:outline-none focus:border-[#1e3a8a] transition-colors"
             >
               <option value="">🛏 Toutes chambres</option>
               {chambres.map(c => (
@@ -649,45 +649,45 @@ export default function Historique() {
         {/* Version Desktop - Tableau */}
         <div className="hidden md:block">
           {filteredClients.length > 0 ? (
-            <table className="w-full bg-white/90 rounded-xl shadow-sm">
-              <thead>
+            <table className="w-full bg-white dark:bg-slate-800 rounded-xl shadow-sm">
+              <thead className="bg-gray-50 dark:bg-slate-700/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     N° Registre
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Nom complet
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Type pièce
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     N° document
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Chambre
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Date check-in
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Nationalité
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Statut
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {filteredClients.map(client => (
-                  <tr key={client.id}>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-700">
+                  <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/40">
+                    <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-700 dark:text-slate-300">
                       {client.numero_registre || '—'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-slate-100">
                       {client.nom} {client.prenoms}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -746,12 +746,12 @@ export default function Historique() {
               </tbody>
             </table>
           ) : (
-            <div className="text-center py-16 bg-white rounded-2xl border border-[#e2e8f0]">
+            <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-[#e2e8f0] dark:border-white/10">
               <p className="text-4xl mb-4">{hasActiveFilters ? '🔍' : '📋'}</p>
-              <p className="font-bold text-[#1e3a8a] text-lg mb-2">
+              <p className="font-bold text-[#1e3a8a] dark:text-blue-400 text-lg mb-2">
                 {hasActiveFilters ? 'Aucun résultat' : 'Aucun check-in effectué'}
               </p>
-              <p className="text-[#64748b] text-sm mb-6">
+              <p className="text-[#64748b] dark:text-slate-400 text-sm mb-6">
                 {hasActiveFilters
                   ? 'Aucun client ne correspond aux filtres sélectionnés.'
                   : 'Commencez à scanner des documents pour voir l\'historique.'}
@@ -780,9 +780,9 @@ export default function Historique() {
           {filteredClients.length > 0 ? (
             <div className="space-y-4">
               {filteredClients.map(client => (
-                <div key={client.id} className="bg-white/90 rounded-xl p-4 shadow-sm">
+                <div key={client.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-transparent dark:border-white/5">
                   <div className="flex items-start justify-between mb-1 gap-2">
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-gray-900 dark:text-slate-100">
                       {client.nom} {client.prenoms}
                     </h3>
                     {(client.checkout_status ?? 'present') === 'present' ? (
@@ -801,13 +801,13 @@ export default function Historique() {
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Type pièce:</span>
-                      <span className="text-sm text-gray-900">{client.document_type}</span>
+                      <span className="text-sm text-gray-600 dark:text-slate-400">Type pièce:</span>
+                      <span className="text-sm text-gray-900 dark:text-slate-200">{client.document_type}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">N° document:</span>
-                      <span className="text-sm text-gray-900">{client.numero_document}</span>
+                      <span className="text-sm text-gray-600 dark:text-slate-400">N° document:</span>
+                      <span className="text-sm text-gray-900 dark:text-slate-200">{client.numero_document}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -828,7 +828,7 @@ export default function Historique() {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-gray-200 space-y-2">
+                  <div className="pt-3 border-t border-gray-200 dark:border-white/10 space-y-2">
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedClient(client)}
@@ -838,7 +838,7 @@ export default function Historique() {
                       </button>
                       <button
                         onClick={() => setEditingClient(client)}
-                        className="flex-1 border border-[#e2e8f0] text-[#1e293b] px-4 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                        className="flex-1 border border-[#e2e8f0] dark:border-white/10 text-[#1e293b] dark:text-slate-200 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm font-medium"
                       >
                         ✏️ Modifier
                       </button>
@@ -857,12 +857,12 @@ export default function Historique() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-white rounded-2xl border border-[#e2e8f0]">
+            <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-[#e2e8f0] dark:border-white/10">
               <p className="text-4xl mb-4">{hasActiveFilters ? '🔍' : '📋'}</p>
-              <p className="font-bold text-[#1e3a8a] text-lg mb-2">
+              <p className="font-bold text-[#1e3a8a] dark:text-blue-400 text-lg mb-2">
                 {hasActiveFilters ? 'Aucun résultat' : 'Aucun check-in effectué'}
               </p>
-              <p className="text-[#64748b] text-sm mb-6">
+              <p className="text-[#64748b] dark:text-slate-400 text-sm mb-6">
                 {hasActiveFilters
                   ? 'Aucun client ne correspond aux filtres sélectionnés.'
                   : 'Commencez à scanner des documents pour voir l\'historique.'}

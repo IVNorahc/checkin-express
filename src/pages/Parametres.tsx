@@ -56,7 +56,7 @@ function Field({
 }) {
   return (
     <div className={span ? 'sm:col-span-2' : ''}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       <input
@@ -66,17 +66,17 @@ function Field({
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none transition"
+        className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none transition"
       />
-      {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">{hint}</p>}
     </div>
   )
 }
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h2 className="text-base font-semibold text-gray-800 mb-5 pb-3 border-b border-gray-100">{title}</h2>
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-white/10 p-6">
+      <h2 className="text-base font-semibold text-gray-800 dark:text-slate-100 mb-5 pb-3 border-b border-gray-100 dark:border-white/10">{title}</h2>
       {children}
     </div>
   )
@@ -88,8 +88,8 @@ function StatusBanner({ text, type, onDismiss }: {
   return (
     <div className={`flex items-start justify-between gap-3 px-4 py-3 rounded-xl mb-4 text-sm ${
       type === 'error'
-        ? 'bg-red-50 border border-red-200 text-red-700'
-        : 'bg-green-50 border border-green-200 text-green-700'
+        ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-400'
+        : 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-500/30 text-green-700 dark:text-green-400'
     }`}>
       <span>{text}</span>
       <button onClick={onDismiss} className="text-current opacity-50 hover:opacity-100 shrink-0 text-base leading-none">✕</button>
@@ -507,7 +507,7 @@ export default function Parametres() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1e3a8a]" />
       </div>
     )
@@ -516,7 +516,7 @@ export default function Parametres() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {showLogout && (
         <LogoutConfirmModal onConfirm={() => void doSignOut()} onCancel={() => setShowLogout(false)} />
       )}
@@ -642,12 +642,12 @@ export default function Parametres() {
         <SectionCard title="Compte utilisateur">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Adresse email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Adresse email</label>
               <input
                 type="email" value={userEmail} disabled
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400 cursor-not-allowed"
               />
-              <p className="mt-1 text-xs text-gray-400">Non modifiable</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Non modifiable</p>
             </div>
             <button
               type="button"
@@ -665,8 +665,8 @@ export default function Parametres() {
             {/* Status badge */}
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium text-gray-700">Double authentification (2FA)</p>
-                <p className="text-xs text-gray-400 mt-0.5">Protégez votre compte avec Google Authenticator ou Authy</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-slate-200">Double authentification (2FA)</p>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Protégez votre compte avec Google Authenticator ou Authy</p>
               </div>
               <span className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                 mfaEnabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
@@ -676,7 +676,7 @@ export default function Parametres() {
             </div>
 
             {mfaError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{mfaError}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-500/30 rounded-lg px-3 py-2">{mfaError}</p>
             )}
 
             {/* Non inscrit → bouton activer */}
@@ -694,10 +694,10 @@ export default function Parametres() {
             {mfaEnrolling && enrollData && (
               <div className="space-y-4">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">
                     Scannez ce QR code avec <strong>Google Authenticator</strong> ou <strong>Authy</strong>, puis entrez le code généré ci-dessous.
                   </p>
-                  <div className="inline-block border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
+                  <div className="inline-block border border-gray-200 dark:border-white/10 rounded-xl p-3 bg-white dark:bg-slate-700 shadow-sm">
                     <img src={enrollData.qr_code} alt="QR Code 2FA" className="w-48 h-48 mx-auto" />
                   </div>
                   <details className="mt-3 text-left">
@@ -707,7 +707,7 @@ export default function Parametres() {
                 </div>
                 <form onSubmit={e => void handleVerifyEnroll(e)} className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Code de vérification (6 chiffres)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Code de vérification (6 chiffres)</label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -717,7 +717,7 @@ export default function Parametres() {
                       value={mfaCode}
                       onChange={e => setMfaCode(e.target.value.replace(/\D/g, ''))}
                       autoFocus
-                      className="w-full border border-gray-300 rounded-lg px-3 py-3 text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none transition"
+                      className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-3 text-center text-2xl font-mono tracking-widest bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none transition"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -762,27 +762,27 @@ export default function Parametres() {
             <p className="text-sm text-gray-500 mb-3">
               Invitez vos réceptionnistes. Ils pourront scanner, consulter l'historique et générer des fiches, mais n'auront pas accès aux paramètres ni à la facturation.
             </p>
-            {empError   && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{empError}</p>}
-            {empSuccess && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{empSuccess}</p>}
+            {empError   && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-500/30 rounded-lg px-3 py-2">{empError}</p>}
+            {empSuccess && <p className="text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-500/30 rounded-lg px-3 py-2">{empSuccess}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nom complet</label>
                 <input
                   type="text"
                   placeholder="Marie Diop"
                   value={inviteNom}
                   onChange={e => setInviteNom(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none"
+                  className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email</label>
                 <input
                   type="email"
                   placeholder="marie@monhotel.sn"
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none"
+                  className="w-full border border-gray-300 dark:border-white/15 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent outline-none"
                 />
               </div>
             </div>
@@ -805,12 +805,12 @@ export default function Parametres() {
           ) : employees.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-3">Aucun employé pour le moment.</p>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 dark:divide-white/10">
               {employees.map(emp => (
                 <li key={emp.id} className="flex items-center justify-between py-3 gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{emp.nom}</p>
-                    <p className="text-xs text-gray-500 truncate">{emp.email}</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-slate-100 truncate">{emp.nom}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{emp.email}</p>
                     <span className={`inline-flex items-center mt-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${
                       emp.status === 'active'   ? 'bg-green-100 text-green-700' :
                       emp.status === 'pending'  ? 'bg-yellow-100 text-yellow-700' :
@@ -849,7 +849,7 @@ export default function Parametres() {
         <SectionCard title="Abonnement">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="space-y-1">
-              <p className="text-sm text-gray-500">Plan actuel</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400">Plan actuel</p>
               {subBadge()}
             </div>
             <button
@@ -906,7 +906,7 @@ export default function Parametres() {
         </SectionCard>
 
         {/* Footer légal */}
-        <footer className="pt-2 pb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400">
+        <footer className="pt-2 pb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-slate-500">
           <a href="/cgu" target="_blank" rel="noopener noreferrer" className="hover:text-[#1e3a8a] transition-colors">
             CGU
           </a>

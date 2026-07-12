@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useTheme } from '../contexts/ThemeContext'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { isDark } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -153,15 +155,15 @@ export default function Login() {
       <div className="bg-overlay" style={{minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center"}}>
         
         <div style={{
-          background: "rgba(255,255,255,0.95)",
+          background: isDark ? "rgba(30,41,59,0.97)" : "rgba(255,255,255,0.95)",
           backdropFilter: "blur(1px)",
           borderRadius: "20px",
           padding: "24px",
           width: "100%",
           margin: "16px",
           maxWidth: "420px",
-          boxShadow: "0 20px 60px rgba(30,58,138,0.15)",
-          border: "1px solid rgba(191,219,254,0.5)"
+          boxShadow: isDark ? "0 20px 60px rgba(0,0,0,0.40)" : "0 20px 60px rgba(30,58,138,0.15)",
+          border: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(191,219,254,0.5)"
         }} className="sm:p-8 sm:mx-auto sm:max-w-md">
           
           {/* Logo centré */}
@@ -174,18 +176,18 @@ export default function Login() {
           </div>
           
           <div style={{textAlign:"center", marginBottom:"32px"}}>
-            <h1 style={{color:"#1e3a8a", fontSize:"26px", fontWeight:"800", margin:"0 0 4px"}}>
+            <h1 style={{color: isDark ? "#93C5FD" : "#1e3a8a", fontSize:"26px", fontWeight:"800", margin:"0 0 4px"}}>
               Check-in Express
             </h1>
             <p style={{color:"#4a90d9", fontSize:"14px", margin:0, fontWeight:"500"}}>
               by Percepta
             </p>
             <p style={{
-              color: "#64748b",
+              color: isDark ? "#94A3B8" : "#64748b",
               fontSize: "13px",
               margin: "8px 0 0",
               padding: "8px 16px",
-              background: "rgba(30,58,138,0.06)",
+              background: isDark ? "rgba(30,58,138,0.30)" : "rgba(30,58,138,0.06)",
               borderRadius: "20px",
               display: "inline-block"
             }}>
@@ -202,18 +204,18 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
-                    background: "rgba(232,244,253,0.60)",
-                    border: "1.5px solid #bfdbfe",
+                    background: isDark ? "rgba(15,23,42,0.70)" : "rgba(232,244,253,0.60)",
+                    border: isDark ? "1.5px solid rgba(148,163,184,0.30)" : "1.5px solid #bfdbfe",
                     borderRadius: "10px",
                     padding: "12px 16px",
                     fontSize: "15px",
-                    color: "#1e293b",
+                    color: isDark ? "#F8FAFC" : "#1e293b",
                     width: "100%",
                     boxSizing: "border-box",
                     outline: "none"
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = "#1e3a8a" }}
-                  onBlur={(e) => { e.target.style.borderColor = "#bfdbfe" }}
+                  onFocus={(e) => { e.target.style.borderColor = isDark ? "#93C5FD" : "#1e3a8a" }}
+                  onBlur={(e) => { e.target.style.borderColor = isDark ? "rgba(148,163,184,0.30)" : "#bfdbfe" }}
                 />
               </div>
 
@@ -224,18 +226,18 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
-                    background: "rgba(232,244,253,0.60)",
-                    border: "1.5px solid #bfdbfe",
+                    background: isDark ? "rgba(15,23,42,0.70)" : "rgba(232,244,253,0.60)",
+                    border: isDark ? "1.5px solid rgba(148,163,184,0.30)" : "1.5px solid #bfdbfe",
                     borderRadius: "10px",
                     padding: "12px 16px",
                     fontSize: "15px",
-                    color: "#1e293b",
+                    color: isDark ? "#F8FAFC" : "#1e293b",
                     width: "100%",
                     boxSizing: "border-box",
                     outline: "none"
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = "#1e3a8a" }}
-                  onBlur={(e) => { e.target.style.borderColor = "#bfdbfe" }}
+                  onFocus={(e) => { e.target.style.borderColor = isDark ? "#93C5FD" : "#1e3a8a" }}
+                  onBlur={(e) => { e.target.style.borderColor = isDark ? "rgba(148,163,184,0.30)" : "#bfdbfe" }}
                 />
               </div>
 
@@ -244,7 +246,7 @@ export default function Login() {
                 alignItems: "center",
                 gap: "8px",
                 fontSize: "14px",
-                color: "#64748b",
+                color: isDark ? "#94A3B8" : "#64748b",
                 cursor: "pointer",
                 marginBottom: "24px"
               }}>
@@ -302,7 +304,7 @@ export default function Login() {
             <>
               <p style={{
                 textAlign: "center",
-                color: "#64748b",
+                color: isDark ? "#94A3B8" : "#64748b",
                 fontSize: "14px",
                 marginBottom: "20px",
                 lineHeight: "1.6"
@@ -321,20 +323,20 @@ export default function Login() {
                     onChange={e => setMfaCode(e.target.value.replace(/\D/g, ''))}
                     autoFocus
                     style={{
-                      background: "rgba(232,244,253,0.60)",
-                      border: "1.5px solid #bfdbfe",
+                      background: isDark ? "rgba(15,23,42,0.70)" : "rgba(232,244,253,0.60)",
+                      border: isDark ? "1.5px solid rgba(148,163,184,0.30)" : "1.5px solid #bfdbfe",
                       borderRadius: "10px",
                       padding: "16px",
                       fontSize: "28px",
                       letterSpacing: "0.4em",
-                      color: "#1e293b",
+                      color: isDark ? "#F8FAFC" : "#1e293b",
                       width: "100%",
                       boxSizing: "border-box",
                       outline: "none",
                       textAlign: "center"
                     }}
-                    onFocus={e => { e.target.style.borderColor = "#1e3a8a" }}
-                    onBlur={e => { e.target.style.borderColor = "#bfdbfe" }}
+                    onFocus={e => { e.target.style.borderColor = isDark ? "#93C5FD" : "#1e3a8a" }}
+                    onBlur={e => { e.target.style.borderColor = isDark ? "rgba(148,163,184,0.30)" : "#bfdbfe" }}
                   />
                 </div>
                 <button
@@ -404,15 +406,15 @@ export default function Login() {
             gap: "16px",
             marginTop: "16px",
             paddingTop: "16px",
-            borderTop: "1px solid #e2e8f0"
+            borderTop: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid #e2e8f0"
           }}>
-            <span style={{color:"#64748b", fontSize:"12px"}}>
+            <span style={{color: isDark ? "#94A3B8" : "#64748b", fontSize:"12px"}}>
               🔒 Sécurisé
             </span>
-            <span style={{color:"#64748b", fontSize:"12px"}}>
+            <span style={{color: isDark ? "#94A3B8" : "#64748b", fontSize:"12px"}}>
               🇪🇺 RGPD
             </span>
-            <span style={{color:"#64748b", fontSize:"12px"}}>
+            <span style={{color: isDark ? "#94A3B8" : "#64748b", fontSize:"12px"}}>
               ⚡ Rapide
             </span>
           </div>
