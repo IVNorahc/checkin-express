@@ -65,22 +65,22 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
       // Initialiser la DB avec l'ID utilisateur Supabase
       initDB(data.session.user.id)
       
-      // RÃ©cupÃ©rer le profil hÃ´tel depuis Supabase
+      // Récupérer le profil hôtel depuis Supabase
       const { data: hotelData, error } = await supabase
         .from('hotels')
         .select('subscription_status, trial_end, hotel_name, phone')
         .eq('user_id', data.session.user.id)
         .single()
       
-      // GÃ©rer l'erreur PGRST116 (not found) et autres erreurs
+      // Gérer l'erreur PGRST116 (not found) et autres erreurs
       if (error && error.code !== 'PGRST116') {
-        console.error('Erreur rÃ©cupÃ©ration hÃ´tel:', error)
+        console.error('Erreur récupération hôtel:', error)
         setNeedsOnboarding(true)
         return
       }
       
       if (hotelData) {
-        // Convertir les donnÃ©es pour compatibilitÃ© avec le reste du code
+        // Convertir les données pour compatibilité avec le reste du code
         setProfile({
           status: hotelData.subscription_status,
           trial_end: hotelData.trial_end,
@@ -88,12 +88,12 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
         })
         setHotelInfo(hotelData)
         setNow(Date.now())
-        // VÃ©rifier si les informations de base sont manquantes
+        // Vérifier si les informations de base sont manquantes
         if (!hotelData.hotel_name || !hotelData.phone) {
           setNeedsOnboarding(true)
         }
       } else {
-        // HÃ´tel non trouvÃ©, besoin d'onboarding
+        // Hôtel non trouvé, besoin d'onboarding
         setNeedsOnboarding(true)
       }
     }
@@ -206,13 +206,13 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
 
 
   const email = session?.user.email ?? ''
-  const hotelName = hotelInfo?.hotel_name || email || 'Mon hÃ´tel'
+  const hotelName = hotelInfo?.hotel_name || email || 'Mon hôtel'
   const isAdmin = session?.user?.user_metadata?.is_admin === true
 
   const trialBanner = useMemo(() => {
     if (profile?.status !== 'trial' || daysLeft <= 0) return null
 
-    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} Â· 10 scans Â· Fiches PDF incluses`
+    const text = `Il vous reste ${daysLeft} jour${daysLeft > 1 ? 's' : ''} · 10 scans · Fiches PDF incluses`
 
     let className: string
     if (daysLeft > 3) {
@@ -233,24 +233,24 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
         {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Compte dÃ©sactivÃ© ðŸ”’
+            Compte désactivé 🔒
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Votre accÃ¨s a expirÃ©. Contactez l'administrateur pour rÃ©activer votre compte.
+            Votre accès a expiré. Contactez l'administrateur pour réactiver votre compte.
           </p>
 
           <a
             href="mailto:contact@percepta.io"
             className="block w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            ðŸ“§ Contacter l'administrateur
+            📧 Contacter l'administrateur
           </a>
 
           <button
             onClick={() => setShowLogout(true)}
             className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
-            DÃ©connexion
+            Déconnexion
           </button>
         </div>
       </div>
@@ -263,10 +263,10 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
         {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Votre compte a Ã©tÃ© suspendu âš ï¸
+            Votre compte a été suspendu ⚠️
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Votre compte a Ã©tÃ© suspendu. Contactez-nous pour rÃ©activer votre accÃ¨s.
+            Votre compte a été suspendu. Contactez-nous pour réactiver votre accès.
           </p>
           
           <div className="mb-8">
@@ -274,7 +274,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               href="mailto:contact@percepta.io" 
               className="inline-flex items-center justify-center w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors"
             >
-              ðŸ“§ Contactez-nous : contact@percepta.io
+              📧 Contactez-nous : contact@percepta.io
             </a>
           </div>
           
@@ -282,45 +282,45 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
             onClick={() => setShowLogout(true)}
             className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
-            DÃ©connexion
+            Déconnexion
           </button>
         </div>
       </div>
     )
   }
 
-  // If trial is expired, show blocking page â€” calcul direct pour Ã©viter la race condition avec daysLeft
+  // If trial is expired, show blocking page — calcul direct pour éviter la race condition avec daysLeft
   if (profile?.status === 'trial' && (!profile.trial_end || new Date(profile.trial_end) <= new Date())) {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4">
         {showLogout && <LogoutConfirmModal onConfirm={handleSignOut} onCancel={() => setShowLogout(false)} />}
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            AccÃ¨s expirÃ© ðŸ”’
+            Accès expiré 🔒
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Votre accÃ¨s a expirÃ©. Contactez l'administrateur pour renouveler votre compte.
+            Votre accès a expiré. Contactez l'administrateur pour renouveler votre compte.
           </p>
 
           <a
             href="mailto:contact@percepta.io"
             className="block w-full bg-[#1e3a8a] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#162f6b] transition-colors mb-4"
           >
-            ðŸ“§ Contacter l'administrateur
+            📧 Contacter l'administrateur
           </a>
 
           <button
             onClick={() => setShowLogout(true)}
             className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
-            DÃ©connexion
+            Déconnexion
           </button>
         </div>
       </div>
     )
   }
 
-  // Si onboarding est nÃ©cessaire, afficher le formulaire
+  // Si onboarding est nécessaire, afficher le formulaire
   if (needsOnboarding && session) {
     return (
       <div className="min-h-screen bg-[#e8f4fd] flex items-center justify-center p-4">
@@ -335,7 +335,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               Bienvenue dans Check-in Express ! 
             </h1>
             <p className="text-gray-600">
-              ComplÃ©tez vos informations pour commencer
+              Complétez vos informations pour commencer
             </p>
           </div>
 
@@ -358,13 +358,13 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 .single()
 
               if (checkError && checkError.code !== 'PGRST116') {
-                console.error('Erreur vÃ©rification tÃ©lÃ©phone:', checkError)
-                alert('Erreur lors de la vÃ©rification du tÃ©lÃ©phone')
+                console.error('Erreur vérification téléphone:', checkError)
+                alert('Erreur lors de la vérification du téléphone')
                 return
               }
 
               if (existingHotel) {
-                alert('Ce numÃ©ro de tÃ©lÃ©phone est dÃ©jÃ  associÃ© Ã  un compte.')
+                alert('Ce numéro de téléphone est déjà associé à un compte.')
                 return
               }
 
@@ -385,25 +385,25 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               window.location.replace(window.location.origin + '/dashboard')
             } catch (error) {
               console.error('Erreur:', error)
-              alert('Erreur lors de la mise Ã  jour')
+              alert('Erreur lors de la mise à jour')
             }
           }}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom de l'hÃ´tel *
+                Nom de l'hôtel *
               </label>
               <input
                 type="text"
                 name="hotelName"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: HÃ´tel de la Plage"
+                placeholder="Ex: Hôtel de la Plage"
               />
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                TÃ©lÃ©phone *
+                Téléphone *
               </label>
               <input
                 type="tel"
@@ -442,7 +442,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Indicateur rÃ©seau */}
+              {/* Indicateur réseau */}
               <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
                 isOnline
                   ? 'text-green-700 bg-green-50 border border-green-200'
@@ -459,7 +459,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 title="Actualiser"
                 className="text-slate-500 hover:text-blue-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <span className={isRefreshing ? 'animate-spin inline-block' : 'inline-block'}>â†»</span>
+                <span className={isRefreshing ? 'animate-spin inline-block' : 'inline-block'}>↻</span>
               </button>
               {isAdmin && (
                 <button
@@ -470,21 +470,21 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                   Admin
                 </button>
               )}
-              {/* ParamÃ¨tres */}
+              {/* Paramètres */}
               <button
                 type="button"
                 onClick={() => navigate('/parametres')}
-                title="ParamÃ¨tres"
+                title="Paramètres"
                 className="text-slate-600 hover:text-blue-700 px-2 py-1.5 rounded-lg text-sm hover:bg-slate-100 transition-colors"
               >
-                âš™ï¸
+                ⚙️
               </button>
               <button
                 onClick={() => setShowLogout(true)}
                 type="button"
                 className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
-                DÃ©connexion
+                Déconnexion
               </button>
             </div>
           </header>
@@ -533,16 +533,16 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
           </div>
         )}
 
-        {/* Carte de bienvenue â€” visible au premier login, disparaÃ®t aprÃ¨s dismiss */}
+        {/* Carte de bienvenue — visible au premier login, disparaît après dismiss */}
         {!welcomeDismissed && lastClients.length === 0 && profile !== null && (
           <div className="bg-white border border-blue-100 rounded-xl shadow-sm p-5 mb-6">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
                 <h2 className="text-lg font-bold text-blue-900">
-                  Bienvenue sur Check-in Express ! ðŸ‘‹
+                  Bienvenue sur Check-in Express ! 👋
                 </h2>
                 <p className="text-sm text-slate-500 mt-0.5">
-                  3 Ã©tapes pour faire votre premier check-in en 30 secondes
+                  3 étapes pour faire votre premier check-in en 30 secondes
                 </p>
               </div>
               <button
@@ -551,15 +551,15 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 className="text-slate-400 hover:text-slate-600 text-lg leading-none flex-shrink-0"
                 aria-label="Fermer"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               {[
-                { step: '1', icon: 'ðŸ“¸', title: 'Scannez le document', desc: "Photographiez la piÃ¨ce d'identitÃ© du client avec la camÃ©ra arriÃ¨re" },
-                { step: '2', icon: 'âœï¸', title: 'VÃ©rifiez les donnÃ©es', desc: "L'OCR remplit le formulaire automatiquement â€” corrigez si besoin" },
-                { step: '3', icon: 'ðŸ–Šï¸', title: 'Faites signer & gÃ©nÃ©rez', desc: 'Le client signe sur l\'Ã©cran, la fiche PDF est crÃ©Ã©e instantanÃ©ment' },
+                { step: '1', icon: '📸', title: 'Scannez le document', desc: "Photographiez la pièce d'identité du client avec la caméra arrière" },
+                { step: '2', icon: '✏️', title: 'Vérifiez les données', desc: "L'OCR remplit le formulaire automatiquement — corrigez si besoin" },
+                { step: '3', icon: '🖊️', title: 'Faites signer & générez', desc: 'Le client signe sur l\'écran, la fiche PDF est créée instantanément' },
               ].map(({ step, icon, title, desc }) => (
                 <div key={step} className="flex gap-3 bg-slate-50 rounded-lg p-3">
                   <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-800 text-white text-xs font-bold flex items-center justify-center">
@@ -575,14 +575,14 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <p className="text-xs text-slate-400">
-                ðŸ’¡ Besoin d'aide ? <a href="mailto:contact@percepta.io" className="text-blue-600 hover:underline">contact@percepta.io</a>
+                💡 Besoin d'aide ? <a href="mailto:contact@percepta.io" className="text-blue-600 hover:underline">contact@percepta.io</a>
               </p>
               <button
                 type="button"
                 onClick={() => { dismissWelcome(); navigate('/scanner') }}
                 className="w-full sm:w-auto bg-blue-800 text-white text-sm font-bold px-5 py-2.5 rounded-lg hover:bg-blue-900 transition-colors"
               >
-                ðŸ“¸ Faire mon premier scan
+                📸 Faire mon premier scan
               </button>
             </div>
           </div>
@@ -605,7 +605,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
               minWidth: "280px"
             }} className="w-full sm:max-w-sm"
           >
-            ðŸ“¸ SCANNER UN DOCUMENT
+            📸 SCANNER UN DOCUMENT
           </button>
         </section>
 
@@ -615,23 +615,23 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
             onClick={() => navigate('/fiches')}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-sm"
           >
-            Fiche de contrÃ´le
+            Fiche de contrôle
           </button>
         </section>
 
         <div className="grid grid-cols-3 gap-3 mb-8">
           <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
-            <span className="text-2xl mb-1">ðŸ“…</span>
+            <span className="text-2xl mb-1">📅</span>
             <p className="text-3xl font-bold text-blue-700">{scansToday}</p>
             <p className="text-xs text-gray-500 mt-1">Scans aujourd'hui</p>
           </div>
           <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-green-100 flex flex-col items-center">
-            <span className="text-2xl mb-1">ðŸ›Ž</span>
+            <span className="text-2xl mb-1">🛎</span>
             <p className="text-3xl font-bold text-green-700">{clientsPresents}</p>
-            <p className="text-xs text-gray-500 mt-1">PrÃ©sents ce soir</p>
+            <p className="text-xs text-gray-500 mt-1">Présents ce soir</p>
           </div>
           <div className="bg-white rounded-xl px-3 py-5 text-center shadow-sm border border-blue-100 flex flex-col items-center">
-            <span className="text-2xl mb-1">ðŸ“Š</span>
+            <span className="text-2xl mb-1">📊</span>
             <p className="text-3xl font-bold text-blue-700">{scansThisMonth}</p>
             <p className="text-xs text-gray-500 mt-1">Scans ce mois</p>
           </div>
@@ -645,23 +645,23 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
           padding: "24px"
         }}>
           <h2 style={{fontSize: "18px", fontWeight: "bold", color: "#1e3a8a", marginBottom: "16px"}}>
-            Derniers clients scannÃ©s
+            Derniers clients scannés
           </h2>
           {lastClients.length === 0 ? (
             <div className="py-8 px-4 text-center">
-              <div className="text-5xl mb-3">ðŸ¨</div>
+              <div className="text-5xl mb-3">🏨</div>
               <h3 className="text-base font-bold text-blue-900 mb-1">
                 Aucun check-in pour l'instant
               </h3>
               <p className="text-sm text-slate-500 mb-6">
-                Votre historique apparaÃ®tra ici aprÃ¨s votre premier scan
+                Votre historique apparaîtra ici après votre premier scan
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-2 text-left max-w-md mx-auto mb-6">
                 {[
-                  { n: '1', label: 'Scannez la piÃ¨ce d\'identitÃ©' },
-                  { n: '2', label: 'VÃ©rifiez et faites signer' },
-                  { n: '3', label: 'La fiche PDF est gÃ©nÃ©rÃ©e' },
+                  { n: '1', label: 'Scannez la pièce d\'identité' },
+                  { n: '2', label: 'Vérifiez et faites signer' },
+                  { n: '3', label: 'La fiche PDF est générée' },
                 ].map(({ n, label }) => (
                   <div key={n} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 flex-1">
                     <span className="w-6 h-6 rounded-full bg-blue-800 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
@@ -677,7 +677,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 onClick={() => navigate('/scanner')}
                 className="bg-gradient-to-br from-blue-800 to-blue-500 text-white font-bold px-6 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-shadow"
               >
-                ðŸ“¸ DÃ©marrer mon premier scan
+                📸 Démarrer mon premier scan
               </button>
             </div>
           ) : (
@@ -689,7 +689,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                 const yyyy = d.getFullYear()
                 const hh = String(d.getHours()).padStart(2, '0')
                 const min = String(d.getMinutes()).padStart(2, '0')
-                const badgeText = client.printed ? 'âœ… ImprimÃ©' : 'â³ En attente'
+                const badgeText = client.printed ? '✅ Imprimé' : '⏳ En attente'
 
                 return (
                   <div
@@ -701,7 +701,7 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                         {client.surname} {client.givenNames}
                       </div>
                       <div className="text-xs sm:text-sm text-[#64748b]">
-                        {dd}/{mm}/{yyyy} {hh}:{min} Â· Chambre {client.roomNumber}
+                        {dd}/{mm}/{yyyy} {hh}:{min} · Chambre {client.roomNumber}
                       </div>
                     </div>
                     <div
@@ -719,13 +719,13 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
         </section>
 
         <footer className="mt-6 pb-6 px-2">
-          {/* Mobile : grille 2 colonnes, 3 rangÃ©es */}
+          {/* Mobile : grille 2 colonnes, 3 rangées */}
           <div className="grid grid-cols-2 gap-y-2 sm:hidden">
             {[
-              { label: 'Fiches de contrÃ´le', path: '/fiches' },
+              { label: 'Fiches de contrôle', path: '/fiches' },
               { label: 'Historique', path: '/historique' },
-              { label: 'ðŸ“Š Statistiques', path: '/stats' },
-              { label: 'â“ Aide', path: '/aide' },
+              { label: '📊 Statistiques', path: '/stats' },
+              { label: '❓ Aide', path: '/aide' },
               { label: 'Support', path: '/support' },
               { label: 'CGU', path: '/cgu' },
             ].map(({ label, path }) => (
@@ -743,14 +743,14 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
           {/* Desktop : ligne horizontale avec tous les liens */}
           <div className="hidden sm:flex flex-row flex-wrap justify-center items-center gap-x-1 gap-y-1">
             {[
-              { label: 'Fiches de contrÃ´le', path: '/fiches' },
+              { label: 'Fiches de contrôle', path: '/fiches' },
               { label: 'Historique', path: '/historique' },
-              { label: 'ðŸ“Š Statistiques', path: '/stats' },
-              { label: 'â“ Aide', path: '/aide' },
+              { label: '📊 Statistiques', path: '/stats' },
+              { label: '❓ Aide', path: '/aide' },
               { label: 'Support', path: '/support' },
               { label: 'CGU', path: '/cgu' },
-              { label: 'ConfidentialitÃ©', path: '/confidentialite' },
-              { label: 'Mentions lÃ©gales', path: '/mentions-legales' },
+              { label: 'Confidentialité', path: '/confidentialite' },
+              { label: 'Mentions légales', path: '/mentions-legales' },
             ].map(({ label, path }, i, arr) => (
               <span key={path} className="flex items-center">
                 <button
@@ -761,14 +761,14 @@ export default function Dashboard({ onRequireLogin }: DashboardProps) {
                   {label}
                 </button>
                 {i < arr.length - 1 && (
-                  <span className="text-gray-300 select-none ml-1">Â·</span>
+                  <span className="text-gray-300 select-none ml-1">·</span>
                 )}
               </span>
             ))}
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-3">
-            Â© 2026 Percepta SUARL Â· Tous droits rÃ©servÃ©s
+            © 2026 Percepta SUARL · Tous droits réservés
           </p>
         </footer>
       </main>

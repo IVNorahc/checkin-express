@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import LogoutConfirmModal from '../components/LogoutConfirmModal'
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface LoginLog {
   id: string
@@ -35,7 +35,7 @@ interface Hotel {
   created_at: string
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const isValidPhone = (phone: string): boolean => {
   const cleaned = phone.replace(/[\s\-\.]/g, '')
@@ -92,12 +92,12 @@ function StatusBanner({ text, type, onDismiss }: {
         : 'bg-green-50 border border-green-200 text-green-700'
     }`}>
       <span>{text}</span>
-      <button onClick={onDismiss} className="text-current opacity-50 hover:opacity-100 shrink-0 text-base leading-none">âœ•</button>
+      <button onClick={onDismiss} className="text-current opacity-50 hover:opacity-100 shrink-0 text-base leading-none">✕</button>
     </div>
   )
 }
 
-// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Parametres() {
   const [userEmail, setUserEmail] = useState('')
@@ -126,7 +126,7 @@ export default function Parametres() {
     window.location.replace('/login')
   }
 
-  // â”€â”€ Employee state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Employee state ───────────────────────────────────────────────────────────
   const [employees, setEmployees]       = useState<Employee[]>([])
   const [empLoading, setEmpLoading]     = useState(false)
   const [inviteEmail, setInviteEmail]   = useState('')
@@ -146,7 +146,7 @@ export default function Parametres() {
     numero_agrement:  '',
   })
 
-  // â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Load ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const load = async () => {
@@ -161,7 +161,7 @@ export default function Parametres() {
           .eq('user_id', user.id)
           .single()
 
-        if (err) { setError('Erreur chargement des donnÃ©es'); return }
+        if (err) { setError('Erreur chargement des données'); return }
 
         setHotel(data)
         setForm({
@@ -175,7 +175,7 @@ export default function Parametres() {
           numero_agrement: data.numero_agrement ?? '',
         })
 
-        // Isolated â€” never blocks page render
+        // Isolated — never blocks page render
         loadEmployees(data.id)
         loadLoginLogs(data.id)
         checkMfaStatus()
@@ -193,7 +193,7 @@ export default function Parametres() {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  // â”€â”€ Save hotel info + legal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Save hotel info + legal ──────────────────────────────────────────────────
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -201,10 +201,10 @@ export default function Parametres() {
     setError(null); setSuccess(null); setSaving(true)
 
     if (!form.phone) {
-      setError('Le tÃ©lÃ©phone est obligatoire.'); setSaving(false); return
+      setError('Le téléphone est obligatoire.'); setSaving(false); return
     }
     if (!isValidPhone(form.phone)) {
-      setError('TÃ©lÃ©phone invalide â€” format attendu : +221XXXXXXXXX, 7XXXXXXXX ou +33XXXXXXXXX')
+      setError('Téléphone invalide — format attendu : +221XXXXXXXXX, 7XXXXXXXX ou +33XXXXXXXXX')
       setSaving(false); return
     }
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
@@ -235,7 +235,7 @@ export default function Parametres() {
       }
 
       setHotel(prev => prev ? { ...prev, ...form } : null)
-      setSuccess('Informations enregistrÃ©es avec succÃ¨s.')
+      setSuccess('Informations enregistrées avec succès.')
     } catch (err) {
       console.error('[Parametres] Unexpected error:', err)
       setError('Erreur inattendue lors de la sauvegarde.')
@@ -244,21 +244,21 @@ export default function Parametres() {
     }
   }
 
-  // â”€â”€ Logo upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Logo upload ──────────────────────────────────────────────────────────────
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !hotel?.id) return
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setError('Format invalide â€” JPG, PNG ou WebP uniquement.'); return
+      setError('Format invalide — JPG, PNG ou WebP uniquement.'); return
     }
     if (file.size > 2 * 1024 * 1024) {
-      setError("L'image ne doit pas dÃ©passer 2 Mo."); return
+      setError("L'image ne doit pas dépasser 2 Mo."); return
     }
 
     setLogoUploading(true); setError(null); setSuccess(null)
-    console.log('[Logo] Upload start â€” hotelId:', hotel.id, '| file:', file.name, file.type, file.size)
+    console.log('[Logo] Upload start — hotelId:', hotel.id, '| file:', file.name, file.type, file.size)
 
     try {
       const storagePath = `${hotel.id}/logo`
@@ -291,18 +291,18 @@ export default function Parametres() {
         throw new Error(`DB update [${updateErr.code}] : ${updateErr.message}`)
       }
 
-      console.log('[Logo] Saved âœ“')
+      console.log('[Logo] Saved ✓')
       setHotel(prev => prev ? { ...prev, logo_url: publicUrl } : null)
       setLogoCacheBust(Date.now())
-      setSuccess('Logo mis Ã  jour avec succÃ¨s.')
+      setSuccess('Logo mis à jour avec succès.')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err)
       console.error('[Logo] Final catch:', msg)
       setError(
         msg.includes('Bucket not found') || msg.includes('404')
-          ? "Bucket 'hotel-logos' introuvable â€” crÃ©ez-le dans Supabase Storage (public)."
+          ? "Bucket 'hotel-logos' introuvable — créez-le dans Supabase Storage (public)."
           : msg.includes('403') || msg.includes('Unauthorized') || msg.includes('policy')
-            ? `AccÃ¨s refusÃ© au Storage â€” vÃ©rifiez les policies RLS du bucket hotel-logos. (${msg})`
+            ? `Accès refusé au Storage — vérifiez les policies RLS du bucket hotel-logos. (${msg})`
             : `Erreur upload logo : ${msg}`
       )
     } finally {
@@ -311,7 +311,7 @@ export default function Parametres() {
     }
   }
 
-  // â”€â”€ Change password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Change password ──────────────────────────────────────────────────────────
 
   const handleChangePassword = async () => {
     if (!userEmail) return
@@ -320,10 +320,10 @@ export default function Parametres() {
       redirectTo: `${window.location.origin}/reset-password`,
     })
     if (err) setError("Erreur lors de l'envoi de l'email.")
-    else setSuccess('Email de rÃ©initialisation envoyÃ©. VÃ©rifiez votre boÃ®te.')
+    else setSuccess('Email de réinitialisation envoyé. Vérifiez votre boîte.')
   }
 
-  // â”€â”€ 2FA helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── 2FA helpers ──────────────────────────────────────────────────────────────
 
   const checkMfaStatus = async () => {
     const { data } = await supabase.auth.mfa.listFactors()
@@ -338,7 +338,7 @@ export default function Parametres() {
     setMfaError(null)
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
     if (error || !data) {
-      setMfaError('Erreur lors de la gÃ©nÃ©ration du QR code.')
+      setMfaError('Erreur lors de la génération du QR code.')
       return
     }
     setEnrollData({ qr_code: data.totp.qr_code, secret: data.totp.secret, factorId: data.id })
@@ -355,7 +355,7 @@ export default function Parametres() {
       code: mfaCode,
     })
     if (error) {
-      setMfaError("Code incorrect. RÃ©essayez avec un nouveau code de l'application.")
+      setMfaError("Code incorrect. Réessayez avec un nouveau code de l'application.")
       setMfaCode('')
       setMfaVerifying(false)
       return
@@ -366,27 +366,27 @@ export default function Parametres() {
     setEnrollData(null)
     setMfaCode('')
     setMfaVerifying(false)
-    setSuccess('Double authentification activÃ©e avec succÃ¨s.')
+    setSuccess('Double authentification activée avec succès.')
   }
 
   const handleUnenroll = async () => {
     if (!mfaFactorId) return
-    if (!window.confirm('DÃ©sactiver la double authentification ? Votre compte sera moins sÃ©curisÃ©.')) return
+    if (!window.confirm('Désactiver la double authentification ? Votre compte sera moins sécurisé.')) return
     setMfaDisabling(true)
     setMfaError(null)
     const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId })
     if (error) {
-      setMfaError('Erreur lors de la dÃ©sactivation.')
+      setMfaError('Erreur lors de la désactivation.')
       setMfaDisabling(false)
       return
     }
     setMfaEnabled(false)
     setMfaFactorId(null)
     setMfaDisabling(false)
-    setSuccess('Double authentification dÃ©sactivÃ©e.')
+    setSuccess('Double authentification désactivée.')
   }
 
-  // â”€â”€ Employee helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Employee helpers ──────────────────────────────────────────────────────────
 
   const loadLoginLogs = async (hotelId: string) => {
     setLogsLoading(true)
@@ -399,7 +399,7 @@ export default function Parametres() {
         .limit(10)
       if (data) setLoginLogs(data as LoginLog[])
     } catch {
-      // table may not exist yet â€” silently ignore
+      // table may not exist yet — silently ignore
     } finally {
       setLogsLoading(false)
     }
@@ -446,7 +446,7 @@ export default function Parametres() {
       if (fnErr) throw fnErr
       if (data?.error) throw new Error(data.error)
 
-      setEmpSuccess(`Invitation envoyÃ©e Ã  ${inviteEmail.trim()}`)
+      setEmpSuccess(`Invitation envoyée à ${inviteEmail.trim()}`)
       setInviteEmail('')
       setInviteNom('')
       await loadEmployees(hotel.id)
@@ -464,7 +464,7 @@ export default function Parametres() {
       .from('hotel_employees')
       .update({ status: newStatus })
       .eq('id', emp.id)
-    if (err) { setEmpError('Erreur lors de la mise Ã  jour.'); return }
+    if (err) { setEmpError('Erreur lors de la mise à jour.'); return }
     setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, status: newStatus } : e))
   }
 
@@ -479,7 +479,7 @@ export default function Parametres() {
     setEmployees(prev => prev.filter(e => e.id !== emp.id))
   }
 
-  // â”€â”€ Subscription badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Subscription badge ───────────────────────────────────────────────────────
 
   const subBadge = () => {
     if (!hotel) return null
@@ -492,9 +492,9 @@ export default function Parametres() {
     const label =
       s === 'trial'    ? 'Trial' :
       s === 'starter'  ? 'Starter' :
-      s === 'business' ? 'Business' : 'ExpirÃ©'
+      s === 'business' ? 'Business' : 'Expiré'
     const expiry = (s === 'trial' && trial_end)
-      ? ` Â· expire le ${new Date(trial_end).toLocaleDateString('fr-FR')}`
+      ? ` · expire le ${new Date(trial_end).toLocaleDateString('fr-FR')}`
       : ''
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${color}`}>
@@ -503,7 +503,7 @@ export default function Parametres() {
     )
   }
 
-  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Loading ───────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -513,7 +513,7 @@ export default function Parametres() {
     )
   }
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -529,14 +529,14 @@ export default function Parametres() {
           </div>
           <div>
             <h1 className="text-white font-bold text-base leading-none">Check-in Express</h1>
-            <p className="text-blue-200 text-xs mt-0.5">ParamÃ¨tres</p>
+            <p className="text-blue-200 text-xs mt-0.5">Paramètres</p>
           </div>
         </div>
         <button
           onClick={() => setShowLogout(true)}
           className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2 rounded-lg text-sm"
         >
-          DÃ©connexion
+          Déconnexion
         </button>
       </header>
 
@@ -545,18 +545,18 @@ export default function Parametres() {
         {error   && <StatusBanner text={error}   type="error"   onDismiss={() => setError(null)} />}
         {success && <StatusBanner text={success} type="success" onDismiss={() => setSuccess(null)} />}
 
-        {/* â”€â”€ 1. Informations hÃ´tel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <SectionCard title="Informations hÃ´tel">
+        {/* ── 1. Informations hôtel ─────────────────────────────────────────── */}
+        <SectionCard title="Informations hôtel">
           <form onSubmit={handleSave} className="space-y-4">
             <FieldRow>
-              <Field label="Nom de l'hÃ´tel" name="hotel_name" value={form.hotel_name}
-                onChange={onChange} required placeholder="HÃ´tel de la Paix" />
-              <Field label="TÃ©lÃ©phone" name="phone" value={form.phone}
+              <Field label="Nom de l'hôtel" name="hotel_name" value={form.hotel_name}
+                onChange={onChange} required placeholder="Hôtel de la Paix" />
+              <Field label="Téléphone" name="phone" value={form.phone}
                 onChange={onChange} required type="tel"
                 placeholder="+221 77 000 00 00"
                 hint="Format : +221XXXXXXXXX ou 7XXXXXXXX" />
             </FieldRow>
-            <Field label="Adresse complÃ¨te" name="address" value={form.address}
+            <Field label="Adresse complète" name="address" value={form.address}
               onChange={onChange} placeholder="123 Rue Carnot" span />
             <FieldRow>
               <Field label="Ville" name="city" value={form.city}
@@ -568,16 +568,16 @@ export default function Parametres() {
               onChange={onChange} type="url" placeholder="https://monhotel.sn"
               hint="Optionnel" span />
 
-            {/* â”€â”€ 3. Informations lÃ©gales (dans le mÃªme formulaire) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── 3. Informations légales (dans le même formulaire) ──────────── */}
             <div className="pt-4 border-t border-gray-100">
-              <p className="text-sm font-medium text-gray-700 mb-3">Informations lÃ©gales</p>
+              <p className="text-sm font-medium text-gray-700 mb-3">Informations légales</p>
               <FieldRow>
-                <Field label="NÂ° registre de commerce" name="numero_registre"
+                <Field label="N° registre de commerce" name="numero_registre"
                   value={form.numero_registre} onChange={onChange}
-                  placeholder="RCCM SN-DKR-â€¦" hint="Optionnel" />
-                <Field label="NÂ° agrÃ©ment hÃ´telier" name="numero_agrement"
+                  placeholder="RCCM SN-DKR-…" hint="Optionnel" />
+                <Field label="N° agrément hôtelier" name="numero_agrement"
                   value={form.numero_agrement} onChange={onChange}
-                  placeholder="AGR-â€¦" hint="Optionnel" />
+                  placeholder="AGR-…" hint="Optionnel" />
               </FieldRow>
             </div>
 
@@ -587,32 +587,32 @@ export default function Parametres() {
                 disabled={saving}
                 className="px-6 py-2.5 bg-[#1e3a8a] hover:bg-blue-800 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition-colors"
               >
-                {saving ? 'Enregistrementâ€¦' : 'Enregistrer'}
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
               </button>
             </div>
           </form>
         </SectionCard>
 
-        {/* â”€â”€ 2. Logo hÃ´tel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <SectionCard title="Logo de l'hÃ´tel">
+        {/* ── 2. Logo hôtel ─────────────────────────────────────────────────── */}
+        <SectionCard title="Logo de l'hôtel">
           <div className="flex items-start gap-5">
-            {/* PrÃ©visualisation */}
+            {/* Prévisualisation */}
             <div className="shrink-0 w-24 h-24 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
               {hotel?.logo_url ? (
                 <img
                   src={`${hotel.logo_url}?cb=${logoCacheBust}`}
-                  alt="Logo hÃ´tel"
+                  alt="Logo hôtel"
                   className="w-full h-full object-contain p-1"
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
               ) : (
-                <span className="text-3xl">ðŸ¨</span>
+                <span className="text-3xl">🏨</span>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
               <p className="text-sm text-gray-600 mb-3">
-                Le logo s'affiche dans l'en-tÃªte des fiches de police PDF gÃ©nÃ©rÃ©es.
+                Le logo s'affiche dans l'en-tête des fiches de police PDF générées.
               </p>
               <label className={`inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
                 logoUploading
@@ -620,9 +620,9 @@ export default function Parametres() {
                   : 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700'
               }`}>
                 {logoUploading ? (
-                  <><div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />TÃ©lÃ©chargementâ€¦</>
+                  <><div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />Téléchargement…</>
                 ) : (
-                  <>{hotel?.logo_url ? 'ðŸ”„ Changer le logo' : 'ðŸ“¤ Choisir un logo'}</>
+                  <>{hotel?.logo_url ? '🔄 Changer le logo' : '📤 Choisir un logo'}</>
                 )}
                 <input
                   ref={fileInputRef}
@@ -633,12 +633,12 @@ export default function Parametres() {
                   disabled={logoUploading}
                 />
               </label>
-              <p className="mt-2 text-xs text-gray-400">JPG, PNG ou WebP Â· max 2 Mo</p>
+              <p className="mt-2 text-xs text-gray-400">JPG, PNG ou WebP · max 2 Mo</p>
             </div>
           </div>
         </SectionCard>
 
-        {/* â”€â”€ 4. Compte utilisateur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── 4. Compte utilisateur ─────────────────────────────────────────── */}
         <SectionCard title="Compte utilisateur">
           <div className="space-y-4">
             <div>
@@ -654,24 +654,24 @@ export default function Parametres() {
               onClick={handleChangePassword}
               className="px-5 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              Envoyer un lien de rÃ©initialisation du mot de passe
+              Envoyer un lien de réinitialisation du mot de passe
             </button>
           </div>
         </SectionCard>
 
-        {/* â”€â”€ 4.5. SÃ©curitÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <SectionCard title="SÃ©curitÃ©">
+        {/* ── 4.5. Sécurité ─────────────────────────────────────────────────── */}
+        <SectionCard title="Sécurité">
           <div className="space-y-4">
             {/* Status badge */}
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-gray-700">Double authentification (2FA)</p>
-                <p className="text-xs text-gray-400 mt-0.5">ProtÃ©gez votre compte avec Google Authenticator ou Authy</p>
+                <p className="text-xs text-gray-400 mt-0.5">Protégez votre compte avec Google Authenticator ou Authy</p>
               </div>
               <span className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                 mfaEnabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
               }`}>
-                {mfaEnabled ? 'â— ActivÃ©' : 'â— Inactif'}
+                {mfaEnabled ? '● Activé' : '● Inactif'}
               </span>
             </div>
 
@@ -679,7 +679,7 @@ export default function Parametres() {
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{mfaError}</p>
             )}
 
-            {/* Non inscrit â†’ bouton activer */}
+            {/* Non inscrit → bouton activer */}
             {!mfaEnabled && !mfaEnrolling && (
               <button
                 type="button"
@@ -690,12 +690,12 @@ export default function Parametres() {
               </button>
             )}
 
-            {/* Enrollment en cours â†’ QR code + saisie code */}
+            {/* Enrollment en cours → QR code + saisie code */}
             {mfaEnrolling && enrollData && (
               <div className="space-y-4">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-3">
-                    Scannez ce QR code avec <strong>Google Authenticator</strong> ou <strong>Authy</strong>, puis entrez le code gÃ©nÃ©rÃ© ci-dessous.
+                    Scannez ce QR code avec <strong>Google Authenticator</strong> ou <strong>Authy</strong>, puis entrez le code généré ci-dessous.
                   </p>
                   <div className="inline-block border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
                     <img src={enrollData.qr_code} alt="QR Code 2FA" className="w-48 h-48 mx-auto" />
@@ -707,7 +707,7 @@ export default function Parametres() {
                 </div>
                 <form onSubmit={e => void handleVerifyEnroll(e)} className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Code de vÃ©rification (6 chiffres)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Code de vérification (6 chiffres)</label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -733,14 +733,14 @@ export default function Parametres() {
                       disabled={mfaVerifying || mfaCode.length !== 6}
                       className="flex-1 px-4 py-2.5 bg-[#1e3a8a] hover:bg-blue-800 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition-colors"
                     >
-                      {mfaVerifying ? 'VÃ©rificationâ€¦' : 'Confirmer'}
+                      {mfaVerifying ? 'Vérification…' : 'Confirmer'}
                     </button>
                   </div>
                 </form>
               </div>
             )}
 
-            {/* DÃ©jÃ  activÃ© â†’ bouton dÃ©sactiver */}
+            {/* Déjà activé → bouton désactiver */}
             {mfaEnabled && !mfaEnrolling && (
               <button
                 type="button"
@@ -748,19 +748,19 @@ export default function Parametres() {
                 disabled={mfaDisabling}
                 className="w-full px-4 py-2.5 border border-red-300 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
               >
-                {mfaDisabling ? 'DÃ©sactivationâ€¦' : 'DÃ©sactiver le 2FA'}
+                {mfaDisabling ? 'Désactivation…' : 'Désactiver le 2FA'}
               </button>
             )}
           </div>
         </SectionCard>
 
-        {/* â”€â”€ 5. EmployÃ©s â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <SectionCard title="EmployÃ©s">
+        {/* ── 5. Employés ───────────────────────────────────────────────────── */}
+        <SectionCard title="Employés">
 
           {/* Invite form */}
           <form onSubmit={handleInvite} className="space-y-3 mb-5">
             <p className="text-sm text-gray-500 mb-3">
-              Invitez vos rÃ©ceptionnistes. Ils pourront scanner, consulter l'historique et gÃ©nÃ©rer des fiches, mais n'auront pas accÃ¨s aux paramÃ¨tres ni Ã  la facturation.
+              Invitez vos réceptionnistes. Ils pourront scanner, consulter l'historique et générer des fiches, mais n'auront pas accès aux paramètres ni à la facturation.
             </p>
             {empError   && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{empError}</p>}
             {empSuccess && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">{empSuccess}</p>}
@@ -792,7 +792,7 @@ export default function Parametres() {
                 disabled={inviting}
                 className="px-5 py-2 bg-[#1e3a8a] hover:bg-blue-800 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition-colors"
               >
-                {inviting ? 'Envoiâ€¦' : '+ Inviter un employÃ©'}
+                {inviting ? 'Envoi…' : '+ Inviter un employé'}
               </button>
             </div>
           </form>
@@ -803,7 +803,7 @@ export default function Parametres() {
               <div className="w-5 h-5 border-2 border-gray-300 border-t-[#1e3a8a] rounded-full animate-spin" />
             </div>
           ) : employees.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-3">Aucun employÃ© pour le moment.</p>
+            <p className="text-sm text-gray-400 text-center py-3">Aucun employé pour le moment.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {employees.map(emp => (
@@ -816,7 +816,7 @@ export default function Parametres() {
                       emp.status === 'pending'  ? 'bg-yellow-100 text-yellow-700' :
                                                   'bg-gray-100 text-gray-500'
                     }`}>
-                      {emp.status === 'active' ? 'Actif' : emp.status === 'pending' ? 'Invitation envoyÃ©e' : 'Inactif'}
+                      {emp.status === 'active' ? 'Actif' : emp.status === 'pending' ? 'Invitation envoyée' : 'Inactif'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -829,7 +829,7 @@ export default function Parametres() {
                             : 'border-green-300 text-green-600 hover:bg-green-50'
                         }`}
                       >
-                        {emp.status === 'active' ? 'DÃ©sactiver' : 'RÃ©activer'}
+                        {emp.status === 'active' ? 'Désactiver' : 'Réactiver'}
                       </button>
                     )}
                     <button
@@ -845,7 +845,7 @@ export default function Parametres() {
           )}
         </SectionCard>
 
-        {/* â”€â”€ 6. Abonnement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── 6. Abonnement ─────────────────────────────────────────────────── */}
         <SectionCard title="Abonnement">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="space-y-1">
@@ -857,38 +857,38 @@ export default function Parametres() {
               onClick={() => window.open('https://lemonsqueezy.com/billing', '_blank')}
               className="px-5 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white text-sm font-medium rounded-lg transition-colors"
             >
-              GÃ©rer mon abonnement
+              Gérer mon abonnement
             </button>
           </div>
         </SectionCard>
 
-        {/* â”€â”€ 7. Connexions rÃ©centes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <SectionCard title="Connexions rÃ©centes">
+        {/* ── 7. Connexions récentes ─────────────────────────────────────── */}
+        <SectionCard title="Connexions récentes">
           {logsLoading ? (
             <div className="flex justify-center py-4">
               <div className="w-5 h-5 border-2 border-gray-300 border-t-[#1e3a8a] rounded-full animate-spin" />
             </div>
           ) : loginLogs.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-3">Aucune connexion enregistrÃ©e.</p>
+            <p className="text-sm text-gray-400 text-center py-3">Aucune connexion enregistrée.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {loginLogs.map((log, idx) => {
-                const deviceIcon = log.device === 'mobile' ? 'ðŸ“±' : 'ðŸ’»'
+                const deviceIcon = log.device === 'mobile' ? '📱' : '💻'
                 const browserIcon =
-                  log.browser === 'Chrome'  ? 'ðŸŒ' :
-                  log.browser === 'Firefox' ? 'ðŸ¦Š' :
-                  log.browser === 'Safari'  ? 'ðŸ§­' :
-                  log.browser === 'Edge'    ? 'ðŸ”·' : 'ðŸŒ'
+                  log.browser === 'Chrome'  ? '🌐' :
+                  log.browser === 'Firefox' ? '🦊' :
+                  log.browser === 'Safari'  ? '🧭' :
+                  log.browser === 'Edge'    ? '🔷' : '🌍'
                 const date = new Date(log.created_at)
                 const label = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-                  + ' Ã  ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                  + ' à ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
                 return (
                   <li key={log.id} className="flex items-center justify-between py-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-xl shrink-0">{deviceIcon}</span>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-800">
-                          {browserIcon} {log.browser ?? 'Navigateur inconnu'} Â· {log.device === 'mobile' ? 'Mobile' : 'Bureau'}
+                          {browserIcon} {log.browser ?? 'Navigateur inconnu'} · {log.device === 'mobile' ? 'Mobile' : 'Bureau'}
                         </p>
                         <p className="text-xs text-gray-400">{label}</p>
                       </div>
@@ -905,16 +905,16 @@ export default function Parametres() {
           )}
         </SectionCard>
 
-        {/* Footer lÃ©gal */}
+        {/* Footer légal */}
         <footer className="pt-2 pb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-400">
           <a href="/cgu" target="_blank" rel="noopener noreferrer" className="hover:text-[#1e3a8a] transition-colors">
             CGU
           </a>
-          <span>Â·</span>
+          <span>·</span>
           <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-[#1e3a8a] transition-colors">
-            Politique de confidentialitÃ©
+            Politique de confidentialité
           </a>
-          <span>Â·</span>
+          <span>·</span>
           <a href="mailto:perceptasn@gmail.com" className="hover:text-[#1e3a8a] transition-colors">
             perceptasn@gmail.com
           </a>

@@ -71,7 +71,7 @@ function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <span className="block text-[10px] text-[#94a3b8] uppercase tracking-wide leading-none mb-0.5">{label}</span>
-      <span className="text-[#1e3a8a] font-medium text-sm truncate block">{value || 'â€”'}</span>
+      <span className="text-[#1e3a8a] font-medium text-sm truncate block">{value || '—'}</span>
     </div>
   )
 }
@@ -137,7 +137,7 @@ export default function FichesControle() {
     if (pdfWin) {
       pdfWin.document.write(
         '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;color:#1e3a8a">' +
-        '<p>â³ GÃ©nÃ©ration du PDF en coursâ€¦</p></body></html>'
+        '<p>⏳ Génération du PDF en cours…</p></body></html>'
       )
     }
 
@@ -150,9 +150,9 @@ export default function FichesControle() {
       }
       setTimeout(() => URL.revokeObjectURL(url), 15_000)
     } catch (err) {
-      console.error('Erreur impression groupÃ©e:', err)
+      console.error('Erreur impression groupée:', err)
       pdfWin?.close()
-      alert('Erreur lors de la gÃ©nÃ©ration du PDF.')
+      alert('Erreur lors de la génération du PDF.')
     } finally {
       setPrinting(false)
     }
@@ -167,7 +167,7 @@ export default function FichesControle() {
       setTimeout(() => URL.revokeObjectURL(url), 15_000)
     } catch (err) {
       console.error('Erreur affichage fiche:', err)
-      alert('Erreur lors de la gÃ©nÃ©ration du PDF.')
+      alert('Erreur lors de la génération du PDF.')
     }
   }, [hotelName, logoDataUrl])
 
@@ -236,23 +236,23 @@ export default function FichesControle() {
             {printing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                GÃ©nÃ©ration en coursâ€¦
+                Génération en cours…
               </>
             ) : (
-              <>ðŸ–¨ Imprimer toutes les fiches du jour</>
+              <>🖨 Imprimer toutes les fiches du jour</>
             )}
           </button>
           <button
             onClick={() => setShowAll(v => !v)}
             className="flex items-center gap-2 px-4 py-3 border border-[#e2e8f0] bg-white text-[#475569] font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm"
           >
-            {showAll ? 'ðŸŸ¢ Voir uniquement les prÃ©sents' : 'ðŸ‘ Voir tous les clients'}
+            {showAll ? '🟢 Voir uniquement les présents' : '👁 Voir tous les clients'}
           </button>
         </div>
 
         {minutesUntilAutoPrint !== null && minutesUntilAutoPrint > 0 && (
           <div className="mb-4 rounded-xl bg-orange-50 border border-orange-300 px-4 py-3 text-orange-700 font-medium text-sm">
-            â° Impression automatique dans {minutesUntilAutoPrint} minute{minutesUntilAutoPrint > 1 ? 's' : ''}
+            ⏰ Impression automatique dans {minutesUntilAutoPrint} minute{minutesUntilAutoPrint > 1 ? 's' : ''}
           </div>
         )}
 
@@ -264,7 +264,7 @@ export default function FichesControle() {
 
         {!loading && displayedClients.length === 0 && (
           <div className="text-center py-16 bg-white rounded-xl border border-[#e2e8f0]">
-            <p className="text-5xl mb-3">ðŸ“‹</p>
+            <p className="text-5xl mb-3">📋</p>
             <h3 className="text-lg font-semibold text-[#1e3a8a] mb-1">
               {clients.length > 0 ? 'Tous les clients sont partis' : 'Aucune fiche pour aujourd\'hui'}
             </h3>
@@ -286,25 +286,25 @@ export default function FichesControle() {
                       {c.nom} {c.prenoms}
                     </h3>
                     <p className="text-xs text-[#94a3b8] mt-0.5">
-                      EnregistrÃ© Ã  {formatTime(c.created_at)}
+                      Enregistré à {formatTime(c.created_at)}
                     </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2.5">
-                  <Field label="NationalitÃ©" value={c.nationalite} />
+                  <Field label="Nationalité" value={c.nationalite} />
                   <Field label="Chambre" value={c.chambre} />
-                  <Field label="Type piÃ¨ce" value={c.document_type} />
-                  <Field label="NÂ° document" value={c.numero_document} />
+                  <Field label="Type pièce" value={c.document_type} />
+                  <Field label="N° document" value={c.numero_document} />
                   <Field label="Venant de" value={c.venant_de} />
-                  <Field label="Allant Ã " value={c.allant_a} />
+                  <Field label="Allant à" value={c.allant_a} />
                 </div>
 
                 <button
                   onClick={() => handleViewSingle(c)}
                   className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#1e3a8a] border border-[#1e3a8a]/40 rounded-lg hover:bg-blue-50 transition-colors"
                 >
-                  ðŸ“„ Voir la fiche PDF
+                  📄 Voir la fiche PDF
                 </button>
               </div>
             ))}

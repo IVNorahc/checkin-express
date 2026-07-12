@@ -21,12 +21,12 @@ const mockData = {
   dateOfBirth: '1985-06-15',
   lieuNaissance: '',
   documentNumber: '12AB34567',
-  nationality: 'FRANÃ‡AISE',
+  nationality: 'FRANÇAISE',
   sex: 'M',
   expiryDate: '2030-06-14',
   dateDelivrance: '2020-06-14',
   address: '123 Rue de la Paix, 75001 Paris',
-  profession: 'IngÃ©nieur',
+  profession: 'Ingénieur',
   venantDe: 'Paris',
   allantA: 'Dakar',
   confidence: 0.97,
@@ -38,20 +38,20 @@ type FormData = Record<EditableKey, string>
 
 const fieldLabels: Record<string, string> = {
   documentType: 'Type de document',
-  issuingCountry: "Pays d'Ã©mission",
+  issuingCountry: "Pays d'émission",
   surname: 'Nom',
-  givenNames: 'PrÃ©nom(s)',
+  givenNames: 'Prénom(s)',
   dateOfBirth: 'Date de naissance',
   lieuNaissance: 'Lieu de naissance',
-  documentNumber: 'NumÃ©ro du document',
-  nationality: 'NationalitÃ©',
+  documentNumber: 'Numéro du document',
+  nationality: 'Nationalité',
   sex: 'Sexe',
   expiryDate: "Date d'expiration",
-  dateDelivrance: 'Date de dÃ©livrance',
+  dateDelivrance: 'Date de délivrance',
   address: 'Adresse',
   profession: 'Profession',
   venantDe: 'Venant de',
-  allantA: 'Allant Ã ',
+  allantA: 'Allant à',
 }
 
 const initialData: FormData = {
@@ -112,8 +112,8 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const isDrawingRef = useRef(false)
 
-  // Garantit que la DB est initialisÃ©e mÃªme aprÃ¨s un rechargement de page (window.location.href).
-  // La DB est un singleton module : elle est null si la page a Ã©tÃ© rechargÃ©e sans passer par Dashboard.
+  // Garantit que la DB est initialisée même après un rechargement de page (window.location.href).
+  // La DB est un singleton module : elle est null si la page a été rechargée sans passer par Dashboard.
   useEffect(() => {
     const ensureDB = async () => {
       try {
@@ -277,7 +277,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       const { data: sessionData } = await supabase.auth.getSession()
 
       if (!sessionData.session) {
-        setSyncError('Session expirÃ©e â€” veuillez vous reconnecter.')
+        setSyncError('Session expirée — veuillez vous reconnecter.')
       } else {
         const { data: hotelData, error: hotelError } = await supabase
           .from('hotels')
@@ -286,9 +286,9 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
           .single()
 
         if (hotelError || !hotelData) {
-          const msg = hotelError?.message ?? 'hÃ´tel introuvable'
-          console.error('[Confirm] Impossible de rÃ©cupÃ©rer l\'hÃ´tel:', hotelError)
-          setSyncError(`HÃ´tel introuvable (${msg}).`)
+          const msg = hotelError?.message ?? 'hôtel introuvable'
+          console.error('[Confirm] Impossible de récupérer l\'hôtel:', hotelError)
+          setSyncError(`Hôtel introuvable (${msg}).`)
         } else {
           const { error: insertError } = await supabase.from('clients').insert({
             hotel_id: hotelData.id,
@@ -319,7 +319,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       }
     } catch (err) {
       console.error('[Confirm] Supabase sync exception:', err)
-      setSyncError('Erreur rÃ©seau â€” impossible d\'enregistrer le check-in.')
+      setSyncError('Erreur réseau — impossible d\'enregistrer le check-in.')
     }
 
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
@@ -354,19 +354,19 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       const x = startX + 3
       const maxWidth = cardWidth - 6
       
-      // EN-TÃŠTE
+      // EN-TÊTE
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9)
-      pdf.text('HÃ”TEL EXEMPLE', x, y)
-      pdf.text('â˜Ž 33 000 000 000', x + 45, y)
-      pdf.text('FICHE DE CONTRÃ”LE', x + 70, y)
+      pdf.text('HÔTEL EXEMPLE', x, y)
+      pdf.text('☎ 33 000 000 000', x + 45, y)
+      pdf.text('FICHE DE CONTRÔLE', x + 70, y)
       y += 4
       
       // Separator line under header
       pdf.line(x, y, x + maxWidth, y)
       y += 3
       
-      // SECTION 1 â€” IDENTITÃ‰
+      // SECTION 1 — IDENTITÉ
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       
@@ -389,10 +389,10 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Maiden name', x, y + 2.5)
       y += 5
       
-      // PrÃ©noms
+      // Prénoms
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('PrÃ©noms :', x, y)
+      pdf.text('Prénoms :', x, y)
       pdf.setFont('helvetica', 'bold')
       pdf.text(formData.givenNames || '', x + 15, y)
       pdf.setFont('helvetica', 'italic')
@@ -400,10 +400,10 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Christian name', x, y + 2.5)
       y += 5
       
-      // NÃ©(e) le
+      // Né(e) le
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('NÃ©(e) le :', x, y)
+      pdf.text('Né(e) le :', x, y)
       pdf.setFont('helvetica', 'bold')
       pdf.text(formData.dateOfBirth || '', x + 15, y)
       pdf.text(' lieu', x + 30, y)
@@ -412,14 +412,14 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Date and place of birth', x, y + 2.5)
       y += 5
       
-      // DÃ©partement
+      // Département
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('DÃ©partement :', x, y)
+      pdf.text('Département :', x, y)
       drawDottedLine(x + 20, y, maxWidth - 20)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
-      pdf.text('ou pays pour l\'Ã©tranger', x, y + 2.5)
+      pdf.text('ou pays pour l\'étranger', x, y + 2.5)
       y += 5
       
       // Country
@@ -430,10 +430,10 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text(formData.issuingCountry || '', x + 15, y)
       y += 6
       
-      // SECTION 2 â€” PIÃˆCES D'IDENTITÃ‰
+      // SECTION 2 — PIÈCES D'IDENTITÉ
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7)
-      pdf.text('PIÃˆCES D\'IDENTITÃ‰', x, y)
+      pdf.text('PIÈCES D\'IDENTITÉ', x, y)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
       pdf.text('Identity documents produced', x, y + 2.5)
@@ -450,43 +450,43 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Type of identity documents', x, y + 2.5)
       y += 5
       
-      // NÂ°
+      // N°
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('NÂ° :', x, y)
+      pdf.text('N° :', x, y)
       pdf.setFont('helvetica', 'bold')
       pdf.text(formData.documentNumber || '', x + 8, y)
-      pdf.text('dÃ©livrÃ© le :', x + 35, y)
+      pdf.text('délivré le :', x + 35, y)
       drawDottedLine(x + 50, y, maxWidth - 50)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
       pdf.text('issued on', x + 35, y + 2.5)
       y += 5
       
-      // Second NÂ°
+      // Second N°
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('NÂ° :', x, y)
+      pdf.text('N° :', x, y)
       drawDottedLine(x + 8, y, maxWidth - 8)
       y += 4
       pdf.text('at :', x, y)
       drawDottedLine(x + 10, y, maxWidth - 10)
       y += 5
       
-      // Date d'entrÃ©e
+      // Date d'entrée
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('Date d\'entrÃ©e au SÃ©nÃ©gal :', x, y)
+      pdf.text('Date d\'entrée au Sénégal :', x, y)
       drawDottedLine(x + 35, y, maxWidth - 35)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
       pdf.text('Date of entry into Senegal', x, y + 2.5)
       y += 5
       
-      // NationalitÃ©
+      // Nationalité
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('NationalitÃ© :', x, y)
+      pdf.text('Nationalité :', x, y)
       pdf.setFont('helvetica', 'bold')
       pdf.text(formData.nationality || '', x + 20, y)
       pdf.setFont('helvetica', 'italic')
@@ -494,16 +494,16 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Nationality', x, y + 2.5)
       y += 6
       
-      // SECTION 3 â€” VOYAGE
+      // SECTION 3 — VOYAGE
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7)
-      pdf.text('SECTION 3 â€” VOYAGE (verso)', x, y)
+      pdf.text('SECTION 3 — VOYAGE (verso)', x, y)
       y += 4
       
       // Profession
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('Profession ou qualitÃ© :', x, y)
+      pdf.text('Profession ou qualité :', x, y)
       drawDottedLine(x + 35, y, maxWidth - 35)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
@@ -521,10 +521,10 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Home address', x, y + 2.5)
       y += 5
       
-      // Date d'arrivÃ©e
+      // Date d'arrivée
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('Date d\'arrivÃ©e dans l\'Ã‰tablissement :', x, y)
+      pdf.text('Date d\'arrivée dans l\'Établissement :', x, y)
       pdf.setFont('helvetica', 'bold')
       const arrivalDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
       pdf.text(arrivalDate, x + 45, y)
@@ -544,10 +544,10 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       pdf.text('Coming from', x, y + 2.5)
       y += 5
       
-      // Allant Ã 
+      // Allant à
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('Allant Ã  :', x, y)
+      pdf.text('Allant à :', x, y)
       pdf.setFont('helvetica', 'bold')
       pdf.text(formData.allantA || '', x + 20, y)
       pdf.setFont('helvetica', 'italic')
@@ -585,14 +585,14 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       // Immatriculation
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text('NÂ° immatriculation vÃ©hicule :', x, y)
+      pdf.text('N° immatriculation véhicule :', x, y)
       drawDottedLine(x + 35, y, maxWidth - 35)
       pdf.setFont('helvetica', 'italic')
       pdf.setFontSize(5)
       pdf.text('Car number plate', x, y + 2.5)
       y += 6
       
-      // SECTION 4 â€” SIGNATURE
+      // SECTION 4 — SIGNATURE
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.text('Le : ___________  Signature', x, y)
@@ -607,15 +607,15 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
       // Registration number
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
-      pdf.text(`NÂ° d\'inscription sur le registre : ${registrationNumber}`, x, y)
+      pdf.text(`N° d\'inscription sur le registre : ${registrationNumber}`, x, y)
       y += 4
       
       // Room number
-      pdf.text(`Chambre NÂ° : ${roomNumber}`, x, y)
+      pdf.text(`Chambre N° : ${roomNumber}`, x, y)
       y += 4
       
       // Phone
-      pdf.text('â˜Ž :', x, y)
+      pdf.text('☎ :', x, y)
       drawDottedLine(x + 8, y, maxWidth - 8)
     }
     
@@ -642,16 +642,16 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
     // Horizontal separator
     pdf.line(startX - 2, pageHeight / 2, startX + 2 * cardWidth + cardSpacing + 2, pageHeight / 2)
 
-    // 3) GÃ©nÃ©rer et tÃ©lÃ©charger le PDF
+    // 3) Générer et télécharger le PDF
     const pdfData = pdf.output('datauristring')
     // Generate filename with customer name and date
     const customerName = formData.surname?.toUpperCase() || 'CLIENT'
     const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
     pdf.save(`fiche-controle-${customerName}-${today}.pdf`)
 
-    setSuccessMessage('âœ… 4 fiches gÃ©nÃ©rÃ©es !')
+    setSuccessMessage('✅ 4 fiches générées !')
     setIsGenerating(false)
-    // 4) Revenir au dashboard aprÃ¨s affichage du message
+    // 4) Revenir au dashboard après affichage du message
     setTimeout(() => onConfirm(), 600)
   }
 
@@ -659,7 +659,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
     <div className="min-h-screen py-4 sm:py-8 px-4">
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded-xl p-4 sm:p-6 lg:p-8 border border-[#e2e8f0]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Confirmation des donnÃ©es</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a8a]">Confirmation des données</h1>
           <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs sm:text-sm font-semibold ${
             confidencePercent >= 80
               ? 'bg-[#dcfce7] text-[#166534]'
@@ -683,9 +683,9 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                     onChange={handleFieldChange(key)}
                     className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
                   >
-                    <option value="">â€” SÃ©lectionner â€”</option>
-                    <option value="M">M â€” Masculin</option>
-                    <option value="F">F â€” FÃ©minin</option>
+                    <option value="">— Sélectionner —</option>
+                    <option value="M">M — Masculin</option>
+                    <option value="F">F — Féminin</option>
                   </select>
                 ) : (
                   <input
@@ -715,9 +715,9 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                           onChange={handleFieldChange(key)}
                           className="w-full border border-[#e2e8f0] rounded-lg px-3 py-2 bg-white focus:border-[#1e3a8a] text-[#1e293b]"
                         >
-                          <option value="">â€” SÃ©lectionner â€”</option>
-                          <option value="M">M â€” Masculin</option>
-                          <option value="F">F â€” FÃ©minin</option>
+                          <option value="">— Sélectionner —</option>
+                          <option value="M">M — Masculin</option>
+                          <option value="F">F — Féminin</option>
                         </select>
                       ) : (
                         <input
@@ -744,7 +744,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               onChange={(e) => { setObjetVoyage(e.target.value); setObjetVoyageAutre('') }}
               className="w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
             >
-              <option value="">â€” SÃ©lectionner â€”</option>
+              <option value="">— Sélectionner —</option>
               <option value="Tourisme">Tourisme</option>
               <option value="Affaires">Affaires</option>
               <option value="Transit">Transit</option>
@@ -756,7 +756,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
                 type="text"
                 value={objetVoyageAutre}
                 onChange={(e) => setObjetVoyageAutre(e.target.value)}
-                placeholder="PrÃ©cisez l'objet du voyageâ€¦"
+                placeholder="Précisez l'objet du voyage…"
                 className="mt-2 w-full border border-[#e2e8f0] rounded-lg px-4 py-3 text-base bg-white focus:border-[#1e3a8a] min-h-[48px] text-[#1e293b]"
               />
             )}
@@ -764,7 +764,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
 
           <div>
             <label htmlFor="roomNumber" className="block text-sm font-semibold text-[#1e293b] mb-2">
-              NumÃ©ro de chambre <span className="text-red-600">*</span>
+              Numéro de chambre <span className="text-red-600">*</span>
             </label>
             <input
               id="roomNumber"
@@ -776,7 +776,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               placeholder="Ex: 204"
             />
             {submitted && !roomNumber.trim() && (
-              <p className="mt-2 text-sm text-red-600">Le numÃ©ro de chambre est obligatoire.</p>
+              <p className="mt-2 text-sm text-red-600">Le numéro de chambre est obligatoire.</p>
             )}
             {submitted && signatureEmpty && (
               <p className="mt-2 text-sm text-red-600">La signature du client est obligatoire.</p>
@@ -813,7 +813,7 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               disabled={isGenerating}
               className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#1e3a8a] text-white font-bold hover:bg-[#1e40af] transition-colors text-base sm:text-sm"
             >
-              {isGenerating ? 'Generation...' : 'âœ“ CONFIRMER'}
+              {isGenerating ? 'Generation...' : '✓ CONFIRMER'}
             </button>
             <button
               type="button"
@@ -821,14 +821,14 @@ export default function Confirm({ data, onRestart, onConfirm }: ConfirmProps) {
               onClick={handleReset}
               className="h-12 w-full sm:w-auto px-6 rounded-xl bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] font-semibold transition-colors text-base sm:text-sm"
             >
-              â†» RECOMMENCER
+              ↻ RECOMMENCER
             </button>
           </div>
 
           {successMessage && <p className="text-sm text-green-600 font-medium">{successMessage}</p>}
           {syncError && (
             <p className="text-sm text-orange-600 font-medium bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-              âš ï¸ {syncError}
+              ⚠️ {syncError}
             </p>
           )}
         </form>

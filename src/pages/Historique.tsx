@@ -103,7 +103,7 @@ function EditModal({
           })
         }
       } catch {
-        // DB non initialisÃ©e ou enregistrement absent â€” non bloquant
+        // DB non initialisée ou enregistrement absent — non bloquant
       }
 
       const updated: Client = {
@@ -133,13 +133,13 @@ function EditModal({
 
   const FIELDS: { label: string; field: keyof typeof form; type: string }[] = [
     { label: 'Nom', field: 'nom', type: 'text' },
-    { label: 'PrÃ©noms', field: 'prenoms', type: 'text' },
+    { label: 'Prénoms', field: 'prenoms', type: 'text' },
     { label: 'Date de naissance', field: 'date_naissance', type: 'date' },
-    { label: 'NationalitÃ©', field: 'nationalite', type: 'text' },
-    { label: 'NÂ° document', field: 'numero_document', type: 'text' },
+    { label: 'Nationalité', field: 'nationalite', type: 'text' },
+    { label: 'N° document', field: 'numero_document', type: 'text' },
     { label: 'Chambre', field: 'chambre', type: 'text' },
     { label: 'Venant de', field: 'venant_de', type: 'text' },
-    { label: 'Allant Ã ', field: 'allant_a', type: 'text' },
+    { label: 'Allant à', field: 'allant_a', type: 'text' },
     { label: 'Objet du voyage', field: 'objet_voyage', type: 'text' },
   ]
 
@@ -156,7 +156,7 @@ function EditModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <div>
-            <h2 className="font-bold text-[#1e3a8a] text-base">âœï¸ Modifier la fiche</h2>
+            <h2 className="font-bold text-[#1e3a8a] text-base">✏️ Modifier la fiche</h2>
             <p className="text-xs text-gray-500 mt-0.5">{client.nom} {client.prenoms}</p>
           </div>
           <button
@@ -164,15 +164,15 @@ function EditModal({
             disabled={saving}
             className="text-gray-400 hover:text-gray-700 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-40"
           >
-            âœ•
+            ✕
           </button>
         </div>
 
-        {/* Bandeau succÃ¨s */}
+        {/* Bandeau succès */}
         {success && (
           <div className="mx-5 mt-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
-            <span className="text-green-600 text-base">âœ“</span>
-            <p className="text-sm text-green-700 font-medium">Fiche mise Ã  jour avec succÃ¨s !</p>
+            <span className="text-green-600 text-base">✓</span>
+            <p className="text-sm text-green-700 font-medium">Fiche mise à jour avec succès !</p>
           </div>
         )}
 
@@ -216,9 +216,9 @@ function EditModal({
             {saving ? (
               <>
                 <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Enregistrementâ€¦
+                Enregistrement…
               </>
-            ) : success ? 'âœ“ EnregistrÃ©' : 'Enregistrer'}
+            ) : success ? '✓ Enregistré' : 'Enregistrer'}
           </button>
         </div>
       </div>
@@ -227,30 +227,30 @@ function EditModal({
 }
 
 function ClientModal({ client, onClose }: { client: Client; onClose: () => void }) {
-  const fmt = (v: string | undefined | null) => v || 'â€”'
+  const fmt = (v: string | undefined | null) => v || '—'
   const fmtDate = (v: string | undefined | null) => {
-    if (!v) return 'â€”'
+    if (!v) return '—'
     try { return new Date(v).toLocaleDateString('fr-FR') } catch { return v }
   }
 
   const fields: { label: string; value: string }[] = [
-    { label: 'NÂ° Registre', value: fmt(client.numero_registre) },
+    { label: 'N° Registre', value: fmt(client.numero_registre) },
     { label: 'Nom', value: fmt(client.nom) },
-    { label: 'PrÃ©noms', value: fmt(client.prenoms) },
+    { label: 'Prénoms', value: fmt(client.prenoms) },
     { label: 'Date de naissance', value: fmtDate(client.date_naissance) },
     { label: 'Lieu de naissance', value: fmt(client.lieu_naissance) },
-    { label: 'NationalitÃ©', value: fmt(client.nationalite) },
+    { label: 'Nationalité', value: fmt(client.nationalite) },
     { label: 'Type de document', value: fmt(client.document_type) },
-    { label: 'NÂ° document', value: fmt(client.numero_document) },
-    { label: 'Date de dÃ©livrance', value: fmtDate(client.date_delivrance) },
+    { label: 'N° document', value: fmt(client.numero_document) },
+    { label: 'Date de délivrance', value: fmtDate(client.date_delivrance) },
     { label: "Date d'expiration", value: fmtDate(client.date_expiration) },
     { label: 'Chambre', value: fmt(client.chambre) },
     { label: 'Profession', value: fmt(client.profession) },
     { label: 'Domicile habituel', value: fmt(client.domicile) },
     { label: 'Venant de', value: fmt(client.venant_de) },
-    { label: 'Allant Ã ', value: fmt(client.allant_a) },
+    { label: 'Allant à', value: fmt(client.allant_a) },
     { label: 'Objet du voyage', value: fmt(client.objet_voyage) },
-    { label: "Date d'arrivÃ©e", value: fmtDate(client.created_at) },
+    { label: "Date d'arrivée", value: fmtDate(client.created_at) },
   ]
 
   return (
@@ -270,14 +270,14 @@ function ClientModal({ client, onClose }: { client: Client; onClose: () => void 
               {client.nom} {client.prenoms}
             </h2>
             {client.numero_registre && (
-              <p className="text-xs font-mono text-blue-600 mt-0.5">NÂ° {client.numero_registre}</p>
+              <p className="text-xs font-mono text-blue-600 mt-0.5">N° {client.numero_registre}</p>
             )}
           </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
           >
-            âœ•
+            ✕
           </button>
         </div>
 
@@ -424,7 +424,7 @@ export default function Historique() {
     const now = new Date()
 
     return clients.filter(client => {
-      // Recherche texte : nom, prÃ©nom, chambre, nÂ° document
+      // Recherche texte : nom, prénom, chambre, n° document
       if (q) {
         const inNom = (client.nom ?? '').toLowerCase().includes(q)
         const inPrenoms = (client.prenoms ?? '').toLowerCase().includes(q)
@@ -446,7 +446,7 @@ export default function Historique() {
         }
       }
 
-      // Filtre nationalitÃ©
+      // Filtre nationalité
       if (nationaliteFilter && client.nationalite !== nationaliteFilter) return false
 
       // Filtre chambre
@@ -457,7 +457,7 @@ export default function Historique() {
   }, [clients, search, dateFilter, nationaliteFilter, chambreFilter])
 
   const handleExportCSV = () => {
-    const headers = ['NÂ° Registre', 'Nom', 'PrÃ©noms', 'Type piÃ¨ce', 'NÂ° document', 'Chambre', 'Date check-in', 'NationalitÃ©', 'Profession', 'Objet du voyage']
+    const headers = ['N° Registre', 'Nom', 'Prénoms', 'Type pièce', 'N° document', 'Chambre', 'Date check-in', 'Nationalité', 'Profession', 'Objet du voyage']
     const csvData = filteredClients.map(client => [
       client.numero_registre || '',
       client.nom,
@@ -508,7 +508,7 @@ export default function Historique() {
             onClick={() => window.location.reload()}
             className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            RÃ©essayer
+            Réessayer
           </button>
         </div>
       </div>
@@ -549,7 +549,7 @@ export default function Historique() {
           onClick={() => setShowLogout(true)}
           className="shrink-0 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          DÃ©connexion
+          Déconnexion
         </button>
       </header>
 
@@ -559,17 +559,17 @@ export default function Historique() {
         {/* Titre */}
         <div className="mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Historique des clients</h1>
-          <p className="mt-2 text-gray-600">Tous les check-ins effectuÃ©s dans votre Ã©tablissement</p>
+          <p className="mt-2 text-gray-600">Tous les check-ins effectués dans votre établissement</p>
         </div>
 
         {/* Barre de recherche + filtres */}
         <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm p-4 mb-5 space-y-3">
           {/* Recherche texte */}
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-base pointer-events-none">ðŸ”</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-base pointer-events-none">🔍</span>
             <input
               type="text"
-              placeholder="Nom, prÃ©nom, chambre, nÂ° documentâ€¦"
+              placeholder="Nom, prénom, chambre, n° document…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full border border-[#e2e8f0] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1e293b] bg-white placeholder-[#94a3b8] focus:outline-none focus:border-[#1e3a8a] transition-colors"
@@ -579,7 +579,7 @@ export default function Historique() {
                 onClick={() => setSearch('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#475569] text-sm"
               >
-                âœ•
+                ✕
               </button>
             )}
           </div>
@@ -591,7 +591,7 @@ export default function Historique() {
               onChange={(e) => setDateFilter(e.target.value as typeof dateFilter)}
               className="border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] bg-white focus:outline-none focus:border-[#1e3a8a] transition-colors"
             >
-              <option value="all">ðŸ“… Toutes les dates</option>
+              <option value="all">📅 Toutes les dates</option>
               <option value="today">Aujourd'hui</option>
               <option value="week">Cette semaine</option>
               <option value="month">Ce mois</option>
@@ -602,7 +602,7 @@ export default function Historique() {
               onChange={(e) => setNationaliteFilter(e.target.value)}
               className="border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] bg-white focus:outline-none focus:border-[#1e3a8a] transition-colors"
             >
-              <option value="">ðŸŒ Toutes nationalitÃ©s</option>
+              <option value="">🌍 Toutes nationalités</option>
               {nationalites.map(n => (
                 <option key={n} value={n}>{n}</option>
               ))}
@@ -613,19 +613,19 @@ export default function Historique() {
               onChange={(e) => setChambreFilter(e.target.value)}
               className="border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#1e293b] bg-white focus:outline-none focus:border-[#1e3a8a] transition-colors"
             >
-              <option value="">ðŸ› Toutes chambres</option>
+              <option value="">🛏 Toutes chambres</option>
               {chambres.map(c => (
                 <option key={c} value={c}>Chambre {c}</option>
               ))}
             </select>
           </div>
 
-          {/* Barre de rÃ©sultats */}
+          {/* Barre de résultats */}
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-[#64748b]">
               {filteredClients.length === clients.length
                 ? `${clients.length} client${clients.length !== 1 ? 's' : ''} au total`
-                : `${filteredClients.length} rÃ©sultat${filteredClients.length !== 1 ? 's' : ''} sur ${clients.length}`}
+                : `${filteredClients.length} résultat${filteredClients.length !== 1 ? 's' : ''} sur ${clients.length}`}
             </span>
             <div className="flex items-center gap-2">
               {hasActiveFilters && (
@@ -633,14 +633,14 @@ export default function Historique() {
                   onClick={() => { setSearch(''); setDateFilter('all'); setNationaliteFilter(''); setChambreFilter('') }}
                   className="text-xs text-[#1e3a8a] hover:underline font-medium"
                 >
-                  RÃ©initialiser les filtres
+                  Réinitialiser les filtres
                 </button>
               )}
               <button
                 onClick={handleExportCSV}
                 className="text-xs font-semibold bg-[#1e3a8a] text-white px-3 py-1.5 rounded-lg hover:bg-[#162f6b] transition-colors"
               >
-                â†“ CSV
+                ↓ CSV
               </button>
             </div>
           </div>
@@ -653,16 +653,16 @@ export default function Historique() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    NÂ° Registre
+                    N° Registre
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nom complet
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type piÃ¨ce
+                    Type pièce
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    NÂ° document
+                    N° document
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Chambre
@@ -671,7 +671,7 @@ export default function Historique() {
                     Date check-in
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    NationalitÃ©
+                    Nationalité
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Statut
@@ -685,7 +685,7 @@ export default function Historique() {
                 {filteredClients.map(client => (
                   <tr key={client.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-700">
-                      {client.numero_registre || 'â€”'}
+                      {client.numero_registre || '—'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                       {client.nom} {client.prenoms}
@@ -697,7 +697,7 @@ export default function Historique() {
                       {client.numero_document}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {client.chambre || 'Non spÃ©cifiÃ©e'}
+                      {client.chambre || 'Non spécifiée'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {new Date(client.created_at).toLocaleDateString('fr-FR')}
@@ -708,11 +708,11 @@ export default function Historique() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {(client.checkout_status ?? 'present') === 'present' ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2.5 py-1">
-                          ðŸŸ¢ PrÃ©sent
+                          🟢 Présent
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2.5 py-1">
-                          âš« Parti
+                          ⚫ Parti
                         </span>
                       )}
                     </td>
@@ -728,7 +728,7 @@ export default function Historique() {
                           onClick={() => setEditingClient(client)}
                           className="text-[#64748b] hover:text-[#1e3a8a] font-medium text-sm"
                         >
-                          âœï¸ Modifier
+                          ✏️ Modifier
                         </button>
                         {(client.checkout_status ?? 'present') === 'present' && (
                           <button
@@ -736,7 +736,7 @@ export default function Historique() {
                             disabled={checkingOut.has(client.id)}
                             className="text-amber-600 hover:text-amber-800 font-medium text-sm disabled:opacity-50"
                           >
-                            {checkingOut.has(client.id) ? 'â€¦' : 'ðŸšª DÃ©part'}
+                            {checkingOut.has(client.id) ? '…' : '🚪 Départ'}
                           </button>
                         )}
                       </div>
@@ -747,21 +747,21 @@ export default function Historique() {
             </table>
           ) : (
             <div className="text-center py-16 bg-white rounded-2xl border border-[#e2e8f0]">
-              <p className="text-4xl mb-4">{hasActiveFilters ? 'ðŸ”' : 'ðŸ“‹'}</p>
+              <p className="text-4xl mb-4">{hasActiveFilters ? '🔍' : '📋'}</p>
               <p className="font-bold text-[#1e3a8a] text-lg mb-2">
-                {hasActiveFilters ? 'Aucun rÃ©sultat' : 'Aucun check-in effectuÃ©'}
+                {hasActiveFilters ? 'Aucun résultat' : 'Aucun check-in effectué'}
               </p>
               <p className="text-[#64748b] text-sm mb-6">
                 {hasActiveFilters
-                  ? 'Aucun client ne correspond aux filtres sÃ©lectionnÃ©s.'
-                  : 'Commencez Ã  scanner des documents pour voir l\'historique.'}
+                  ? 'Aucun client ne correspond aux filtres sélectionnés.'
+                  : 'Commencez à scanner des documents pour voir l\'historique.'}
               </p>
               {hasActiveFilters ? (
                 <button
                   onClick={() => { setSearch(''); setDateFilter('all'); setNationaliteFilter(''); setChambreFilter('') }}
                   className="bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#162f6b]"
                 >
-                  RÃ©initialiser les filtres
+                  Réinitialiser les filtres
                 </button>
               ) : (
                 <button
@@ -787,32 +787,32 @@ export default function Historique() {
                     </h3>
                     {(client.checkout_status ?? 'present') === 'present' ? (
                       <span className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-                        ðŸŸ¢ PrÃ©sent
+                        🟢 Présent
                       </span>
                     ) : (
                       <span className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">
-                        âš« Parti
+                        ⚫ Parti
                       </span>
                     )}
                   </div>
                   {client.numero_registre && (
-                    <p className="text-xs font-mono text-blue-700 font-medium mb-3">NÂ° {client.numero_registre}</p>
+                    <p className="text-xs font-mono text-blue-700 font-medium mb-3">N° {client.numero_registre}</p>
                   )}
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Type piÃ¨ce:</span>
+                      <span className="text-sm text-gray-600">Type pièce:</span>
                       <span className="text-sm text-gray-900">{client.document_type}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">NÂ° document:</span>
+                      <span className="text-sm text-gray-600">N° document:</span>
                       <span className="text-sm text-gray-900">{client.numero_document}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Chambre:</span>
-                      <span className="text-sm text-gray-900">{client.chambre || 'Non spÃ©cifiÃ©e'}</span>
+                      <span className="text-sm text-gray-900">{client.chambre || 'Non spécifiée'}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -823,7 +823,7 @@ export default function Historique() {
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">NationalitÃ©:</span>
+                      <span className="text-sm text-gray-600">Nationalité:</span>
                       <span className="text-sm text-gray-900">{client.nationalite}</span>
                     </div>
                   </div>
@@ -840,7 +840,7 @@ export default function Historique() {
                         onClick={() => setEditingClient(client)}
                         className="flex-1 border border-[#e2e8f0] text-[#1e293b] px-4 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium"
                       >
-                        âœï¸ Modifier
+                        ✏️ Modifier
                       </button>
                     </div>
                     {(client.checkout_status ?? 'present') === 'present' && (
@@ -849,7 +849,7 @@ export default function Historique() {
                         disabled={checkingOut.has(client.id)}
                         className="w-full bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-lg hover:bg-amber-100 text-sm font-medium disabled:opacity-50 transition-colors"
                       >
-                        {checkingOut.has(client.id) ? 'â³ Enregistrementâ€¦' : 'ðŸšª Enregistrer le dÃ©part'}
+                        {checkingOut.has(client.id) ? '⏳ Enregistrement…' : '🚪 Enregistrer le départ'}
                       </button>
                     )}
                   </div>
@@ -858,21 +858,21 @@ export default function Historique() {
             </div>
           ) : (
             <div className="text-center py-16 bg-white rounded-2xl border border-[#e2e8f0]">
-              <p className="text-4xl mb-4">{hasActiveFilters ? 'ðŸ”' : 'ðŸ“‹'}</p>
+              <p className="text-4xl mb-4">{hasActiveFilters ? '🔍' : '📋'}</p>
               <p className="font-bold text-[#1e3a8a] text-lg mb-2">
-                {hasActiveFilters ? 'Aucun rÃ©sultat' : 'Aucun check-in effectuÃ©'}
+                {hasActiveFilters ? 'Aucun résultat' : 'Aucun check-in effectué'}
               </p>
               <p className="text-[#64748b] text-sm mb-6">
                 {hasActiveFilters
-                  ? 'Aucun client ne correspond aux filtres sÃ©lectionnÃ©s.'
-                  : 'Commencez Ã  scanner des documents pour voir l\'historique.'}
+                  ? 'Aucun client ne correspond aux filtres sélectionnés.'
+                  : 'Commencez à scanner des documents pour voir l\'historique.'}
               </p>
               {hasActiveFilters ? (
                 <button
                   onClick={() => { setSearch(''); setDateFilter('all'); setNationaliteFilter(''); setChambreFilter('') }}
                   className="bg-[#1e3a8a] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#162f6b]"
                 >
-                  RÃ©initialiser les filtres
+                  Réinitialiser les filtres
                 </button>
               ) : (
                 <button
