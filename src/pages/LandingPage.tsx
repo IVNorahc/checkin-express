@@ -82,11 +82,10 @@ function Hero() {
 
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight mb-5">
           L'enregistrement hôtelier intelligent
-          <span className="text-[#4a90d9]"> pour le Sénégal</span>
         </h1>
 
         <p className="text-base sm:text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-          Scannez les pièces d'identité, générez les fiches de police et exportez vers la gendarmerie en quelques secondes.
+          Scannez les pièces d'identité, générez les fiches de police et gérez vos check-ins en quelques secondes.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -133,7 +132,7 @@ function ProblemSolution() {
             Fini la paperasse manuelle
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto">
-            Les hôteliers sénégalais perdent en moyenne 8 minutes par client à remplir manuellement les fiches de police. Check-in Express réduit ça à 30 secondes.
+            Les hôteliers perdent en moyenne 8 minutes par client à remplir manuellement les fiches de police. Check-in Express réduit ça à 30 secondes.
           </p>
         </div>
 
@@ -205,7 +204,7 @@ function Features() {
     {
       icon: '📄',
       title: 'Fiches PDF',
-      subtitle: 'Format police sénégalaise officiel',
+      subtitle: 'Format réglementaire officiel',
       description: 'La fiche de police est générée automatiquement au format réglementaire. Signature électronique du client incluse. Exportez en PDF en un clic.',
       bullets: ['Format conforme gendarmerie', 'Signature électronique intégrée', 'Archivage automatique 5 ans'],
     },
@@ -213,7 +212,7 @@ function Features() {
       icon: '📤',
       title: 'Export SYNEXIE',
       subtitle: 'Transmission gendarmerie en 1 clic',
-      description: 'Envoyez vos fiches directement au système SYNEXIE de la gendarmerie nationale sénégalaise. Aucune ressaisie, aucun déplacement.',
+      description: 'Envoyez vos fiches directement au système SYNEXIE de la gendarmerie nationale. Aucune ressaisie, aucun déplacement.',
       bullets: ['Compatible SYNEXIE officiel', 'Accusé de réception automatique', 'Traçabilité complète des envois'],
     },
   ]
@@ -226,7 +225,7 @@ function Features() {
             Tout ce dont votre hôtel a besoin
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto">
-            Une solution complète, pensée pour les réalités du terrain hôtelier au Sénégal.
+            Une solution complète, pensée pour les réalités du terrain hôtelier.
           </p>
         </div>
 
@@ -271,7 +270,7 @@ function Footer() {
               <span className="font-bold text-white">Check-in Express</span>
             </div>
             <p className="text-blue-200 text-sm leading-relaxed">
-              La solution d'enregistrement hôtelier intelligente, conçue pour les hôteliers sénégalais.
+              La solution d'enregistrement hôtelier intelligente, conçue pour les hôteliers.
             </p>
             <div className="mt-4 space-y-1">
               <a href="mailto:perceptasn@gmail.com" className="block text-sm text-blue-300 hover:text-white transition-colors">
