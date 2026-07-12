@@ -24,15 +24,26 @@ interface Corner { x: number; y: number }
 
 // Module-level singleton — OpenCV.js is fetched only once per browser session
 let cvLoadPromise: Promise<void> | null = null
+// True when the promise resolved instantly from cache (previous navigation in same session)
+let cvWasCached = false
 
 function loadOpenCV(): Promise<void> {
   if (cvLoadPromise) return cvLoadPromise
   const w = window as any
+  // If cv.Mat already exists, do a real functional test (new cv.Mat()) to confirm
+  // that the WASM runtime is truly initialized — not just a stub reference.
   if (w.cv?.Mat) {
-    console.log('[AutoScan] OpenCV already loaded (cached)')
-    cvLoadPromise = Promise.resolve()
-    return cvLoadPromise
+    try {
+      const test = new w.cv.Mat(); test.delete()
+      console.log('[AutoScan] OpenCV already loaded and functional (cache hit)')
+      cvWasCached = true
+      cvLoadPromise = Promise.resolve()
+      return cvLoadPromise
+    } catch {
+      console.log('[AutoScan] cv.Mat stub exists but WASM not ready — loading script...')
+    }
   }
+  cvWasCached = false
   cvLoadPromise = new Promise<void>((resolve, reject) => {
     const script = document.createElement('script')
     script.async = true
@@ -41,13 +52,19 @@ function loadOpenCV(): Promise<void> {
 
     script.onload = () => {
       console.log('[AutoScan] opencv.js script loaded — polling for WASM init...')
-      // Poll every 200ms — never call cv.then() or cv.catch() (cv is NOT a Promise)
+      // Poll every 200ms — use new cv.Mat() to confirm WASM is truly initialized,
+      // not just that the cv object exists as a stub
       const interval = setInterval(() => {
         const cv = w.cv
         if (cv && typeof cv.Mat === 'function') {
-          clearInterval(interval)
-          console.log('[AutoScan] OpenCV.js ready (cv.Mat available)')
-          resolve()
+          try {
+            const test = new cv.Mat(); test.delete()
+            clearInterval(interval)
+            console.log('[AutoScan] OpenCV.js WASM fully ready (cv.Mat functional)')
+            resolve()
+          } catch {
+            console.log('[AutoScan] cv.Mat stub exists but WASM still initializing...')
+          }
         } else {
           console.log('[AutoScan] Still waiting for cv.Mat...')
         }
@@ -83,7 +100,15 @@ function sortCorners(pts: Corner[]): [Corner, Corner, Corner, Corner] {
   return [tl, rem[0], br, rem[1]] // tl, tr, br, bl
 }
 
-function detectDocument(cv: any, canvas: HTMLCanvasElement): { corners: Corner[] | null; sharpness: number } {
+interface DetectResult {
+  corners: Corner[] | null
+  sharpness: number
+  rawContours: number    // total contours from findContours (before any filter)
+  largeContours: number  // contours passing the 8% area threshold
+  quadCount: number      // 4-sided polygons among large contours
+}
+
+function detectDocument(cv: any, canvas: HTMLCanvasElement): DetectResult {
   const src = cv.imread(canvas)
   const gray = new cv.Mat(), blur = new cv.Mat(), edges = new cv.Mat(), dilated = new cv.Mat()
   const contours = new cv.MatVector(), hierarchy = new cv.Mat()
@@ -96,22 +121,28 @@ function detectDocument(cv: any, canvas: HTMLCanvasElement): { corners: Corner[]
     kernel.delete()
     cv.findContours(dilated, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
+    const rawContours = contours.size()
     const frameArea = canvas.width * canvas.height
     let maxArea = 0, bestPts: Corner[] | null = null
+    let largeContours = 0, quadCount = 0
 
     for (let i = 0; i < contours.size(); i++) {
       const c = contours.get(i)
       const area = cv.contourArea(c)
       if (area < frameArea * 0.08) { c.delete(); continue }
+      largeContours++
       const perim = cv.arcLength(c, true)
       const approx = new cv.Mat()
       cv.approxPolyDP(c, approx, 0.02 * perim, true)
-      if (approx.rows === 4 && area > maxArea) {
-        maxArea = area
-        const pts: Corner[] = []
-        for (let j = 0; j < 4; j++)
-          pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] })
-        bestPts = sortCorners(pts) as Corner[]
+      if (approx.rows === 4) {
+        quadCount++
+        if (area > maxArea) {
+          maxArea = area
+          const pts: Corner[] = []
+          for (let j = 0; j < 4; j++)
+            pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] })
+          bestPts = sortCorners(pts) as Corner[]
+        }
       }
       approx.delete(); c.delete()
     }
@@ -131,7 +162,7 @@ function detectDocument(cv: any, canvas: HTMLCanvasElement): { corners: Corner[]
         mean.delete(); std.delete(); lap.delete(); roi.delete()
       }
     }
-    return { corners: bestPts, sharpness }
+    return { corners: bestPts, sharpness, rawContours, largeContours, quadCount }
   } finally {
     src.delete(); gray.delete(); blur.delete(); edges.delete()
     dilated.delete(); contours.delete(); hierarchy.delete()
@@ -409,8 +440,9 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
       if (!cv?.Mat) return
 
       let corners: Corner[] | null = null, sharpness = 0
+      let rawContours = 0, largeContours = 0, quadCount = 0
       try {
-        ;({ corners, sharpness } = detectDocument(cv, ac))
+        ;({ corners, sharpness, rawContours, largeContours, quadCount } = detectDocument(cv, ac))
       } catch (e) {
         console.error('[AutoScan] detectDocument error:', e)
         return
@@ -419,7 +451,8 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
       if (!corners) {
         stableStart.current = null; lastCorners.current = null
         setStableProgress(0); setGuidance('Placez la pièce devant la caméra')
-        setDiagDetail('aucun quadrilatère détecté')
+        const vidInfo = `${video.videoWidth}x${video.videoHeight}`
+        setDiagDetail(`aucun quad — vid ${vidInfo} — ${rawContours} contours, ${largeContours} grands, ${quadCount} quads`)
         clearOverlay(); return
       }
 
@@ -625,7 +658,9 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
             ? `chargement… ${diagElapsed}s / ${CV_LOAD_TIMEOUT_MS / 1000}s`
             : cvError
               ? `❌ échec — timeout ${CV_LOAD_TIMEOUT_MS / 1000}s`
-              : `✅ prêt en ${cvLoadMs != null ? (cvLoadMs / 1000).toFixed(1) + 's' : '?'}`}
+              : cvWasCached || (cvLoadMs != null && cvLoadMs < 100)
+                ? `✅ déjà chargé (cache)`
+                : `✅ prêt en ${cvLoadMs != null ? (cvLoadMs / 1000).toFixed(1) + 's' : '?'}`}
         </p>
         <p>
           <span className="font-semibold text-gray-700">Détection : </span>
