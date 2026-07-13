@@ -20,7 +20,18 @@ function parseIdentityText(text: string): Record<string, string> {
   }
 
   const find = (pattern: RegExp): number => lines.findIndex(l => pattern.test(l))
-  const isDate = (s: string) => /^\d{2}\/\d{2}\/\d{4}$/.test(s)
+  // Accept DD/MM/YYYY, DD.MM.YYYY and DD-MM-YYYY
+  const isDate  = (s: string) => /^\d{2}[\/.\-]\d{2}[\/.\-]\d{4}$/.test(s)
+  const normDate = (s: string) => s.replace(/[.\-]/g, '/')
+  // Extract first date from a line or from the next N lines, supports inline too
+  const extractDate = (fromIdx: number, maxOffset = 6): string => {
+    for (let o = 0; o <= maxOffset; o++) {
+      const line = lines[fromIdx + o] ?? ''
+      const m = line.match(/\b(\d{2}[\/.\-]\d{2}[\/.\-]\d{4})\b/)
+      if (m) return normDate(m[1])
+    }
+    return ''
+  }
 
   // ── VERSO : NIN ─────────────────────────────────────────────────────────
   // Exemple : "NIN 1 770 1994 03910" → "1 770 1994 03910"
@@ -35,51 +46,57 @@ function parseIdentityText(text: string): Record<string, string> {
   const nomIdx = find(/^nom$/i)
   if (nomIdx !== -1) result.nom = lines[nomIdx + 1] ?? ''
 
-  // ── RECTO : Sexe + Date de naissance ────────────────────────────────────
-  // CNI CEDEAO confirmé : labels "Date de naissance" / "Sexe" / "Taille"
-  // puis valeurs dans l'ordre : M → 175 cm → 26/09/1994
-  // => tailleIdx+1 = sexe (M/F), tailleIdx+2 = taille (175 cm), tailleIdx+3 = date
-  const tailleIdx = find(/^taille$/i)
-  if (tailleIdx !== -1) {
-    const v1 = lines[tailleIdx + 1] ?? ''
-    if (v1 === 'M' || v1 === 'F') result.sexe = v1
-    for (let o = 2; o <= 4; o++) {
-      const v = lines[tailleIdx + o] ?? ''
-      if (isDate(v)) { result.date_naissance = v; break }
+  // ── RECTO : Sexe ──────────────────────────────────────────────────────────
+  // 1st try: "Sexe" label → next line
+  const sexeIdx  = find(/^sexe/i)
+  if (sexeIdx !== -1) {
+    const v = lines[sexeIdx + 1] ?? ''
+    if (v === 'M' || v === 'F') result.sexe = v
+  }
+  // 2nd try: value immediately before "Taille" label (some older CNI formats)
+  if (!result.sexe) {
+    const tailleIdx = find(/^taille/i)
+    if (tailleIdx !== -1) {
+      for (let o = 1; o <= 3; o++) {
+        const v = lines[tailleIdx - o] ?? ''
+        if (v === 'M' || v === 'F') { result.sexe = v; break }
+      }
     }
-  } else {
-    // Fallback : pas de label "Taille" (autres types de documents)
-    const naissIdx = find(/^date de naissance$/i)
-    if (naissIdx !== -1) {
-      for (let o = 1; o <= 6; o++) {
-        const v = lines[naissIdx + o] ?? ''
-        if (v === 'M' || v === 'F') result.sexe = v
-        if (isDate(v) && !result.date_naissance) result.date_naissance = v
+  }
+
+  // ── RECTO : Date de naissance ─────────────────────────────────────────────
+  // Always search by label — never tie this to the "Taille" branch.
+  // The CEDEAO CNI has date-of-birth BEFORE "Taille", not after.
+  const naissIdx = find(/^date de naissance/i)  // matches bilingual "Date de naissance / Date of birth"
+  if (naissIdx !== -1) {
+    result.date_naissance = extractDate(naissIdx)
+  }
+  // Fallback: if label not found, scan lines just before "Taille"
+  if (!result.date_naissance) {
+    const tailleIdx = find(/^taille/i)
+    if (tailleIdx !== -1) {
+      for (let o = 2; o <= 6; o++) {
+        const v = lines[tailleIdx - o] ?? ''
+        if (isDate(v)) { result.date_naissance = normDate(v); break }
       }
     }
   }
 
   // ── RECTO : Lieu de naissance ────────────────────────────────────────────
-  const lieuIdx = find(/^lieu de naissance$/i)
+  const lieuIdx = find(/^lieu de naissance/i)  // no $ — tolerates bilingual labels
   if (lieuIdx !== -1) result.lieu_naissance = lines[lieuIdx + 1] ?? ''
 
-  // ── RECTO : Date de délivrance (scan : ignore les lignes non-date) ───────
-  // Accepte aussi "Data de délivrance" (orthographe portugaise CEDEAO)
-  const delivIdx = find(/^d[ae]t[ae] de d[eé]livrance$/i)
+  // ── RECTO : Date de délivrance ───────────────────────────────────────────
+  // No $ anchor — matches "Date de délivrance / Date of issue" (CEDEAO bilingual)
+  const delivIdx = find(/^d[ae]t[ae] de d[eé]livrance/i)
   if (delivIdx !== -1) {
-    for (let o = 1; o <= 3; o++) {
-      const v = lines[delivIdx + o] ?? ''
-      if (isDate(v)) { result.date_delivrance = v; break }
-    }
+    result.date_delivrance = extractDate(delivIdx)
   }
 
-  // ── RECTO : Date d'expiration (scan — ignore "26/09" tronqué) ───────────
-  const expirIdx = find(/^date d['']expiration$/i)
+  // ── RECTO : Date d'expiration ────────────────────────────────────────────
+  const expirIdx = find(/^date d['']expiration/i)
   if (expirIdx !== -1) {
-    for (let o = 1; o <= 4; o++) {
-      const v = lines[expirIdx + o] ?? ''
-      if (isDate(v)) { result.date_expiration = v; break }
-    }
+    result.date_expiration = extractDate(expirIdx)
   }
 
   // ── RECTO : Adresse du domicile (2 lignes jointes si non-label) ──────────
@@ -166,6 +183,7 @@ serve(async (req: Request) => {
     }
 
     const rawText = visionData.responses?.[0]?.fullTextAnnotation?.text ?? ''
+    console.log('[OCR] rawText brut Vision:\n' + rawText)
     if (!rawText.trim()) {
       return new Response(
         JSON.stringify({ error: 'Aucun texte détecté. Veuillez photographier un document valide.' }),
