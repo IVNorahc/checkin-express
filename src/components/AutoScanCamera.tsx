@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 // ─── Tuneable constants ────────────────────────────────────────────────────────
 // Increase COVERAGE_MIN if it fires on partial documents, decrease if it never triggers
-const COVERAGE_MIN = 0.25
+const COVERAGE_MIN = 0.15
 // Lower STABILITY_THRESHOLD_PX if it captures while still moving, raise to require less stillness
 const STABILITY_THRESHOLD_PX = 14
 // How long the document must stay still before auto-capture fires (ms)
@@ -100,12 +100,22 @@ function sortCorners(pts: Corner[]): [Corner, Corner, Corner, Corner] {
   return [tl, rem[0], br, rem[1]] // tl, tr, br, bl
 }
 
+// For polygons with 4-6 sides, find the 4 most extreme corners
+function findFourCorners(pts: Corner[]): [Corner, Corner, Corner, Corner] {
+  const tl = pts.reduce((a, b) => (a.x + a.y) <= (b.x + b.y) ? a : b)
+  const br = pts.reduce((a, b) => (a.x + a.y) >= (b.x + b.y) ? a : b)
+  const tr = pts.reduce((a, b) => (a.x - a.y) >= (b.x - b.y) ? a : b)
+  const bl = pts.reduce((a, b) => (a.x - a.y) <= (b.x - b.y) ? a : b)
+  return [tl, tr, br, bl]
+}
+
 interface DetectResult {
   corners: Corner[] | null
   sharpness: number
   rawContours: number    // total contours from findContours (before any filter)
-  largeContours: number  // contours passing the 8% area threshold
-  quadCount: number      // 4-sided polygons among large contours
+  largeContours: number  // contours passing the 3% area threshold
+  quadCount: number      // 4-6 sided polygons among large contours
+  maxContourPct: number  // largest contour area as % of frame (0-100), before filtering
 }
 
 function detectDocument(cv: any, canvas: HTMLCanvasElement): DetectResult {
@@ -114,8 +124,10 @@ function detectDocument(cv: any, canvas: HTMLCanvasElement): DetectResult {
   const contours = new cv.MatVector(), hierarchy = new cv.Mat()
   try {
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY)
-    cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0)
-    cv.Canny(blur, edges, 40, 140)
+    // Larger blur kernel (7x7) smooths card texture/text noise before edge detection
+    cv.GaussianBlur(gray, blur, new cv.Size(7, 7), 0)
+    // Lower thresholds (20/60 vs 40/140) to catch weak edges on low-contrast card borders
+    cv.Canny(blur, edges, 20, 60)
     const kernel = cv.Mat.ones(3, 3, cv.CV_8U)
     cv.dilate(edges, dilated, kernel)
     kernel.delete()
@@ -125,23 +137,29 @@ function detectDocument(cv: any, canvas: HTMLCanvasElement): DetectResult {
     const frameArea = canvas.width * canvas.height
     let maxArea = 0, bestPts: Corner[] | null = null
     let largeContours = 0, quadCount = 0
+    let maxContourArea = 0  // track largest contour before any filtering
 
     for (let i = 0; i < contours.size(); i++) {
       const c = contours.get(i)
       const area = cv.contourArea(c)
-      if (area < frameArea * 0.08) { c.delete(); continue }
+      if (area > maxContourArea) maxContourArea = area  // track before filter
+      // Lowered threshold: 3% instead of 8% — more candidates on mobile
+      if (area < frameArea * 0.03) { c.delete(); continue }
       largeContours++
       const perim = cv.arcLength(c, true)
       const approx = new cv.Mat()
-      cv.approxPolyDP(c, approx, 0.02 * perim, true)
-      if (approx.rows === 4) {
+      // Looser epsilon (0.04 vs 0.02) accepts slightly curved/imperfect card edges
+      cv.approxPolyDP(c, approx, 0.04 * perim, true)
+      // Accept 4-6 sides: real cards often approximate as 5-6 vertices
+      if (approx.rows >= 4 && approx.rows <= 6) {
         quadCount++
         if (area > maxArea) {
           maxArea = area
-          const pts: Corner[] = []
-          for (let j = 0; j < 4; j++)
-            pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] })
-          bestPts = sortCorners(pts) as Corner[]
+          const rawPts: Corner[] = []
+          for (let j = 0; j < approx.rows; j++)
+            rawPts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] })
+          // Reduce to 4 extreme corners for perspective correction
+          bestPts = approx.rows === 4 ? sortCorners(rawPts) : findFourCorners(rawPts)
         }
       }
       approx.delete(); c.delete()
@@ -162,7 +180,8 @@ function detectDocument(cv: any, canvas: HTMLCanvasElement): DetectResult {
         mean.delete(); std.delete(); lap.delete(); roi.delete()
       }
     }
-    return { corners: bestPts, sharpness, rawContours, largeContours, quadCount }
+    const maxContourPct = Math.round(maxContourArea / frameArea * 100)
+    return { corners: bestPts, sharpness, rawContours, largeContours, quadCount, maxContourPct }
   } finally {
     src.delete(); gray.delete(); blur.delete(); edges.delete()
     dilated.delete(); contours.delete(); hierarchy.delete()
@@ -440,9 +459,9 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
       if (!cv?.Mat) return
 
       let corners: Corner[] | null = null, sharpness = 0
-      let rawContours = 0, largeContours = 0, quadCount = 0
+      let rawContours = 0, largeContours = 0, quadCount = 0, maxContourPct = 0
       try {
-        ;({ corners, sharpness, rawContours, largeContours, quadCount } = detectDocument(cv, ac))
+        ;({ corners, sharpness, rawContours, largeContours, quadCount, maxContourPct } = detectDocument(cv, ac))
       } catch (e) {
         console.error('[AutoScan] detectDocument error:', e)
         return
@@ -452,7 +471,7 @@ export default function AutoScanCamera({ onCapture, onManualInput, onBack }: Aut
         stableStart.current = null; lastCorners.current = null
         setStableProgress(0); setGuidance('Placez la pièce devant la caméra')
         const vidInfo = `${video.videoWidth}x${video.videoHeight}`
-        setDiagDetail(`aucun quad — vid ${vidInfo} — ${rawContours} contours, ${largeContours} grands, ${quadCount} quads`)
+        setDiagDetail(`aucun quad — vid ${vidInfo} — ${rawContours} contours, ${largeContours} grands, ${quadCount} quads — plus grand: ${maxContourPct}%`)
         clearOverlay(); return
       }
 
